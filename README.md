@@ -1,3 +1,6 @@
+# taskflow-ui
+TaskFlow UI – Modern Angular 20 SaaS application with scalable architecture, reusable components, authentication, and enterprise-grade UI/UX.
+
 # TaskFlowApp
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.4.
