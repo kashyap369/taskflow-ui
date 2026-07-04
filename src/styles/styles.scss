@@ -1,0 +1,24 @@
+@import "bootstrap/scss/bootstrap";
+
+@import "./abstracts/colors";
+@import "./abstracts/variables";
+@import "./abstracts/typography";
+@import "./abstracts/radius";
+@import "./abstracts/shadows";
+@import "./abstracts/breakpoints";
+@import "./abstracts/mixins";
+
+@import "./base/reset";
+@import "./base/global";
+@import "./base/typography";
+
+@import "./components/button";
+@import "./components/card";
+@import "./components/badge";
+@import "./components/input";
+@import "./components/modal";
+@import "./components/table";
+
+@import "./themes/light";
+@import "ngx-toastr/toastr";
+@import "./components/toastr";

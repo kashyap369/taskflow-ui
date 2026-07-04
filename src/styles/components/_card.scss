@@ -1,0 +1,21 @@
+@import '../abstracts/colors';
+@import '../abstracts/radius';
+@import '../abstracts/shadows';
+
+.app-card {
+  background: $white;
+  border: 1px solid $border-light;
+  border-radius: $radius-2xl;
+  padding: 1.5rem;
+  box-shadow: $shadow-sm;
+  transition: .3s;
+}
+
+.app-card:hover {
+  box-shadow: $shadow-md;
+}
+
+.app-card-highlight {
+  border: 1px solid $primary-300;
+  box-shadow: $shadow-lg;
+}

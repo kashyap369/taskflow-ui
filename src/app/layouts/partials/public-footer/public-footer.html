@@ -1,0 +1,121 @@
+<footer class="footer">
+
+    <div class="container">
+
+        <div class="row gy-5">
+
+            <!-- Brand -->
+
+            <div class="col-lg-5">
+
+                <a routerLink="/" class="footer-logo">
+
+                    <div class="logo-circle">
+
+                        <lucide-angular name="Stars" size="20"></lucide-angular>
+
+                    </div>
+
+                    <span>TaskFlow</span>
+
+                </a>
+
+                <p class="footer-description">
+
+                    The premium productivity workspace for modern,
+                    ambitious teams.
+
+                </p>
+
+                <div class="footer-badge">
+
+                    <lucide-angular name="Globe" size="20"></lucide-angular>    
+
+                    Available worldwide · SOC 2 Type II
+
+                </div>
+
+            </div>
+
+            <!-- Product -->
+
+            <div class="col-6 col-md-4 col-lg-2">
+
+                <h6>Product</h6>
+
+                @for(link of productLinks; track link){
+
+                <a href="#">
+                    {{link}}
+                </a>
+
+                }
+
+            </div>
+
+            <!-- Company -->
+
+            <div class="col-6 col-md-4 col-lg-2">
+
+                <h6>Company</h6>
+
+                @for(link of companyLinks; track link){
+
+                <a href="#">
+                    {{link}}
+                </a>
+
+                }
+
+            </div>
+
+            <!-- Resources -->
+
+            <div class="col-6 col-md-4 col-lg-3">
+
+                <h6>Resources</h6>
+
+                @for(link of resourceLinks; track link){
+
+                <a href="#">
+                    {{link}}
+                </a>
+
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+
+        <div class="container">
+
+            <div
+                class="d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3">
+
+                <span>
+
+                    © 2026 TaskFlow Inc. All rights reserved.
+
+                </span>
+
+                <div class="footer-links">
+
+                    <a href="#">Privacy</a>
+
+                    <a href="#">Terms</a>
+
+                    <a href="#">Cookies</a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</footer>

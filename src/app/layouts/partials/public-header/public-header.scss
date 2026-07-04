@@ -1,0 +1,107 @@
+.public-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+
+  background: #ffffff;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.navbar {
+  min-height: 80px;
+}
+
+.navbar-brand {
+  gap: .75rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f2937;
+
+  text-decoration: none;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(135deg, #7c4dff, #5b5fff);
+  color: white;
+  font-size: 18px;
+
+  box-shadow: 0 10px 20px rgba(124, 77, 255, .25);
+}
+
+.brand-name {
+  color: #1f2937;
+}
+
+.navbar-nav {
+  gap: 1rem;
+}
+
+.nav-link {
+  font-size: .95rem;
+  color: #64748b;
+  font-weight: 500;
+  transition: .25s;
+
+  &:hover {
+    color: #111827;
+  }
+
+  &.active {
+    color: #111827;
+  }
+}
+
+.signin {
+  color: #374151;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    color: #000;
+  }
+}
+
+.get-started {
+  border-radius: 999px;
+  padding: .7rem 1.4rem;
+  font-weight: 600;
+}
+
+.navbar-toggler {
+  padding: .35rem;
+}
+
+@media (max-width: 991px) {
+
+  .navbar-collapse {
+    padding-top: 1rem;
+  }
+
+  .navbar-nav {
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+
+  .d-flex {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .get-started {
+    width: 100%;
+  }
+
+  .signin {
+    text-align: center;
+  }
+
+}

@@ -1,0 +1,81 @@
+// ======================================
+// Layout _variables.scss
+// ======================================
+
+$navbar-height: 72px;
+
+$sidebar-width: 280px;
+$sidebar-collapsed-width: 80px;
+
+$container-max-width: 1320px;
+$container-padding: 1rem;
+
+// ======================================
+// Z-Index
+// ======================================
+
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-toast: 1060;
+$z-tooltip: 1070;
+
+// ======================================
+// Animation Durations
+// ======================================
+
+$transition-fast: 0.15s;
+$transition-normal: 0.3s;
+$transition-slow: 0.5s;
+
+// ======================================
+// Animation Easing
+// ======================================
+
+$ease-default: ease;
+$ease-in-out: ease-in-out;
+$ease-out: ease-out;
+
+// ======================================
+// Header Heights
+// ======================================
+
+$public-header-height: 80px;
+$dashboard-header-height: 72px;
+
+// ======================================
+// Form Controls
+// ======================================
+
+$input-height-sm: 36px;
+$input-height-md: 44px;
+$input-height-lg: 52px;
+
+// ======================================
+// Button Heights
+// ======================================
+
+$button-height-sm: 36px;
+$button-height-md: 44px;
+$button-height-lg: 52px;
+
+// ======================================
+// Card Defaults
+// ======================================
+
+$card-padding: 1.5rem;
+
+// ======================================
+// Landing Page Sections
+// ======================================
+
+$section-padding-y: 6rem;
+$section-padding-x: 1rem;
+
+// ======================================
+// Dashboard
+// ======================================
+
+$dashboard-card-height: 140px;

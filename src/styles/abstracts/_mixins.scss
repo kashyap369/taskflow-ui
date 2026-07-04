@@ -1,0 +1,25 @@
+// _mixins.scss
+
+@import './typography';
+
+@mixin heading-1 {
+  font-size: $fs-h1;
+  font-weight: $fw-bold;
+  line-height: $lh-heading;
+}
+
+@mixin heading-2 {
+  font-size: $fs-h2;
+  font-weight: $fw-bold;
+  line-height: $lh-heading;
+}
+
+@mixin body-md {
+  font-size: $fs-body-md;
+  line-height: $lh-normal;
+}
+
+@mixin body-sm {
+  font-size: $fs-body-sm;
+  line-height: $lh-normal;
+}

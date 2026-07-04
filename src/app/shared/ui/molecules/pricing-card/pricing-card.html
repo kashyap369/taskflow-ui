@@ -1,0 +1,72 @@
+<div
+    class="pricing-card"
+    [class.popular]="plan().popular">
+
+    @if(plan().popular){
+
+    <div class="popular-badge">
+
+        MOST POPULAR
+
+    </div>
+
+    }
+
+    <h3>
+
+        {{plan().title}}
+
+    </h3>
+
+    <p class="description">
+
+        {{plan().description}}
+
+    </p>
+
+    <div class="price-section">
+
+        <span class="price">
+
+            {{plan().price}}
+
+        </span>
+
+        @if(plan().duration){
+
+        <span class="duration">
+
+            {{plan().duration}}
+
+        </span>
+
+        }
+
+    </div>
+
+    <button
+        class="btn w-100 mt-4"
+        [class.btn-dark]="!plan().outlineButton"
+        [class.btn-outline-dark]="plan().outlineButton">
+
+        {{plan().buttonText}}
+
+    </button>
+
+    <ul class="feature-list">
+
+        @for(feature of plan().features; track feature){
+
+        <li>
+
+            <i class="bi bi-check-circle"></i>
+
+            {{feature}}
+
+        </li>
+
+        }
+
+    </ul>
+
+</div>

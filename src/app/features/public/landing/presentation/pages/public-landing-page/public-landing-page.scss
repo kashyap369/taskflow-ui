@@ -1,0 +1,279 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: #f8f9fc;
+}
+
+.hero-badge {
+  border: 1px solid #e9ecef;
+  border-radius: 50rem;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.badge-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c63ff, #2196f3);
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #6c3bff, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-description {
+  max-width: 700px;
+}
+
+.btn-dark,
+.btn-outline-secondary {
+  transition: 0.3s ease;
+}
+
+.btn-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: auto;
+    padding: 5rem 0;
+  }
+
+  .display-1 {
+    font-size: 3rem;
+  }
+}
+
+/// hero _ 2*************************************************************  *
+#hero_2 {
+  background: #f8f9fc;
+}
+
+.dashboard {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.browser-header {
+  background: #f7f8fc;
+  border-bottom: 1px solid #ececec;
+}
+
+.browser-dots {
+  display: flex;
+  gap: 0.4rem;
+
+  span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: block;
+  }
+
+  .red {
+    background: #ff5f57;
+  }
+
+  .yellow {
+    background: #febc2e;
+  }
+
+  .green {
+    background: #28c840;
+  }
+}
+
+.sidebar {
+  border-right: 1px solid #ececec;
+}
+
+.logo-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c63ff, #8b5cf6);
+}
+
+.nav-item {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.active-item {
+  background: #eef1f6;
+  color: #111;
+  font-weight: 600;
+}
+
+.stat-card {
+  padding: 1.5rem;
+  border-radius: 20px;
+}
+
+.stat-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+
+.purple {
+  background: #7c3aed;
+}
+
+.green {
+  background: #10b981;
+}
+
+.blue {
+  background: #3b82f6;
+}
+
+.kanban {
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 20px;
+  padding: 1rem;
+}
+
+.task-card {
+  background: white;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.line {
+  height: 8px;
+  border-radius: 100px;
+  background: #d6d9df;
+}
+
+.long {
+  width: 80%;
+  background: #5d6472;
+}
+
+.short {
+  width: 55%;
+  margin-top: 0.5rem;
+}
+
+.avatars {
+  display: flex;
+
+  span {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #8b5cf6;
+    border: 2px solid #fff;
+    margin-left: -4px;
+  }
+}
+
+@media (max-width: 991px) {
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid #ececec;
+  }
+}
+
+// workflow css below
+.workflow {
+  background: #f8f9fc;
+}
+
+.section-label {
+  color: #5b4dff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.workflow-step {
+  gap: 1.25rem;
+}
+
+.step-number {
+  color: #5b4dff;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 50px;
+}
+
+.workflow-card {
+  background: #fff;
+  border: 1px solid #ececec;
+  border-radius: 24px;
+  padding: 2rem;
+}
+
+.status-pill {
+  background: #dff7ea;
+  color: #1b9b67;
+  padding: 0.35rem 0.85rem;
+  border-radius: 50rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.progress-item {
+  margin-bottom: 1.5rem;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 50rem;
+  background: #eceef4;
+}
+
+.progress-bar {
+  background: #6c4cff;
+  border-radius: inherit;
+}
+
+.progress-64 {
+  width: 64%;
+}
+
+.progress-38 {
+  width: 38%;
+}
+
+.progress-12 {
+  width: 12%;
+}
+
+@media (max-width: 991px) {
+  .workflow-card {
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+
+  .step-number {
+    font-size: 1.6rem;
+    min-width: 40px;
+  }
+
+  .workflow-card {
+    padding: 1.5rem;
+  }
+}

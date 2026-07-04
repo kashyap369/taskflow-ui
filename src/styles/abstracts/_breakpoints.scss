@@ -1,0 +1,62 @@
+// ======================================
+// Bootstrap 5 Breakpoints breakpoint.sccs
+// ======================================
+
+$sm: 576px;
+$md: 768px;
+$lg: 992px;
+$xl: 1200px;
+$xxl: 1400px;
+
+// ======================================
+// Mobile First Mixins
+// Use only when Bootstrap utilities
+// are not enough.
+// ======================================
+
+@mixin md {
+@media (min-width: $md) {
+@content;
+}
+}
+
+@mixin lg {
+@media (min-width: $lg) {
+@content;
+}
+}
+
+@mixin xl {
+@media (min-width: $xl) {
+@content;
+}
+}
+
+@mixin xxl {
+@media (min-width: $xxl) {
+@content;
+}
+}
+
+// ======================================
+// Utility Mixins
+// For rare custom responsive cases
+// ======================================
+
+@mixin min-width($width) {
+@media (min-width: $width) {
+@content;
+}
+}
+
+@mixin max-width($width) {
+@media (max-width: $width) {
+@content;
+}
+}
+
+@mixin between($min, $max) {
+@media (min-width: $min) and (max-width: $max) {
+@content;
+}
+}

@@ -1,0 +1,14 @@
+@import '../abstracts/radius';
+
+.modal-content {
+  border: none;
+  border-radius: $radius-2xl;
+}
+
+.modal-header {
+  border-bottom: 1px solid #eee;
+}
+
+.modal-footer {
+  border-top: 1px solid #eee;
+}

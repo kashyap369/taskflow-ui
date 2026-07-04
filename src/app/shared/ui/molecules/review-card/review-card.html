@@ -1,0 +1,26 @@
+<div class="review-card">
+  <div class="rating">
+    @for (star of stars(); track $index) {
+      <lucide-angular name="Stars" size="20"></lucide-angular>
+    }
+  </div>
+
+  <p class="review-text">"{{ review().review }}"</p>
+
+  <div class="reviewer">
+    <div class="avatar" [style.background]="review().avatarColor || '#7C4DFF'">
+      {{ review().avatar || review().name.charAt(0) }}
+    </div>
+
+    <div>
+      <h6>
+        {{ review().name }}
+      </h6>
+
+      <span>
+        {{ review().designation }},
+        {{ review().company }}
+      </span>
+    </div>
+  </div>
+</div>

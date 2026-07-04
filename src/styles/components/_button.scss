@@ -1,0 +1,37 @@
+@import '../abstracts/colors';
+@import '../abstracts/radius';
+
+.btn-primary-custom {
+  background: $gray-900;
+  color: $white;
+  border: none;
+  border-radius: $radius-full;
+  padding: .85rem 1.75rem;
+  font-weight: 600;
+  transition: .3s;
+}
+
+.btn-primary-custom:hover {
+  opacity: .9;
+}
+
+.btn-outline-custom {
+  background: $white;
+  color: $text-primary;
+  border: 1px solid $border-light;
+  border-radius: $radius-full;
+  padding: .85rem 1.75rem;
+  transition: .3s;
+}
+
+.btn-outline-custom:hover {
+  background: $bg-secondary;
+}
+
+.btn-gradient {
+  background: $gradient-primary;
+  color: white;
+  border: none;
+  border-radius: $radius-full;
+  padding: .85rem 1.75rem;
+}

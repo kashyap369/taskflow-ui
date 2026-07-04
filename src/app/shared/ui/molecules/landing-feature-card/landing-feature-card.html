@@ -1,0 +1,17 @@
+<div class="feature-card">
+  <div
+    class="feature-icon"
+    [style.background]="feature().iconBackground"
+    [style.color]="feature().iconColor || '#ffffff'"
+  >
+    <lucide-angular [name]="feature().icon" [size]="22"> </lucide-angular>
+  </div>
+
+  <h3>
+    {{ feature().title }}
+  </h3>
+
+  <p>
+    {{ feature().description }}
+  </p>
+</div>

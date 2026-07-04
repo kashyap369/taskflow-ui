@@ -1,0 +1,29 @@
+<div class="health-card">
+  <div class="mb-4">
+    <h5>Project health</h5>
+
+    <p>4 active projects</p>
+  </div>
+
+  <div class="row align-items-center">
+    <div class="col-lg-6 col-md-5">
+      <div echarts class="donut-chart" [options]="chartOption"></div>
+    </div>
+
+    <div class="col-lg-6 col-md-7">
+      @for (item of status; track item.name) {
+        <div class="legend-item">
+          <div class="legend-left">
+            <span class="legend-color" [style.background]="item.color"> </span>
+
+            {{ item.name }}
+          </div>
+
+          <strong>
+            {{ item.value }}
+          </strong>
+        </div>
+      }
+    </div>
+  </div>
+</div>

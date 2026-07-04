@@ -1,0 +1,161 @@
+.pricing-card {
+
+    position: relative;
+
+    background: white;
+
+    border: 1px solid #E5E7EB;
+
+    border-radius: 24px;
+
+    padding: 2rem;
+
+    height: 100%;
+
+    transition: .3s;
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+.pricing-card:hover{
+
+    transform: translateY(-6px);
+
+    box-shadow: 0 20px 45px rgba(0,0,0,.08);
+
+}
+
+.popular{
+
+    border:2px solid #7C4DFF;
+
+}
+
+.popular-badge{
+
+    position:absolute;
+
+    top:-14px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:#6D4CFF;
+
+    color:white;
+
+    padding:8px 18px;
+
+    border-radius:999px;
+
+    font-size:.75rem;
+
+    font-weight:700;
+
+    letter-spacing:.5px;
+
+}
+
+h3{
+
+    font-size:2rem;
+
+    font-weight:700;
+
+    margin-bottom:.75rem;
+
+}
+
+.description{
+
+    color:#6B7280;
+
+    margin-bottom:2rem;
+
+    min-height:52px;
+
+}
+
+.price-section{
+
+    display:flex;
+
+    align-items:flex-end;
+
+    gap:.5rem;
+
+}
+
+.price{
+
+    font-size:3rem;
+
+    font-weight:800;
+
+    line-height:1;
+
+}
+
+.duration{
+
+    color:#6B7280;
+
+    margin-bottom:.45rem;
+
+}
+
+.btn{
+
+    border-radius:999px;
+
+    padding:.9rem;
+
+    font-weight:600;
+
+}
+
+.feature-list{
+
+    list-style:none;
+
+    margin:2rem 0 0;
+
+    padding:0;
+
+}
+
+.feature-list li{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.75rem;
+
+    margin-bottom:1rem;
+
+    color:#374151;
+
+}
+
+.feature-list i{
+
+    color:#00C875;
+
+    font-size:1.1rem;
+
+}
+
+@media(max-width:991px){
+
+    .pricing-card{
+
+        margin-bottom:2rem;
+
+    }
+
+}

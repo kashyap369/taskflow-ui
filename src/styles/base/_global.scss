@@ -1,0 +1,36 @@
+@import '../abstracts/colors';
+@import '../abstracts/typography';
+
+body {
+  font-family: $font-family-base;
+  color: $text-primary;
+  background-color: $bg-primary;
+  line-height: $lh-normal;
+  overflow-x: hidden;
+}
+
+.container-fluid {
+  padding-inline: 1rem;
+}
+
+.section {
+  padding: 6rem 0;
+}
+
+.section-sm {
+  padding: 4rem 0;
+}
+
+.section-lg {
+  padding: 8rem 0;
+}
+
+.text-gradient {
+  background: $gradient-primary;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

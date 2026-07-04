@@ -1,0 +1,19 @@
+<div class="chart-card">
+  <div class="chart-header">
+    <div>
+      <h5>Productivity this week</h5>
+
+      <p>Tasks completed vs. created · focus score</p>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn" [class.active]="selectedView === 'Week'">Week</button>
+
+      <button class="btn">Month</button>
+
+      <button class="btn">Quarter</button>
+    </div>
+  </div>
+
+  <div echarts class="chart" [options]="chartOption"></div>
+</div>

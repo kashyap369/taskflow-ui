@@ -1,0 +1,141 @@
+<section class="dashboard-hero">
+  <div class="container-fluid">
+    <div class="hero-card">
+      <div class="row align-items-center gy-4">
+        <!-- Left -->
+
+        <div class="col-lg-8">
+          <span class="workspace-badge">
+            <lucide-angular name="Sparkles" size="14"> </lucide-angular>
+
+            Acme Inc.
+          </span>
+
+          <h1 class="hero-title">
+            Good morning,
+
+            <span>Avery</span>
+          </h1>
+
+          <p class="hero-text">You have 9 active tasks across 4 projects today.</p>
+        </div>
+
+        <!-- Right -->
+
+        <div class="col-lg-4">
+          <div
+            class="d-flex justify-content-lg-end justify-content-start align-items-center gap-3 flex-wrap"
+          >
+            <!-- Score -->
+
+            <div class="score-card">
+              <div class="score-ring">
+                <div>
+                  <h3>67</h3>
+
+                  <small>SCORE</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+
+            <div class="hero-actions">
+              <button class="btn btn-primary btn-task">
+                <lucide-angular name="Plus" size="18"> </lucide-angular>
+
+                New task
+              </button>
+
+              <button class="btn btn-report">
+                View report
+
+                <lucide-angular name="ArrowRight" size="18"> </lucide-angular>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stats-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="icon purple">
+              <lucide-angular name="FolderKanban" size="20"></lucide-angular>
+            </div>
+
+            <small class="stats-info">+2 this month</small>
+          </div>
+
+          <h2>4</h2>
+
+          <p>Projects</p>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stats-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="icon blue">
+              <lucide-angular name="CheckCheck" size="20"></lucide-angular>
+            </div>
+
+            <small class="stats-info">11 total</small>
+          </div>
+
+          <h2>9</h2>
+
+          <p>Active Tasks</p>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stats-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="icon green">
+              <lucide-angular name="CircleCheckBig" size="20"></lucide-angular>
+            </div>
+
+            <small class="stats-info">+18% wk/wk</small>
+          </div>
+
+          <h2>2</h2>
+
+          <p>Completed</p>
+        </div>
+      </div>
+
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stats-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div class="icon orange">
+              <lucide-angular name="TriangleAlert" size="20"></lucide-angular>
+            </div>
+
+            <small class="stats-info">Needs attention</small>
+          </div>
+
+          <h2>2</h2>
+
+          <p>Overdue</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-2 g-4">
+      <!-- Productivity Chart -->
+
+      <div class="col-12 col-xl-8">
+        <app-productivity-chart />
+      </div>
+
+      <!-- Project Health -->
+
+      <div class="col-12 col-xl-4">
+        <app-project-health-chart />
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,205 @@
+<div class="organization-layout d-flex">
+  <!-- Sidebar will come later -->
+  <aside class="sidebar d-none d-lg-flex flex-column">
+    <!-- Logo -->
+
+    <div class="logo">
+      <div class="logo-icon">
+        <lucide-angular name="Sparkles" size="18"></lucide-angular>
+      </div>
+
+      <div>
+        <h5>TaskFlow</h5>
+        <small>Premium workspace</small>
+      </div>
+    </div>
+
+    <!-- Workspace -->
+
+    <div class="workspace-card">
+      <div class="workspace-avatar">AC</div>
+
+      <div class="workspace-content">
+        <h6>Acme Inc.</h6>
+
+        <small>Business · 28 members</small>
+      </div>
+
+      <lucide-angular name="ChevronDown" size="18"> </lucide-angular>
+    </div>
+
+    <!-- Workspace Title -->
+
+    <span class="section-title"> WORKSPACE </span>
+
+    <!-- Navigation -->
+
+    <nav class="sidebar-nav">
+      <a class="active">
+        <lucide-angular name="LayoutDashboard"></lucide-angular>
+
+        Dashboard
+      </a>
+
+      <a>
+        <lucide-angular name="FolderKanban"></lucide-angular>
+
+        Projects
+      </a>
+
+      <a>
+        <lucide-angular name="CheckSquare"></lucide-angular>
+
+        Tasks
+      </a>
+
+      <a>
+        <lucide-angular name="CalendarDays"></lucide-angular>
+
+        Calendar
+      </a>
+
+      <a>
+        <lucide-angular name="Users"></lucide-angular>
+
+        Team
+      </a>
+
+      <a>
+        <lucide-angular name="BarChart3"></lucide-angular>
+
+        Reports
+      </a>
+
+      <a>
+        <lucide-angular name="Settings"></lucide-angular>
+
+        Settings
+      </a>
+    </nav>
+
+    <!-- Pinned -->
+
+    <span class="section-title mt-4"> PINNED </span>
+
+    <div class="pinned-list">
+      <a>
+        <span class="dot blue"></span>
+
+        Atlas Design System
+      </a>
+
+      <a>
+        <span class="dot blue"></span>
+
+        Mobile App v3
+      </a>
+
+      <a>
+        <span class="dot purple"></span>
+
+        Q3 Marketing Launch
+      </a>
+    </div>
+
+    <div class="flex-grow-1"></div>
+
+    <!-- Upgrade Card -->
+
+    <div class="upgrade-card">
+      <div class="upgrade-title">
+        <lucide-angular name="Crown" size="18"> </lucide-angular>
+
+        Upgrade to Business
+      </div>
+
+      <p>Unlock advanced reports, unlimited members and custom roles.</p>
+
+      <button class="btn btn-upgrade">See plans</button>
+    </div>
+
+    <!-- Help -->
+
+    <a class="help-link">
+      <lucide-angular name="CircleHelp"> </lucide-angular>
+
+      Help & Support
+    </a>
+  </aside>
+
+  <div class="layout-wrapper flex-grow-1">
+    <!-- ========================= -->
+    <!-- Header -->
+    <!-- ========================= -->
+
+    <header class="top-header">
+      <div class="container-fluid h-100">
+        <div class="d-flex align-items-center justify-content-between h-100">
+          <!-- Left -->
+
+          <div class="header-left d-flex align-items-center">
+            <!-- Mobile Toggle -->
+
+            <button class="btn btn-link d-lg-none p-0 me-3" type="button">
+              <lucide-angular name="Menu" size="22"> </lucide-angular>
+            </button>
+
+            <!-- Search -->
+
+            <div class="search-box">
+              <lucide-angular name="Search" class="search-icon" size="18"> </lucide-angular>
+
+              <input type="text" placeholder="Search projects, tasks, people..." />
+
+              <div class="shortcut">⌘ K</div>
+            </div>
+          </div>
+
+          <!-- Right -->
+
+          <div class="header-right d-flex align-items-center">
+            <!-- Create -->
+
+            <button class="btn btn-create">
+              <lucide-angular name="Plus" size="18"> </lucide-angular>
+
+              Create
+            </button>
+
+            <!-- Notification -->
+
+            <button class="icon-btn position-relative">
+              <lucide-angular name="Bell" size="18"> </lucide-angular>
+
+              <span class="notification-badge"> 3 </span>
+            </button>
+
+            <!-- Settings -->
+
+            <button class="icon-btn">
+              <lucide-angular name="Settings" size="18"> </lucide-angular>
+            </button>
+
+            <!-- User -->
+
+            <div class="user-profile">
+              <img src="https://i.pravatar.cc/60?img=32" alt="user" />
+
+              <div>
+                <h6>Avery Mitchell</h6>
+
+                <small>avery@taskflow.app</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Router -->
+
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+@import '../abstracts/colors' ;
+@import '../abstracts/radius' ;
+
+.form-control,
+.form-select {
+  border-radius: $radius-lg;
+  border: 1px solid $border-light;
+  min-height: 48px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: $primary-500;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, .15);
+}
+
+textarea.form-control {
+  min-height: 120px;
+}

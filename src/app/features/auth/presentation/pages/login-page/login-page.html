@@ -1,0 +1,188 @@
+<section class="login-page">
+  <div class="container-fluid h-100">
+    <div class="row h-100 g-0">
+      <!-- LEFT PANEL -->
+      <div class="col-lg-6">
+        <div class="left-panel">
+          <!-- Logo -->
+          <div class="logo">
+            <div class="logo-icon">✦</div>
+
+            <h4 class="mb-0 fw-bold">TaskFlow</h4>
+          </div>
+
+          <!-- Login Content -->
+          <div class="login-container">
+            <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
+              <h1 class="fw-bold mb-2">Welcome back</h1>
+
+              <p class="text-secondary mb-4">Sign in to continue to your TaskFlow workspace.</p>
+
+              <!-- Google Button -->
+
+              <button type="button" class="btn btn-google w-100">
+                <img
+                  src="https://www.svgrepo.com/show/475656/google-color.svg"
+                  width="18"
+                  alt="Google"
+                />
+
+                Continue with Google
+              </button>
+
+              <!-- Divider -->
+
+              <div class="divider my-4">
+                <span>OR WITH EMAIL</span>
+              </div>
+
+              <!-- Email -->
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold" for="email"> Email </label>
+
+                <div class="input-wrapper">
+                  <span class="input-icon"> ✉ </span>
+
+                  <input
+                    id="email"
+                    type="email"
+                    class="form-control"
+                    placeholder="Enter your email"
+                    formControlName="email"
+                  />
+                </div>
+
+                @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+                  <small class="text-danger">
+                    @if (loginForm.controls.email.hasError('required')) {
+                      Email is required.
+                    }
+
+                    @if (loginForm.controls.email.hasError('email')) {
+                      Enter a valid email address.
+                    }
+                  </small>
+                }
+              </div>
+
+              <!-- Password -->
+
+              <div class="mb-2">
+                <div class="d-flex justify-content-between">
+                  <label class="form-label fw-semibold" for="password"> Password </label>
+
+                  <a href="#" class="forgot-link"> Forgot? </a>
+                </div>
+
+                <div class="input-wrapper">
+                  <span class="input-icon"> 🔒 </span>
+
+                  <input
+                    id="password"
+                    type="password"
+                    class="form-control"
+                    placeholder="Enter your password"
+                    formControlName="password"
+                  />
+
+                  <span class="eye-icon"> 👁 </span>
+                </div>
+
+                @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+                  <small class="text-danger"> Password is required. </small>
+                }
+              </div>
+
+              <!-- Remember -->
+
+              <div class="form-check mb-4">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="rememberMe"
+                  formControlName="rememberMe"
+                />
+
+                <label class="form-check-label" for="rememberMe">
+                  Keep me signed in for 30 days
+                </label>
+              </div>
+
+              <!-- Submit -->
+
+              <button type="submit" class="btn btn-dark btn-login" [disabled]="loginForm.invalid">
+                Sign in
+
+                <span class="ms-2"> → </span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Bottom Link -->
+          <div class="signup-link">
+            Don't have an account?
+
+            <a href="#">Create one</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="right-panel">
+          <div class="hero-content">
+            <div>
+              <span class="hero-tag"> THE PREMIUM WORKSPACE </span>
+
+              <h2 class="hero-title mt-4">
+                "TaskFlow gave our team a single source of truth—clarity, speed, and finally a
+                workspace people actually enjoy opening every day."
+              </h2>
+            </div>
+
+            <!-- Author -->
+
+            <div class="author mt-5">
+              <div class="author-avatar">SL</div>
+
+              <div>
+                <h6 class="mb-1">Sarah Lin</h6>
+
+                <small> VP Engineering, Northwind </small>
+              </div>
+            </div>
+
+            <!-- Stats -->
+
+            <div class="row g-3 mt-5">
+              <div class="col-4">
+                <div class="stat-card">
+                  <h2>10k+</h2>
+
+                  <p>Teams</p>
+                </div>
+              </div>
+
+              <div class="col-4">
+                <div class="stat-card">
+                  <h2>99.99%</h2>
+
+                  <p>Uptime</p>
+                </div>
+              </div>
+
+              <div class="col-4">
+                <div class="stat-card">
+                  <h2>4.9/5</h2>
+
+                  <p>G2 Rating</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
