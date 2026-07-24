@@ -1,0 +1,90 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Teams</h1>
+        <p>Group people into teams inside {{ currentOrg()?.name ?? 'your organization' }}.</p>
+      </div>
+      @if (!needsOrganization()) {
+        <button class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="18"></lucide-angular>
+          New team
+        </button>
+      }
+    </div>
+
+    @if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h3>No organization yet</h3>
+        <p>Create your organization from the dashboard to start adding teams.</p>
+        <a routerLink="/organization/dashboard" class="btn-primary-cta">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else if (loading() && !hasTeams()) {
+      <div class="lottie-state">
+        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading teams" />
+        <p>Loading teams…</p>
+      </div>
+    } @else if (!hasTeams()) {
+      <div class="lottie-state">
+        <app-lottie-player src="/lottie/empty.json" [width]="150" [height]="150" ariaLabel="No teams yet" />
+        <h3>No teams yet</h3>
+        <p>Create a team like “Design” or “Engineering” to organize your people.</p>
+        <button class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="16"></lucide-angular> New team
+        </button>
+      </div>
+    } @else {
+      <div class="team-grid">
+        @for (team of teams(); track team.id) {
+          <article class="team-card">
+            <span class="team-icon"><lucide-angular name="Users" size="18"></lucide-angular></span>
+            <h3>{{ team.name }}</h3>
+            @if (team.description) {
+              <p>{{ team.description }}</p>
+            }
+            <div class="team-foot">
+              <span class="member-count">
+                {{ team.memberCount }} {{ team.memberCount === 1 ? 'member' : 'members' }}
+              </span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Create team drawer -->
+  @if (showCreate()) {
+    <div class="drawer-backdrop" (click)="closeCreate()"></div>
+    <aside class="drawer">
+      <div class="drawer-head">
+        <h2>New team</h2>
+        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+      <form class="drawer-form" [formGroup]="createForm" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="name" class="form-label">Team name</label>
+          <input id="name" type="text" class="form-control" placeholder="Design Team" formControlName="name" />
+          @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
+            <small class="field-msg">A team name is required.</small>
+          }
+        </div>
+        <div class="field">
+          <label for="description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="description" rows="3" class="form-control" placeholder="What does this team do?" formControlName="description"></textarea>
+        </div>
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            {{ saving() ? 'Creating…' : 'Create team' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

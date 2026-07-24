@@ -5,6 +5,144 @@
 > consumes it and is at the start of feature build-out. Phase order roughly follows the backend so
 > each frontend phase has a working API behind it.
 
+## Current Status (2026-07-25, Phase 7 — Task assignment + Project detail)
+- ✅ **Task assignment.** Repository `assignTask(taskId,userId)`/`unassignTask(taskId)` →
+  `PUT /task/{id}/assign/{userId}` | `/task/{id}/unassign`. Facade actions reload org tasks + summary
+  (and the open project's tasks). The **Tasks page** and **Project detail** each row now has an
+  **assignee `<select>`** (Unassigned + members) that assigns/unassigns on change.
+- ✅ **Project detail page** (`project-detail-page`, 5 files) at `/organization/projects/:id`: header
+  (status badge, description, dates, progress bar from `GET /project/{id}`), a tasks table
+  (`GET /task/project/{id}`) with assignee + start/complete, and a **create-task drawer scoped to the
+  project** (`createProjectTask` → `POST /task` with the projectId). Project cards got an **Open →** link.
+- ✅ **Verified the whole work-management loop live**: opened Website Redesign → created "Build the
+  responsive nav bar" (header recomputed to **1/2 tasks, 50%**) → assigned it to Jane
+  (`PUT /task/3/assign/2 → 204`) → **member report for Jane now shows Assigned: 1**. Reports finally
+  populate with real workload. `ng build` passes; responsive (table reflows, header stacks).
+- ⚠️ **Backend gap found:** `CreateTask` requires a valid `OrganizationId` (404s otherwise) and there is
+  **no endpoint to create a personal/org-less task** — only `GET /task/mine/personal` (read). So the
+  Member (Individual) portal's core "create personal task" isn't buildable via the current API; it's
+  backend-blocked. To make assignment testable, jane (userId 2) was added as an active Manager member of
+  org 2 directly in the dev DB (`OrganizationMembers` was empty; no accept-invitation flow available to us).
+- ⏭️ **Next:** team member add/remove (`/team/{id}/members/{userId}`) + team detail; subtasks UI
+  (`/subtask`); work-log/time-tracking UI; org switcher; then either unblock the Member portal (needs a
+  backend personal-task create endpoint) or extend design tokens to the org portal (still light-only).
+
+## Current Status (2026-07-24, Phase 6 — Reporting)
+- ✅ **Reports page** (`reports-page`, 5 files) wired to `/report/*` (all raw DTOs). A **date-window**
+  control (Week/Month/Year/All-time presets + From/To inputs) drives the reports reactively via two
+  `effect()`s (one for team, one for member) that reload when the org resolves or the window changes.
+  - **Team performance** — `GET /report/team/{orgId}?from&to` (returns a LIST): an **echarts** grouped
+    bar chart (Assigned vs Completed per team) + a table (members/assigned/completed/tracked-hrs/avg-days).
+  - **Member report** — member selector (from members list) → `GET /report/member/{userId}?from&to`
+    (single DTO) → six stat tiles (created/assigned/completed/in-progress/overdue/tracked). Shows a hint
+    linking to Members when the org has no active members yet.
+  - **Project report** — project selector → `GET /report/project/{projectId}` (single DTO, no date
+    window) → a completion **ring** (conic-gradient), tasks/tracked-hours, and a per-member workload table.
+- ✅ Route `/organization/reports` + Reports sidebar link enabled (only Calendar remains "Coming soon").
+  Date inputs forced to `color-scheme: light` so native pickers match the light theme.
+- ✅ **Verified live**: team report loads + reloads on preset change (`?from&to` window updates), project
+  report for "Website Redesign" shows **100% complete, 1/1 tasks**; member report shows the empty-member
+  hint (no accepted members in the test org). Responsive: chart/tables scroll, two-col collapses, tiles
+  reflow. `ng build` passes.
+- ⏭️ **Next:** project **detail** page (tasks under a project) + task **assign/unassign** UI (so member/
+  project reports get populated workloads), team member add/remove (`/team/{id}/members/{userId}`), org
+  switcher, member portal (Phase 5 in the old numbering), and extending design tokens to the org portal.
+
+## Current Status (2026-07-24, Phase 5 — Roles/Members/Teams + Lottie)
+- ✅ **Lottie infrastructure.** `provideLottieOptions({ player: () => import('lottie-web') })` in
+  `app.config.ts`; new reusable atom `shared/ui/atoms/animations/lottie-player/` (wraps `<ng-lottie>`,
+  inputs: `src`/`width`/`height`/`loop`/`ariaLabel`). Two **hand-authored, offline-safe** JSONs in
+  `public/lottie/` (`loading-dots.json`, `empty.json` — no external fetch, so CSP/offline-safe). Used
+  for loading/empty states on the new pages. Verified rendering in-browser (lottie-web parses the JSON
+  into SVG; the `lottie-web is not ESM` build warning is harmless).
+- ✅ **Roles & Permissions page** (`roles-page`) — list roles, create role, and a **permissions editor**
+  drawer with the grantable **catalog** (`GET /organizationrole/permissions`) as toggle switches;
+  grant/revoke by **permission NAME** (`POST grant-permission`/`revoke-permission`). Verified: create
+  role + grant persists.
+- ✅ **Members + Invitations page** (`members-page`) — members list (change-role inline select,
+  activate/deactivate, remove) + **pending invitations** (invite into a role → `POST invite`, cancel).
+  Note: **inviting requires a role first** (a notice links to Roles when none exist). Verified: invited
+  jane@example.com into Manager → appears as Pending.
+- ✅ **Teams page** (`teams-page`) — list + create (`POST /team`). Verified: created "Engineering".
+- ✅ **Facade/repo/models extended** for roles/members/invitations/teams (all raw, unenveloped). `loadOrgData`
+  now forkJoins these alongside summary/projects/tasks; permission catalog fetched once. Added
+  `ApiService.delete(endpoint, body?)` for remove-member (DELETE-with-body). Sidebar nav now routes
+  Members/Teams/Roles (Calendar/Reports still "Coming soon").
+- ✅ **Responsive**: verified no horizontal overflow at 375px; sidebar collapses, member rows reflow to a
+  stacked grid, card grids use `auto-fill minmax`, drawers go full-width. `ng build` passes.
+- ⚠️ **Gotcha:** creating an org seeds **no roles**, and Invite needs an `organizationRoleId` — so Roles
+  is a prerequisite for Invitations (surfaced in the UI). Invite is slow (~3.5s: backend sends an email).
+- ⏭️ **Next:** Reporting pages (dashboard already done; add member/team/project reports with From/To date
+  windows via `/report/member|team|project`), project **detail** + task assign/unassign UI, team member
+  management (add/remove via `/team/{id}/members/{userId}`), org switcher, and extend design tokens to the
+  org portal (still light-only hardcoded colors).
+
+## Current Status (2026-07-24, Phase 4 — Organization portal wired to the live API)
+- ✅ **Org portal foundation.** `features/organization/organization.models.ts` (DTOs + enums
+  `OrganizationStatus`/`ProjectStatus`/`TaskStatus`/`TaskPriority` with exact API int values + label/tone
+  helpers), `organization.repository.ts` (getMyOrganizations, getDashboard, getProjects, getTasks,
+  createOrganization/Project/Task, start/completeTask), `organization.facade.ts` (signals: currentOrg,
+  summary, projects, tasks; resolves the current org via `/organization/mine` and persists the selected
+  id; `needsOrganization` drives onboarding). **All non-Auth endpoints return RAW values (no
+  `ApiResponse<T>` envelope)** — repositories are typed to the bare DTOs. `core/api/api-endpoints.ts`
+  extended with Organization/Report/Project/Task route builders.
+- ✅ **Dashboard wired to real data.** `dashboard-page` now shows the live `DashboardSummary` (projects,
+  active/completed/overdue tasks, members/teams, tracked hours), a **recent-projects** panel, and a real
+  **task-status donut** (made `ProjectHealthChart` `input()`-driven). Includes a **create-organization
+  onboarding** state for freshly registered org accounts (register does NOT create an org).
+- ✅ **Projects page** (`projects-page`, 5 files) — live list from `/project/organization/{id}` as cards
+  (status badge + progress), **create-project** slide-in drawer → `POST /project`.
+- ✅ **Tasks page** (`tasks-page`, 5 files) — live list from `/task/organization/{id}` as a table
+  (status/priority badges, subtask progress), **create-task** drawer (priority + project select fed from
+  real projects) → `POST /task`, and **Start/Complete lifecycle** → `PUT /task/{id}/start|complete`.
+- ✅ **Sidebar routing** — org-layout nav wired with `routerLink`/`routerLinkActive` (Dashboard/Projects/
+  Tasks); not-yet-built items (Calendar/Team/Reports/Settings) shown disabled ("Coming soon").
+- ✅ **FIXED a latent Phase-2 auth bug** exposed by the live API: `GET /user/me` returns the DTO **raw**
+  (not enveloped), but the login flow read `profileRes.data` → `undefined` → `toUser` threw inside the
+  `next` handler, so the token was stored but the user principal wasn't and login silently didn't
+  redirect. `auth.repository.me()` now returns the raw `UserProfileResponse`; `auth.facade` maps it
+  directly. Login → `/organization` now works.
+- ✅ **Verified end-to-end against the running API** (localhost:4200 → https://localhost:7086): register
+  org account → login → create org (Northwind Labs) → dashboard (real summary) → create project → create
+  task under it → Start → Complete → dashboard reflects 1 project / 1 completed task. `ng build` passes.
+- ⚠️ **Testing gotchas (see SESSIONS):** (1) new users are `PendingVerification` and login returns
+  `EMAIL_NOT_VERIFIED` — there's **no email-verification endpoint** (backend leftover); to test, the
+  user's `Status`/`IsEmailVerified` were set in the dev DB. (2) BCrypt is very slow on this machine
+  (~5s/hash) — concurrent login attempts saturate the API; do one at a time.
+- ⏭️ **Next (remaining org pages):** Teams, Members + Invitations, Roles + Permissions, and the
+  Reporting pages (member/team/project reports with date windows). Each needs its controller/DTOs read
+  and a page built. Also: org switcher UI (facade already supports multiple orgs), and extend the design
+  tokens to the org portal (currently light-only hardcoded colors).
+
+## Current Status (2026-07-24, Phase 2c — register + refresh rotation + org logout)
+- ✅ **Register wired end-to-end.** New `features/auth/register-page/` (5 files) — a themed two-panel
+  screen mirroring the login design, with an **account-type toggle** (Individual / Organization) that
+  feeds the API's `accountType` int (Individual = 1, Organization = 2). Reactive form validates to the
+  backend's `RegisterUserCommandValidator` rules (names ≤100, email, phone 10–20, password ≥8 with
+  upper/lower/digit) plus a client-only **confirm-password** cross-field validator and a terms checkbox.
+  `auth.models.ts` adds `RegisterRequest`/`RegisterPayload` + `accountTypeToInt`/`toRegisterPayload`;
+  `auth.repository.register()` posts to `/auth/register`; `auth.facade.register()` shows a success toast
+  and routes to the matching login variant (org → `/auth/organization`, else `/auth/login`). Route
+  `/auth/register` added. Links wired: login "Create one" → register, public header "Get started" →
+  register. Verified live: renders (both fields + toggle + showcase), required-field + password-mismatch
+  validation fire, Organization toggle activates. `ng build` passes. (Live `/auth/register` POST not
+  exercised — no API running, same constraint as login.)
+- ✅ **Refresh-token rotation** — new `core/interceptors/refresh.interceptor.ts` (registered **last** in
+  the pipeline, innermost). On a `401` from a protected endpoint it calls `POST /auth/refresh` with the
+  stored refresh token, swaps tokens via new `TokenService.updateTokens()` (preserves the remember-me
+  storage + user principal), and **retries the original request once**. Single-flight lock
+  (`isRefreshing` + a `BehaviorSubject`) queues concurrent 401s and replays them with the new token.
+  On refresh failure → `clearSession()` + redirect to `/auth/login`. Skips the auth endpoints
+  (login/register/refresh/logout) to avoid loops. Sits inner of the error interceptor so a successful
+  refresh never surfaces the 401 toast.
+- ✅ **Organization portal logout wired.** `organization-layout` now injects `AuthService`/`AuthFacade`/
+  `ThemeService`: replaced the hardcoded "Avery Mitchell" user with the **real session principal**
+  (initials avatar + name + email), added a **theme toggle** and a **Sign out** button →
+  `AuthFacade.logout()`. (Member + admin layouts already had logout.)
+- ⏭️ **Next:** wire the organization **dashboard** to a real `organization.facade`/`repository` against
+  the API dashboard summary (replace hardcoded chart data) — Phase 4. Then build the first real portal
+  pages (projects/tasks). Optional auth leftovers: forgot-password, Manager-role portal decision.
+
 ## Current Status (2026-07-24, role-based login + admin/member portals)
 - ✅ **Real login wired with role-based redirect.** The login form now calls the API, stores the
   session (access + refresh token), fetches `/user/me` for account type, and routes the user to their
@@ -137,14 +275,17 @@
 - ✅ `member-layout` + `admin-layout` themed shells + placeholder dashboards; `MEMBER_ROUTES` /
   `ADMIN_ROUTES`; guarded branches in `app.routes.ts`.
 
-### 2c — Remaining auth work ⬜ (next)
-- ⬜ **Register** page(s) with **account-type choice** (Individual vs Organization → API `accountType`);
-  org register may also capture the organization name (check the register command's org flow).
-- ⬜ **Logout** wired from the portal top bars → `AuthFacade.logout()` → `POST /auth/logout` (send the
-  refresh token) → `endSession()` → `/auth/login`.
-- ⬜ **Refresh-token rotation**: on a 401, call `POST /auth/refresh` with the stored refresh token,
-  swap tokens, retry once; on reuse/failure → force logout. Add to `error.interceptor` (or a dedicated
-  refresh interceptor) with a single-flight lock.
+### 2c — Remaining auth work 🟡 (mostly done this session)
+- ✅ **Register** page with **account-type choice** (Individual vs Organization → API `accountType` int).
+  `features/auth/register-page/` (5 files), route `/auth/register`, facade/repository/models wired,
+  entry links hooked from the login page + public header. Note: the API's `RegisterUserCommand` does
+  **not** take an organization name — an org account registers as a user with `AccountType.Organization`;
+  org-name capture (if ever needed) would be a separate backend concern.
+- ✅ **Logout** wired from **all three** portal top bars (member/admin already; organization added this
+  session) → `AuthFacade.logout()` → `POST /auth/logout` (refresh token) → `endSession()` → `/auth/login`.
+- ✅ **Refresh-token rotation**: dedicated `core/interceptors/refresh.interceptor.ts` — on 401 calls
+  `POST /auth/refresh`, swaps tokens (`TokenService.updateTokens`), retries once; single-flight lock
+  queues concurrent 401s; on failure → force logout. Registered innermost in the pipeline.
 - ⬜ **Forgot-password / email-verification** screens (API email-verification endpoint is itself a
   backend leftover — coordinate).
 - ⬜ **Manager** system role: decide its portal (currently only Admin is special; Manager falls through
@@ -158,14 +299,15 @@
 - ✅ `PublicLayout` (header/navbar/footer partials) + landing page (~400 lines) with pricing/review/feature cards.
 - ⏭️ Possible: pricing page, about/contact, wire "Sign up"/"Log in" CTAs to auth routes.
 
-## Phase 4 — Organization Portal ⬜ (dashboard shell only)
-- 🟡 `OrganizationLayout` + `DashboardPage` render with `ProductivityChart` + `ProjectHealthChart` —
-  but on **hardcoded** data, no facade/repository.
-- ⬜ Wire dashboard to the API dashboard summary (Dapper read side) via an `organization.facade` +
-  `organization.repository`; feed charts through `input()`.
-- ⬜ Pages: projects (list/create/detail), tasks (list/assign/lifecycle), teams, members + invitations,
-  roles + permissions, reports. Register each in `ORGANIZATION_ROUTES`.
-- ⬜ Sidebar navigation organism for the portal.
+## Phase 4 — Organization Portal 🟡 (dashboard + projects + tasks wired to live API)
+- ✅ Dashboard wired to the API dashboard summary via `organization.facade` + `organization.repository`;
+  `ProjectHealthChart` is now `input()`-driven and fed real task-status counts. Create-org onboarding.
+- ✅ Projects (list + create) and Tasks (list + create + start/complete lifecycle) pages, registered in
+  `ORGANIZATION_ROUTES`. Sidebar nav wired (routerLink/routerLinkActive).
+- ✅ Members + Invitations, Teams, and Roles + Permissions pages built and live-verified (Phase 5).
+- ⬜ Remaining pages: project **detail**, task **assign/unassign** UI, team member add/remove, reports.
+  Org **switcher** UI (facade supports it).
+- ⬜ Sidebar is inline in the layout (fine); a dedicated sidebar organism is optional.
 
 ## Phase 5 — Member (Individual) Portal ⬜
 - ✅ `MemberLayout` shell + placeholder dashboard; `/member` branch guarded with `portalGuard('member')`.
@@ -176,10 +318,11 @@
 - ✅ `AdminLayout` shell + placeholder dashboard; `/admin` branch guarded with `roleGuard('Admin')`.
 - ⬜ Platform admin pages: user list (`GET /user`, AdminOnly), organizations overview, platform settings.
 
-## Phase 7 — Reporting & Dashboard (headline feature) ⬜
-- ⬜ Rich charts/reports consuming the API's report endpoints (dashboard summary, member task report,
-  team performance, project report) via echarts organisms fed by facades.
-- ⬜ Date-window (From/To) controls for weekly/monthly/yearly cuts; work-log durations.
+## Phase 7 — Reporting & Dashboard (headline feature) 🟡 (reports page done)
+- ✅ Reports page consuming dashboard summary + member/team/project report endpoints; echarts team
+  bar chart, member stat tiles, project completion ring + workload table (fed by the org facade).
+- ✅ Date-window (From/To) controls with Week/Month/Year/All presets, reactive via effects.
+- ⬜ Work-log durations UI; richer per-member trend charts; export (CSV/PDF).
 
 ## Phase 8 — Polish & Hardening ⬜
 - ⬜ Custom `shared/validations/` decorator engine (FluentValidation-style) — folders exist, empty.

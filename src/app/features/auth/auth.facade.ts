@@ -3,9 +3,11 @@ import { Router } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
 
 import { AuthService } from '@core/auth/auth.service';
+import { AccountType } from '@core/auth/roles.enum';
+import { NotificationService } from '@core/services/notification.service';
 
 import { AuthRepository } from './auth.repository';
-import { LoginRequest, toUser } from './auth.models';
+import { LoginRequest, RegisterRequest, toUser } from './auth.models';
 
 /**
  * Application layer for auth. Orchestrates the login use-case:
@@ -18,6 +20,7 @@ export class AuthFacade {
   private readonly repository = inject(AuthRepository);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly notification = inject(NotificationService);
 
   private readonly _loading = signal(false);
   readonly loading = this._loading.asReadonly();
@@ -36,9 +39,10 @@ export class AuthFacade {
           // Persist tokens first so the /user/me request is authenticated.
           this.auth.setTokens(loginRes.data.token, loginRes.data.refreshToken, remember);
 
+          // `/user/me` is NOT enveloped (raw DTO), unlike the login response which is.
           return this.repository
             .me()
-            .pipe(map((profileRes) => ({ login: loginRes.data, profile: profileRes.data })));
+            .pipe(map((profile) => ({ login: loginRes.data, profile })));
         }),
       )
       .subscribe({
@@ -57,6 +61,31 @@ export class AuthFacade {
           this.auth.endSession();
         },
       });
+  }
+
+  /**
+   * Register use-case. The API returns only the new user id (no tokens), so on success we send the
+   * user to the sign-in screen — the Organization variant for org accounts, else the solo one.
+   */
+  register(request: RegisterRequest): void {
+    this._loading.set(true);
+    this._error.set(null);
+
+    this.repository.register(request).subscribe({
+      next: () => {
+        this._loading.set(false);
+        this.notification.success('Account created successfully. Please sign in.');
+
+        const target =
+          request.accountType === AccountType.Organization ? '/auth/organization' : '/auth/login';
+        void this.router.navigateByUrl(target);
+      },
+      error: () => {
+        this._loading.set(false);
+        // The error interceptor already toasts the server message; surface an inline hint too.
+        this._error.set('Registration failed. Please review your details and try again.');
+      },
+    });
   }
 
   logout(): void {

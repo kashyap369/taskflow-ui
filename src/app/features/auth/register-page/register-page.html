@@ -1,0 +1,265 @@
+<div class="register-page">
+  <div class="row g-0 min-vh-100">
+    <!-- ============ LEFT: Sign-up form ============ -->
+    <div class="col-12 col-lg-6 form-side">
+      <div class="form-side-inner d-flex flex-column">
+        <a routerLink="/" class="brand d-flex align-items-center text-decoration-none" appReveal>
+          <div class="brand-logo">
+            <lucide-angular name="Sparkles" [size]="18"></lucide-angular>
+          </div>
+          <span class="brand-name">TaskFlow</span>
+        </a>
+
+        <div class="form-wrapper flex-grow-1 d-flex flex-column justify-content-center">
+          <span class="variant-chip" appReveal>
+            <lucide-angular name="Sparkles" [size]="14"></lucide-angular>
+            Create your account
+          </span>
+
+          <h1 class="title" appReveal [revealDelay]="60">Get started free</h1>
+          <p class="subtitle" appReveal [revealDelay]="120">
+            No credit card required. Set up your workspace in under two minutes.
+          </p>
+
+          @if (error()) {
+            <div class="form-error" role="alert" appReveal>{{ error() }}</div>
+          }
+
+          <form class="register-form" [formGroup]="registerForm" (ngSubmit)="register()">
+            <!-- Account type toggle -->
+            <div class="field" appReveal [revealDelay]="160">
+              <label class="form-label">I'm signing up as</label>
+              <div class="account-toggle" role="radiogroup" aria-label="Account type">
+                <button
+                  type="button"
+                  class="toggle-option"
+                  [class.active]="!isOrganization()"
+                  [attr.aria-pressed]="!isOrganization()"
+                  (click)="selectAccountType(AccountType.Individual)"
+                >
+                  <lucide-angular name="User" [size]="18"></lucide-angular>
+                  <span class="opt-title">Individual</span>
+                  <span class="opt-sub">Just me</span>
+                </button>
+                <button
+                  type="button"
+                  class="toggle-option"
+                  [class.active]="isOrganization()"
+                  [attr.aria-pressed]="isOrganization()"
+                  (click)="selectAccountType(AccountType.Organization)"
+                >
+                  <lucide-angular name="Building2" [size]="18"></lucide-angular>
+                  <span class="opt-title">Organization</span>
+                  <span class="opt-sub">My team</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Name row -->
+            <div class="field-row" appReveal [revealDelay]="200">
+              <div class="field">
+                <label for="firstName" class="form-label">First name</label>
+                <div class="input-icon-group">
+                  <lucide-angular name="User" [size]="16" class="field-icon"></lucide-angular>
+                  <input
+                    id="firstName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Jane"
+                    autocomplete="given-name"
+                    formControlName="firstName"
+                  />
+                </div>
+                @if (registerForm.controls.firstName.touched && registerForm.controls.firstName.invalid) {
+                  <small class="field-msg">First name is required.</small>
+                }
+              </div>
+
+              <div class="field">
+                <label for="lastName" class="form-label">Last name</label>
+                <div class="input-icon-group">
+                  <lucide-angular name="User" [size]="16" class="field-icon"></lucide-angular>
+                  <input
+                    id="lastName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Doe"
+                    autocomplete="family-name"
+                    formControlName="lastName"
+                  />
+                </div>
+                @if (registerForm.controls.lastName.touched && registerForm.controls.lastName.invalid) {
+                  <small class="field-msg">Last name is required.</small>
+                }
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="field" appReveal [revealDelay]="240">
+              <label for="email" class="form-label">Email</label>
+              <div class="input-icon-group">
+                <lucide-angular name="Mail" [size]="16" class="field-icon"></lucide-angular>
+                <input
+                  id="email"
+                  type="email"
+                  class="form-control"
+                  placeholder="you@company.com"
+                  autocomplete="email"
+                  formControlName="email"
+                />
+              </div>
+              @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+                <small class="field-msg">
+                  @if (registerForm.controls.email.hasError('required')) { Email is required. }
+                  @else if (registerForm.controls.email.hasError('email')) { Enter a valid email address. }
+                </small>
+              }
+            </div>
+
+            <!-- Phone -->
+            <div class="field" appReveal [revealDelay]="280">
+              <label for="phoneNumber" class="form-label">Phone number</label>
+              <div class="input-icon-group">
+                <lucide-angular name="Phone" [size]="16" class="field-icon"></lucide-angular>
+                <input
+                  id="phoneNumber"
+                  type="tel"
+                  class="form-control"
+                  placeholder="+1 555 123 4567"
+                  autocomplete="tel"
+                  formControlName="phoneNumber"
+                />
+              </div>
+              @if (registerForm.controls.phoneNumber.touched && registerForm.controls.phoneNumber.invalid) {
+                <small class="field-msg">
+                  @if (registerForm.controls.phoneNumber.hasError('required')) { Phone number is required. }
+                  @else { Enter a valid phone number (at least 10 digits). }
+                </small>
+              }
+            </div>
+
+            <!-- Password -->
+            <div class="field" appReveal [revealDelay]="320">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-icon-group">
+                <lucide-angular name="Lock" [size]="16" class="field-icon"></lucide-angular>
+                <input
+                  id="password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  class="form-control"
+                  placeholder="Create a strong password"
+                  autocomplete="new-password"
+                  formControlName="password"
+                />
+                <button type="button" class="icon-btn" (click)="togglePasswordVisibility()">
+                  <lucide-angular [name]="showPassword() ? 'EyeOff' : 'Eye'" [size]="16"></lucide-angular>
+                </button>
+              </div>
+              @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+                <small class="field-msg">
+                  @if (registerForm.controls.password.hasError('required')) { Password is required. }
+                  @else { Min 8 chars with an uppercase, a lowercase, and a number. }
+                </small>
+              }
+            </div>
+
+            <!-- Confirm password -->
+            <div class="field" appReveal [revealDelay]="360">
+              <label for="confirmPassword" class="form-label">Confirm password</label>
+              <div class="input-icon-group">
+                <lucide-angular name="Lock" [size]="16" class="field-icon"></lucide-angular>
+                <input
+                  id="confirmPassword"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  class="form-control"
+                  placeholder="Re-enter your password"
+                  autocomplete="new-password"
+                  formControlName="confirmPassword"
+                />
+              </div>
+              @if (
+                registerForm.controls.confirmPassword.touched &&
+                (registerForm.controls.confirmPassword.invalid || registerForm.hasError('passwordsMismatch'))
+              ) {
+                <small class="field-msg">
+                  @if (registerForm.controls.confirmPassword.hasError('required')) { Please confirm your password. }
+                  @else if (registerForm.hasError('passwordsMismatch')) { Passwords don't match. }
+                </small>
+              }
+            </div>
+
+            <!-- Terms -->
+            <label class="terms" appReveal [revealDelay]="400">
+              <input type="checkbox" formControlName="acceptTerms" />
+              <span class="terms-box">
+                <lucide-angular name="Check" [size]="12"></lucide-angular>
+              </span>
+              <span class="terms-text">
+                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+              </span>
+            </label>
+
+            <button
+              type="submit"
+              class="sign-up-btn"
+              [class.is-loading]="loading()"
+              [disabled]="loading()"
+              appReveal
+              [revealDelay]="440"
+            >
+              <span>{{ loading() ? 'Creating account…' : 'Create account' }}</span>
+              @if (!loading()) {
+                <lucide-angular name="ArrowRight" [size]="16"></lucide-angular>
+              }
+            </button>
+          </form>
+        </div>
+
+        <p class="signin-text text-center" appReveal [revealDelay]="480">
+          Already have an account? <a routerLink="/auth/login">Sign in</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ RIGHT: Showcase ============ -->
+    <div class="col-lg-6 d-none d-lg-flex showcase-side">
+      <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob b1"></span>
+        <span class="aurora-blob b2"></span>
+        <span class="aurora-blob b3"></span>
+        <span class="grid-overlay"></span>
+      </div>
+
+      <div class="showcase-inner">
+        <div class="showcase-head">
+          <span class="eyebrow">Join TaskFlow</span>
+          <h2 class="showcase-headline">
+            Everything your work needs, in one <span class="grad">flow</span>.
+          </h2>
+        </div>
+
+        <ul class="perks">
+          @for (perk of perks; track perk; let i = $index) {
+            <li class="perk" [style.--i]="i" appReveal [revealDelay]="i * 90">
+              <span class="perk-check">
+                <lucide-angular name="Check" [size]="14"></lucide-angular>
+              </span>
+              <span>{{ perk }}</span>
+            </li>
+          }
+        </ul>
+
+        <div class="showcase-foot">
+          <div class="stats-row d-flex flex-wrap gap-3">
+            @for (stat of stats; track stat.label) {
+              <div class="stat-card">
+                <div class="stat-value">{{ stat.value }}</div>
+                <div class="stat-label">{{ stat.label }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

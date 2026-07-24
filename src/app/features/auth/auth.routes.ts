@@ -26,5 +26,9 @@ export const AUTH_ROUTES: Routes = [
     data: { variant: 'admin' },
     loadComponent: () => import('./login-page/login-page').then((m) => m.LoginPage),
   },
-  // Future auth screens (register, forgot-password) are added here as sibling routes.
+  {
+    path: 'register',
+    loadComponent: () => import('./register-page/register-page').then((m) => m.RegisterPage),
+  },
+  // Future auth screens (forgot-password) are added here as sibling routes.
 ];

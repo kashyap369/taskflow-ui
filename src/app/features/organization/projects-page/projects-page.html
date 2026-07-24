@@ -1,0 +1,123 @@
+<section class="page">
+  <div class="container-fluid">
+    <!-- Header -->
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Projects</h1>
+        <p>Plan and track work across {{ currentOrg()?.name ?? 'your organization' }}.</p>
+      </div>
+      @if (!needsOrganization()) {
+        <button class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="18"></lucide-angular>
+          New project
+        </button>
+      }
+    </div>
+
+    @if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h3>No organization yet</h3>
+        <p>Create your organization from the dashboard to start adding projects.</p>
+        <a routerLink="/organization/dashboard" class="btn-primary-cta">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else if (loading() && !hasProjects()) {
+      <div class="loading-hint">Loading projects…</div>
+    } @else if (!hasProjects()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="FolderKanban" size="24"></lucide-angular></span>
+        <h3>No projects yet</h3>
+        <p>Create your first project to organize tasks and track progress.</p>
+        <button class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="16"></lucide-angular> New project
+        </button>
+      </div>
+    } @else {
+      <div class="project-grid">
+        @for (project of projects(); track project.id) {
+          <article class="project-card">
+            <header class="pc-head">
+              <span class="pc-icon"><lucide-angular name="FolderKanban" size="18"></lucide-angular></span>
+              <span class="badge" [attr.data-tone]="projectStatusMeta(project.status).tone">
+                {{ projectStatusMeta(project.status).label }}
+              </span>
+            </header>
+
+            <h3 class="pc-title">{{ project.title }}</h3>
+            @if (project.description) {
+              <p class="pc-desc">{{ project.description }}</p>
+            }
+
+            <div class="pc-progress">
+              <div class="pc-progress-row">
+                <span>{{ project.completedTaskCount }}/{{ project.taskCount }} tasks</span>
+                <strong>{{ project.completionPercentage }}%</strong>
+              </div>
+              <div class="progress-track">
+                <span class="progress-fill" [style.width.%]="project.completionPercentage"></span>
+              </div>
+            </div>
+
+            <footer class="pc-foot">
+              <span class="pc-date">
+                <lucide-angular name="CalendarDays" size="14"></lucide-angular>
+                {{ project.startDate | date: 'mediumDate' }}
+              </span>
+              <a class="pc-open" [routerLink]="['/organization/projects', project.id]">
+                Open <lucide-angular name="ArrowRight" size="14"></lucide-angular>
+              </a>
+            </footer>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Create project drawer -->
+  @if (showCreate()) {
+    <div class="drawer-backdrop" (click)="closeCreate()"></div>
+    <aside class="drawer">
+      <div class="drawer-head">
+        <h2>New project</h2>
+        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      <form class="drawer-form" [formGroup]="createForm" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="title" class="form-label">Title</label>
+          <input id="title" type="text" class="form-control" placeholder="Website redesign" formControlName="title" />
+          @if (createForm.controls.title.touched && createForm.controls.title.invalid) {
+            <small class="field-msg">A title is required.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="description" rows="3" class="form-control" placeholder="What is this project about?" formControlName="description"></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="startDate" class="form-label">Start date</label>
+            <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+          </div>
+          <div class="field">
+            <label for="expectedCompletionDate" class="form-label">Target date <span>(optional)</span></label>
+            <input id="expectedCompletionDate" type="date" class="form-control" formControlName="expectedCompletionDate" />
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            {{ saving() ? 'Creating…' : 'Create project' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

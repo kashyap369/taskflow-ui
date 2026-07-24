@@ -1,0 +1,161 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head">
+      <h1>Reports</h1>
+      <p>Track performance across {{ currentOrg()?.name ?? 'your organization' }}.</p>
+    </div>
+
+    @if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h3>No organization yet</h3>
+        <p>Create your organization from the dashboard to see reports.</p>
+        <a routerLink="/organization/dashboard" class="btn-primary-cta">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else {
+      <!-- Date window -->
+      <div class="window-bar">
+        <div class="presets">
+          <button [class.active]="activePreset() === 'week'" (click)="applyPreset('week')">Week</button>
+          <button [class.active]="activePreset() === 'month'" (click)="applyPreset('month')">Month</button>
+          <button [class.active]="activePreset() === 'year'" (click)="applyPreset('year')">Year</button>
+          <button [class.active]="activePreset() === 'all'" (click)="applyPreset('all')">All time</button>
+        </div>
+        <div class="range">
+          <label>
+            <span>From</span>
+            <input type="date" [ngModel]="from()" (ngModelChange)="onFromChange($event)" />
+          </label>
+          <label>
+            <span>To</span>
+            <input type="date" [ngModel]="to()" (ngModelChange)="onToChange($event)" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Team performance -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2><lucide-angular name="Users" size="18"></lucide-angular> Team performance</h2>
+          @if (reportLoading()) {
+            <app-lottie-player src="/lottie/loading-dots.json" [width]="70" [height]="28" ariaLabel="Loading" />
+          }
+        </div>
+
+        @if (!hasTeamData()) {
+          <div class="lottie-state">
+            <app-lottie-player src="/lottie/empty.json" [width]="140" [height]="120" ariaLabel="No data" />
+            <p>No team activity in this window yet.</p>
+          </div>
+        } @else {
+          <div class="chart-wrap">
+            <div echarts [options]="teamChartOption()" class="team-chart"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Team</th><th>Members</th><th>Assigned</th><th>Completed</th>
+                  <th>Tracked (h)</th><th>Avg days</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (team of teamReport(); track team.teamId) {
+                  <tr>
+                    <td class="strong">{{ team.teamName }}</td>
+                    <td>{{ team.activeMembers }}</td>
+                    <td>{{ team.tasksAssigned }}</td>
+                    <td>{{ team.tasksCompleted }}</td>
+                    <td>{{ team.trackedHours }}</td>
+                    <td>{{ team.avgCompletionDays | number: '1.0-1' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      <div class="two-col">
+        <!-- Member report -->
+        <div class="panel">
+          <div class="panel-head"><h2><lucide-angular name="ListChecks" size="18"></lucide-angular> Member report</h2></div>
+          <select class="selector" [ngModel]="selectedMemberId()" (ngModelChange)="onMemberChange($event)">
+            <option [ngValue]="null">Select a member…</option>
+            @for (m of members(); track m.id) {
+              <option [ngValue]="m.userId">{{ m.userFullName }}</option>
+            }
+          </select>
+
+          @if (members().length === 0) {
+            <p class="hint">No active members yet — invite people from the
+              <a routerLink="/organization/members">Members</a> page.</p>
+          } @else if (memberReport(); as r) {
+            <div class="tiles">
+              <div class="tile"><span class="tv">{{ r.tasksCreated }}</span><span class="tl">Created</span></div>
+              <div class="tile"><span class="tv">{{ r.tasksAssigned }}</span><span class="tl">Assigned</span></div>
+              <div class="tile"><span class="tv accent-green">{{ r.tasksCompleted }}</span><span class="tl">Completed</span></div>
+              <div class="tile"><span class="tv accent-blue">{{ r.tasksInProgress }}</span><span class="tl">In progress</span></div>
+              <div class="tile"><span class="tv accent-red">{{ r.tasksOverdue }}</span><span class="tl">Overdue</span></div>
+              <div class="tile"><span class="tv">{{ r.trackedHours }}</span><span class="tl">Tracked hrs</span></div>
+            </div>
+          } @else {
+            <p class="hint">Pick a member to see their throughput for this window.</p>
+          }
+        </div>
+
+        <!-- Project report -->
+        <div class="panel">
+          <div class="panel-head"><h2><lucide-angular name="FolderKanban" size="18"></lucide-angular> Project report</h2></div>
+          <select class="selector" [ngModel]="selectedProjectId()" (ngModelChange)="onProjectChange($event)">
+            <option [ngValue]="null">Select a project…</option>
+            @for (p of projects(); track p.id) {
+              <option [ngValue]="p.id">{{ p.title }}</option>
+            }
+          </select>
+
+          @if (projects().length === 0) {
+            <p class="hint">No projects yet — create one from the
+              <a routerLink="/organization/projects">Projects</a> page.</p>
+          } @else if (projectReport(); as r) {
+            <div class="proj-summary">
+              <div class="proj-ring" [style.--pct.%]="r.completionPercentage">
+                <span class="ring-val">{{ r.completionPercentage | number: '1.0-0' }}%</span>
+                <span class="ring-lbl">complete</span>
+              </div>
+              <div class="proj-meta">
+                <div><strong>{{ r.completedTasks }}/{{ r.totalTasks }}</strong> tasks</div>
+                <div><strong>{{ r.trackedHours }}</strong> tracked hrs</div>
+              </div>
+            </div>
+
+            @if (r.memberWorkloads.length) {
+              <div class="table-scroll">
+                <table class="report-table">
+                  <thead><tr><th>Member</th><th>Assigned</th><th>Completed</th><th>Hrs</th></tr></thead>
+                  <tbody>
+                    @for (w of r.memberWorkloads; track w.userId) {
+                      <tr>
+                        <td class="strong">{{ w.fullName }}</td>
+                        <td>{{ w.tasksAssigned }}</td>
+                        <td>{{ w.tasksCompleted }}</td>
+                        <td>{{ w.trackedHours }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="hint">No assigned work in this project yet.</p>
+            }
+          } @else {
+            <p class="hint">Pick a project to see its progress and workload.</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>

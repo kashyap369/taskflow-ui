@@ -5,7 +5,13 @@ import { ApiService } from '@core/api/api.service';
 import { API } from '@core/api/api-endpoints';
 import { ApiResponse } from '@core/api/api-response';
 
-import { LoginRequest, LoginResponse, UserProfileResponse } from './auth.models';
+import {
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  UserProfileResponse,
+  toRegisterPayload,
+} from './auth.models';
 
 /**
  * Data layer for the auth feature — the only place that talks to the auth/profile HTTP endpoints.
@@ -18,9 +24,18 @@ export class AuthRepository {
     return this.api.post<ApiResponse<LoginResponse>>(API.Auth.Login, request);
   }
 
-  /** Current user's profile — carries `accountType`, which the login response does not. */
-  me(): Observable<ApiResponse<UserProfileResponse>> {
-    return this.api.get<ApiResponse<UserProfileResponse>>(API.User.Me);
+  /** Create an account. Returns the new user's id (no tokens — the user then signs in). */
+  register(request: RegisterRequest): Observable<ApiResponse<number>> {
+    return this.api.post<ApiResponse<number>>(API.Auth.Register, toRegisterPayload(request));
+  }
+
+  /**
+   * Current user's profile — carries `accountType`, which the login response does not.
+   * NOTE: `UserController` returns the DTO RAW (no `ApiResponse<T>` envelope — only AuthController
+   * wraps its responses), so this is the bare `UserProfileResponse`.
+   */
+  me(): Observable<UserProfileResponse> {
+    return this.api.get<UserProfileResponse>(API.User.Me);
   }
 
   logout(refreshToken: string | null): Observable<ApiResponse<void>> {

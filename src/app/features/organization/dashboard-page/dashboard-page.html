@@ -1,141 +1,202 @@
 <section class="dashboard-hero">
   <div class="container-fluid">
-    <div class="hero-card">
-      <div class="row align-items-center gy-4">
-        <!-- Left -->
-
-        <div class="col-lg-8">
-          <span class="workspace-badge">
-            <lucide-angular name="Sparkles" size="14"> </lucide-angular>
-
-            Acme Inc.
-          </span>
-
-          <h1 class="hero-title">
-            Good morning,
-
-            <span>Avery</span>
-          </h1>
-
-          <p class="hero-text">You have 9 active tasks across 4 projects today.</p>
+    @if (needsOrganization()) {
+      <!-- ============ Onboarding: no organization yet ============ -->
+      <div class="onboarding-card">
+        <div class="onboarding-icon">
+          <lucide-angular name="Building2" size="26"></lucide-angular>
         </div>
+        <h1>Create your organization</h1>
+        <p>
+          You're all set up as an organization account. Create your workspace to start adding
+          projects, tasks and teammates.
+        </p>
 
-        <!-- Right -->
+        <form class="onboarding-form" [formGroup]="createOrgForm" (ngSubmit)="createOrganization()">
+          <div class="field">
+            <label for="orgName" class="form-label">Organization name</label>
+            <input
+              id="orgName"
+              type="text"
+              class="form-control"
+              placeholder="Acme Inc."
+              formControlName="name"
+            />
+            @if (createOrgForm.controls.name.touched && createOrgForm.controls.name.invalid) {
+              <small class="field-msg">An organization name is required.</small>
+            }
+          </div>
 
-        <div class="col-lg-4">
-          <div
-            class="d-flex justify-content-lg-end justify-content-start align-items-center gap-3 flex-wrap"
-          >
-            <!-- Score -->
+          <div class="field">
+            <label for="orgDesc" class="form-label">Description <span>(optional)</span></label>
+            <textarea
+              id="orgDesc"
+              rows="3"
+              class="form-control"
+              placeholder="What does your team do?"
+              formControlName="description"
+            ></textarea>
+          </div>
 
-            <div class="score-card">
-              <div class="score-ring">
-                <div>
-                  <h3>67</h3>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            <lucide-angular name="Plus" size="18"></lucide-angular>
+            {{ saving() ? 'Creating…' : 'Create organization' }}
+          </button>
+        </form>
+      </div>
+    } @else {
+      <!-- ============ Real dashboard ============ -->
+      <div class="hero-card">
+        <div class="row align-items-center gy-4">
+          <div class="col-lg-8">
+            <span class="workspace-badge">
+              <lucide-angular name="Sparkles" size="14"></lucide-angular>
+              {{ currentOrg()?.name ?? 'Workspace' }}
+            </span>
 
-                  <small>SCORE</small>
-                </div>
+            <h1 class="hero-title">Good day, <span>{{ firstName() }}</span></h1>
+
+            @if (summary(); as s) {
+              <p class="hero-text">
+                You have {{ s.todoTasks + s.inProgressTasks }} active
+                {{ s.todoTasks + s.inProgressTasks === 1 ? 'task' : 'tasks' }} across
+                {{ s.projectCount }} {{ s.projectCount === 1 ? 'project' : 'projects' }}.
+              </p>
+            } @else {
+              <p class="hero-text">Loading your workspace…</p>
+            }
+          </div>
+
+          <div class="col-lg-4">
+            <div class="d-flex justify-content-lg-end justify-content-start align-items-center gap-3 flex-wrap">
+              <div class="hero-actions">
+                <a class="btn btn-primary btn-task" routerLink="/organization/tasks">
+                  <lucide-angular name="Plus" size="18"></lucide-angular>
+                  New task
+                </a>
+                <a class="btn btn-report" routerLink="/organization/projects">
+                  Projects
+                  <lucide-angular name="ArrowRight" size="18"></lucide-angular>
+                </a>
               </div>
             </div>
-
-            <!-- Buttons -->
-
-            <div class="hero-actions">
-              <button class="btn btn-primary btn-task">
-                <lucide-angular name="Plus" size="18"> </lucide-angular>
-
-                New task
-              </button>
-
-              <button class="btn btn-report">
-                View report
-
-                <lucide-angular name="ArrowRight" size="18"> </lucide-angular>
-              </button>
-            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="row g-4 mt-2">
-      <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="icon purple">
-              <lucide-angular name="FolderKanban" size="20"></lucide-angular>
+      @if (summary(); as s) {
+        <div class="row g-4 mt-2">
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="icon purple">
+                  <lucide-angular name="FolderKanban" size="20"></lucide-angular>
+                </div>
+                <small class="stats-info">{{ s.teamCount }} teams</small>
+              </div>
+              <h2>{{ s.projectCount }}</h2>
+              <p>Projects</p>
             </div>
-
-            <small class="stats-info">+2 this month</small>
           </div>
 
-          <h2>4</h2>
-
-          <p>Projects</p>
-        </div>
-      </div>
-
-      <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="icon blue">
-              <lucide-angular name="CheckCheck" size="20"></lucide-angular>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="icon blue">
+                  <lucide-angular name="CheckCheck" size="20"></lucide-angular>
+                </div>
+                <small class="stats-info">{{ s.totalTasks }} total</small>
+              </div>
+              <h2>{{ s.todoTasks + s.inProgressTasks }}</h2>
+              <p>Active tasks</p>
             </div>
-
-            <small class="stats-info">11 total</small>
           </div>
 
-          <h2>9</h2>
-
-          <p>Active Tasks</p>
-        </div>
-      </div>
-
-      <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="icon green">
-              <lucide-angular name="CircleCheckBig" size="20"></lucide-angular>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="icon green">
+                  <lucide-angular name="CircleCheckBig" size="20"></lucide-angular>
+                </div>
+                <small class="stats-info">{{ s.unassignedTasks }} unassigned</small>
+              </div>
+              <h2>{{ s.completedTasks }}</h2>
+              <p>Completed</p>
             </div>
-
-            <small class="stats-info">+18% wk/wk</small>
           </div>
 
-          <h2>2</h2>
-
-          <p>Completed</p>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stats-card">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="icon orange">
+                  <lucide-angular name="TriangleAlert" size="20"></lucide-angular>
+                </div>
+                <small class="stats-info">{{ s.totalTrackedHours }}h tracked</small>
+              </div>
+              <h2>{{ s.overdueTasks }}</h2>
+              <p>Overdue</p>
+            </div>
+          </div>
         </div>
-      </div>
+      }
 
-      <div class="col-12 col-sm-6 col-xl-3">
-        <div class="stats-card">
-          <div class="d-flex justify-content-between align-items-start">
-            <div class="icon orange">
-              <lucide-angular name="TriangleAlert" size="20"></lucide-angular>
+      <div class="row mt-2 g-4">
+        <!-- Recent projects -->
+        <div class="col-12 col-xl-8">
+          <div class="panel">
+            <div class="panel-head d-flex align-items-center justify-content-between">
+              <h5>Recent projects</h5>
+              <a routerLink="/organization/projects" class="panel-link">
+                View all <lucide-angular name="ArrowRight" size="15"></lucide-angular>
+              </a>
             </div>
 
-            <small class="stats-info">Needs attention</small>
+            @if (recentProjects().length) {
+              <div class="project-list">
+                @for (project of recentProjects(); track project.id) {
+                  <div class="project-row">
+                    <div class="project-main">
+                      <span class="project-icon">
+                        <lucide-angular name="FolderKanban" size="16"></lucide-angular>
+                      </span>
+                      <div>
+                        <div class="project-title">{{ project.title }}</div>
+                        <div class="project-sub">
+                          {{ project.completedTaskCount }}/{{ project.taskCount }} tasks
+                        </div>
+                      </div>
+                    </div>
+                    <div class="project-end">
+                      <div class="progress-track">
+                        <span class="progress-fill" [style.width.%]="project.completionPercentage"></span>
+                      </div>
+                      <span class="badge" [attr.data-tone]="projectStatusMeta(project.status).tone">
+                        {{ projectStatusMeta(project.status).label }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="empty-panel">
+                <p>No projects yet.</p>
+                <a routerLink="/organization/projects" class="btn-primary-cta sm">
+                  <lucide-angular name="Plus" size="16"></lucide-angular> New project
+                </a>
+              </div>
+            }
           </div>
+        </div>
 
-          <h2>2</h2>
-
-          <p>Overdue</p>
+        <!-- Task status breakdown (real) -->
+        <div class="col-12 col-xl-4">
+          <app-project-health-chart
+            title="Task status"
+            [subtitle]="(summary()?.totalTasks ?? 0) + ' total tasks'"
+            [segments]="taskSegments()"
+          />
         </div>
       </div>
-    </div>
-
-    <div class="row mt-2 g-4">
-      <!-- Productivity Chart -->
-
-      <div class="col-12 col-xl-8">
-        <app-productivity-chart />
-      </div>
-
-      <!-- Project Health -->
-
-      <div class="col-12 col-xl-4">
-        <app-project-health-chart />
-      </div>
-    </div>
+    }
   </div>
 </section>

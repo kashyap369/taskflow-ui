@@ -7,6 +7,29 @@ export interface LoginRequest {
   password: string;
 }
 
+/**
+ * Mirrors `RegisterUserCommand`. `accountType` is sent to the API as an int (see `accountTypeToInt`);
+ * the backend enum is Individual = 1, Organization = 2.
+ */
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  accountType: AccountType;
+}
+
+/** The JSON body posted to `POST /auth/register` (account type as the API's enum int). */
+export interface RegisterPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  accountType: number;
+}
+
 // ── Responses (mirror the API DTOs) ───────────────────────
 
 /** Mirrors `LoginUserResponseDto`. Roles are system roles; account type is NOT here. */
@@ -49,6 +72,23 @@ export function mapSystemRoles(roles: string[] | undefined): SystemRole[] {
 /** API sends AccountType as an int: Individual = 1, Organization = 2. */
 export function mapAccountType(value: number): AccountType {
   return value === 2 ? AccountType.Organization : AccountType.Individual;
+}
+
+/** Reverse of `mapAccountType` — the frontend union → the API's enum int. */
+export function accountTypeToInt(value: AccountType): number {
+  return value === AccountType.Organization ? 2 : 1;
+}
+
+/** Build the JSON body for `POST /auth/register` from the form model. */
+export function toRegisterPayload(request: RegisterRequest): RegisterPayload {
+  return {
+    firstName: request.firstName,
+    lastName: request.lastName,
+    email: request.email,
+    phoneNumber: request.phoneNumber,
+    password: request.password,
+    accountType: accountTypeToInt(request.accountType),
+  };
 }
 
 /** Build the session principal from the login response (roles/identity) + profile (account type). */

@@ -137,6 +137,7 @@
   color: var(--on-primary);
   background: var(--gradient-brand);
   box-shadow: var(--shadow-brand);
+  text-decoration: none;
   cursor: pointer;
   transition:
     transform var(--dur-2) var(--ease-standard),

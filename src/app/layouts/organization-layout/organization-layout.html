@@ -35,46 +35,52 @@
     <!-- Navigation -->
 
     <nav class="sidebar-nav">
-      <a class="active">
+      <a routerLink="/organization/dashboard" routerLinkActive="active">
         <lucide-angular name="LayoutDashboard"></lucide-angular>
 
         Dashboard
       </a>
 
-      <a>
+      <a routerLink="/organization/projects" routerLinkActive="active">
         <lucide-angular name="FolderKanban"></lucide-angular>
 
         Projects
       </a>
 
-      <a>
+      <a routerLink="/organization/tasks" routerLinkActive="active">
         <lucide-angular name="CheckSquare"></lucide-angular>
 
         Tasks
       </a>
 
-      <a>
+      <a routerLink="/organization/members" routerLinkActive="active">
+        <lucide-angular name="Users"></lucide-angular>
+
+        Members
+      </a>
+
+      <a routerLink="/organization/teams" routerLinkActive="active">
+        <lucide-angular name="Users"></lucide-angular>
+
+        Teams
+      </a>
+
+      <a routerLink="/organization/roles" routerLinkActive="active">
+        <lucide-angular name="Settings"></lucide-angular>
+
+        Roles
+      </a>
+
+      <a class="disabled" title="Coming soon">
         <lucide-angular name="CalendarDays"></lucide-angular>
 
         Calendar
       </a>
 
-      <a>
-        <lucide-angular name="Users"></lucide-angular>
-
-        Team
-      </a>
-
-      <a>
+      <a routerLink="/organization/reports" routerLinkActive="active">
         <lucide-angular name="BarChart3"></lucide-angular>
 
         Reports
-      </a>
-
-      <a>
-        <lucide-angular name="Settings"></lucide-angular>
-
-        Settings
       </a>
     </nav>
 
@@ -174,23 +180,40 @@
               <span class="notification-badge"> 3 </span>
             </button>
 
-            <!-- Settings -->
+            <!-- Theme toggle -->
 
-            <button class="icon-btn">
-              <lucide-angular name="Settings" size="18"> </lucide-angular>
+            <button
+              class="icon-btn"
+              type="button"
+              (click)="toggleTheme()"
+              [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+            >
+              @if (isDark()) {
+                <lucide-angular name="Sun" size="18"></lucide-angular>
+              } @else {
+                <lucide-angular name="Moon" size="18"></lucide-angular>
+              }
             </button>
 
             <!-- User -->
 
-            <div class="user-profile">
-              <img src="https://i.pravatar.cc/60?img=32" alt="user" />
+            @if (user(); as u) {
+              <div class="user-profile">
+                <span class="user-avatar">{{ u.fullName.charAt(0) }}</span>
 
-              <div>
-                <h6>Avery Mitchell</h6>
+                <div>
+                  <h6>{{ u.fullName }}</h6>
 
-                <small>avery@taskflow.app</small>
+                  <small>{{ u.email }}</small>
+                </div>
               </div>
-            </div>
+            }
+
+            <!-- Sign out -->
+
+            <button class="icon-btn" type="button" (click)="logout()" aria-label="Sign out">
+              <lucide-angular name="LogOut" size="18"> </lucide-angular>
+            </button>
           </div>
         </div>
       </div>

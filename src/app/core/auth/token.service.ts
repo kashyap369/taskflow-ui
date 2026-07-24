@@ -35,6 +35,16 @@ export class TokenService {
     storage.setItem(this.REFRESH_KEY, refreshToken);
   }
 
+  /**
+   * Swap in rotated tokens (from `POST /auth/refresh`) without clearing the stored user principal or
+   * changing the remember-me storage choice — writes to whichever storage currently holds the session.
+   */
+  updateTokens(accessToken: string, refreshToken: string): void {
+    const storage = localStorage.getItem(this.ACCESS_KEY) ? localStorage : sessionStorage;
+    storage.setItem(this.ACCESS_KEY, accessToken);
+    storage.setItem(this.REFRESH_KEY, refreshToken);
+  }
+
   /** Persist the principal in the same storage that holds the access token. */
   setUser(user: User): void {
     const storage = localStorage.getItem(this.ACCESS_KEY) ? localStorage : sessionStorage;

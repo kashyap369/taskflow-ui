@@ -1,0 +1,125 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Roles &amp; permissions</h1>
+        <p>Define what people can do in {{ currentOrg()?.name ?? 'your organization' }}.</p>
+      </div>
+      @if (!needsOrganization()) {
+        <button class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="18"></lucide-angular>
+          New role
+        </button>
+      }
+    </div>
+
+    @if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h3>No organization yet</h3>
+        <p>Create your organization from the dashboard to start defining roles.</p>
+        <a routerLink="/organization/dashboard" class="btn-primary-cta">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else if (loading() && !hasRoles()) {
+      <div class="lottie-state">
+        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading roles" />
+        <p>Loading roles…</p>
+      </div>
+    } @else if (!hasRoles()) {
+      <div class="lottie-state">
+        <app-lottie-player src="/lottie/empty.json" [width]="150" [height]="150" ariaLabel="No roles yet" />
+        <h3>No roles yet</h3>
+        <p>Create a role (e.g. Manager, Developer) to invite teammates into.</p>
+        <button class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="16"></lucide-angular> New role
+        </button>
+      </div>
+    } @else {
+      <div class="role-grid">
+        @for (role of roles(); track role.id) {
+          <article class="role-card">
+            <span class="role-icon"><lucide-angular name="ShieldCheck" size="18"></lucide-angular></span>
+            <h3>{{ role.name }}</h3>
+            @if (role.description) {
+              <p>{{ role.description }}</p>
+            }
+            <button class="manage-btn" (click)="manage(role.id)">
+              <lucide-angular name="KeyRound" size="14"></lucide-angular>
+              Manage permissions
+            </button>
+          </article>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Create role drawer -->
+  @if (showCreate()) {
+    <div class="drawer-backdrop" (click)="closeCreate()"></div>
+    <aside class="drawer">
+      <div class="drawer-head">
+        <h2>New role</h2>
+        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+      <form class="drawer-form" [formGroup]="createForm" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="name" class="form-label">Role name</label>
+          <input id="name" type="text" class="form-control" placeholder="Manager" formControlName="name" />
+          @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
+            <small class="field-msg">A role name is required.</small>
+          }
+        </div>
+        <div class="field">
+          <label for="description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="description" rows="3" class="form-control" placeholder="What can this role do?" formControlName="description"></textarea>
+        </div>
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            {{ saving() ? 'Creating…' : 'Create role' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+
+  <!-- Manage permissions drawer -->
+  @if (selectedRole(); as role) {
+    <div class="drawer-backdrop" (click)="closeManage()"></div>
+    <aside class="drawer">
+      <div class="drawer-head">
+        <div>
+          <h2>{{ role.name }}</h2>
+          <span class="drawer-sub">Toggle what this role can do</span>
+        </div>
+        <button class="icon-btn" (click)="closeManage()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="perm-list">
+        @for (perm of catalog(); track perm.id) {
+          <label class="perm-row">
+            <div class="perm-text">
+              <span class="perm-name">{{ perm.name }}</span>
+              @if (perm.description) {
+                <span class="perm-desc">{{ perm.description }}</span>
+              }
+            </div>
+            <input
+              type="checkbox"
+              class="perm-toggle"
+              [checked]="hasPermission(perm.name)"
+              (change)="togglePermission(perm.name, $event)"
+            />
+            <span class="switch"></span>
+          </label>
+        }
+      </div>
+    </aside>
+  }
+</section>

@@ -12,6 +12,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 // Third Party
 import { provideToastr } from 'ngx-toastr';
 import { provideEchartsCore } from 'ngx-echarts';
+import { provideLottieOptions } from 'ngx-lottie';
 
 import * as echarts from 'echarts/core';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
@@ -28,6 +29,7 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { loggingInterceptor } from './core/interceptors/logging.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { refreshInterceptor } from './core/interceptors/refresh.interceptor';
 
 echarts.use([
   LineChart,
@@ -52,6 +54,9 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideEchartsCore({ echarts }),
 
+    // Lottie player (lazy-loaded lottie-web). Animation JSONs live in public/lottie/.
+    provideLottieOptions({ player: () => import('lottie-web') }),
+
     provideToastr({
       positionClass: 'toast-top-right',
       preventDuplicates: true,
@@ -63,9 +68,17 @@ export const appConfig: ApplicationConfig = {
 
     { provide: APP_SETTINGS, useValue: AppSettings },
 
-    // Middleware pipeline (order matters): attach token -> log -> spinner -> handle errors
+    // Middleware pipeline (order matters): attach token -> log -> spinner -> handle errors ->
+    // refresh. `refreshInterceptor` sits innermost so it catches a raw 401 and transparently
+    // rotates the token BEFORE the error interceptor would surface it.
     provideHttpClient(
-      withInterceptors([authInterceptor, loggingInterceptor, loadingInterceptor, errorInterceptor]),
+      withInterceptors([
+        authInterceptor,
+        loggingInterceptor,
+        loadingInterceptor,
+        errorInterceptor,
+        refreshInterceptor,
+      ]),
     ),
   ],
 };

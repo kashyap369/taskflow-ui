@@ -1,8 +1,13 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
+  Building2,
   CheckCheck,
   CircleCheckBig,
+  Clock,
   FolderKanban,
   LUCIDE_ICONS,
   LucideAngularModule,
@@ -10,15 +15,20 @@ import {
   Plus,
   Sparkles,
   TriangleAlert,
+  Users,
 } from 'lucide-angular';
 
-import { ProjectHealthChart } from '@shared/ui/organisms/project-health-chart/project-health-chart';
-import { ProductivityChart } from '@shared/ui/organisms/productivity-chart/productivity-chart';
+import {
+  HealthSegment,
+  ProjectHealthChart,
+} from '@shared/ui/organisms/project-health-chart/project-health-chart';
+import { projectStatusMeta } from '../organization.models';
+import { OrganizationFacade } from '../organization.facade';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [LucideAngularModule, ProjectHealthChart, ProductivityChart],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, ProjectHealthChart],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.scss',
   providers: [
@@ -33,8 +43,61 @@ import { ProductivityChart } from '@shared/ui/organisms/productivity-chart/produ
         CheckCheck,
         CircleCheckBig,
         TriangleAlert,
+        Users,
+        Clock,
+        Building2,
       }),
     },
   ],
 })
-export class DashboardPage {}
+export class DashboardPage {
+  private readonly facade = inject(OrganizationFacade);
+  private readonly fb = inject(FormBuilder);
+
+  readonly loading = this.facade.loading;
+  readonly saving = this.facade.saving;
+  readonly needsOrganization = this.facade.needsOrganization;
+  readonly currentOrg = this.facade.currentOrg;
+  readonly summary = this.facade.summary;
+  readonly projects = this.facade.projects;
+  readonly user = this.facade.user;
+
+  readonly projectStatusMeta = projectStatusMeta;
+
+  /** First name for the greeting, falling back gracefully. */
+  readonly firstName = computed(() => this.user()?.fullName?.split(' ')[0] ?? 'there');
+
+  /** Up to 5 most recent projects for the overview list. */
+  readonly recentProjects = computed(() => this.projects().slice(0, 5));
+
+  /** Real task-status donut fed from the dashboard summary. */
+  readonly taskSegments = computed<HealthSegment[]>(() => {
+    const s = this.summary();
+    if (!s) {
+      return [];
+    }
+    return [
+      { name: 'To do', value: s.todoTasks, color: '#94A3B8' },
+      { name: 'In progress', value: s.inProgressTasks, color: '#4F6EF7' },
+      { name: 'Completed', value: s.completedTasks, color: '#10B981' },
+    ];
+  });
+
+  readonly createOrgForm = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.maxLength(150)]],
+    description: ['', [Validators.maxLength(500)]],
+  });
+
+  constructor() {
+    this.facade.init();
+  }
+
+  createOrganization(): void {
+    if (this.createOrgForm.invalid) {
+      this.createOrgForm.markAllAsTouched();
+      return;
+    }
+    const { name, description } = this.createOrgForm.getRawValue();
+    this.facade.createOrganization(name, description);
+  }
+}
