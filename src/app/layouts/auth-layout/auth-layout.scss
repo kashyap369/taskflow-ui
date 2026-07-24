@@ -1,12 +1,5 @@
+// Full-bleed shell — each auth page (the split-screen login) owns its own layout.
 .auth-layout {
-  display: flex;
   min-height: 100vh;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-
-  &__card {
-    width: 100%;
-    max-width: 420px;
-  }
+  background: var(--bg);
 }

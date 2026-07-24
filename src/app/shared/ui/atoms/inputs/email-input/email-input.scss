@@ -1,0 +1,84 @@
+.email-input {
+  width: 100%;
+  max-width: 480px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  width: 100%;
+  min-height: 56px;
+
+  padding: 0 16px;
+
+  background: #ffffff;
+  border: 1.5px solid #d1d5db;
+  border-radius: 14px;
+
+  transition: all 0.25s ease;
+}
+
+.input-wrapper:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+}
+
+.email-control {
+  flex: 1;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  font-size: 15px;
+  color: #111827;
+
+  padding: 0;
+
+  height: 54px;
+}
+
+.email-control::placeholder {
+  color: #9ca3af;
+}
+
+.left-icon {
+  color: #6b7280;
+  width: 20px;
+  height: 20px;
+}
+.email-control {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.right-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.success-icon {
+  color: #22c55e;
+}
+
+.error-icon {
+  color: #ef4444;
+}
+
+.input-wrapper.success {
+  border-color: #22c55e;
+}
+
+.input-wrapper.error {
+  border-color: #ef4444;
+}
+
+.input-wrapper.success:focus-within {
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+}
+
+.input-wrapper.error:focus-within {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}

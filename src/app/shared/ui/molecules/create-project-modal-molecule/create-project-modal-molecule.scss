@@ -1,0 +1,377 @@
+:host {
+  display: contents;
+}
+
+/* Backdrop */
+
+.modal-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 1rem;
+
+  background: rgba(15, 23, 42, 0.55);
+
+  overflow-y: auto;
+}
+
+/* Modal */
+
+.create-modal {
+  width: 100%;
+
+  max-width: 600px;
+
+  padding: 2rem;
+
+  background: #fff;
+
+  border-radius: 24px;
+
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.28);
+}
+
+/* Header */
+
+.modal-header {
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  margin: 0;
+
+  font-size: 1.35rem;
+
+  font-weight: 700;
+
+  color: #111827;
+}
+
+.close-btn {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 32px;
+
+  height: 32px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: #9ca3af;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+
+  color: #374151;
+}
+
+/* Fields */
+
+.field {
+  margin-bottom: 1.25rem;
+}
+
+.field-row {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 1rem;
+}
+
+.field-label {
+  display: block;
+
+  margin-bottom: 0.5rem;
+
+  font-size: 0.88rem;
+
+  font-weight: 600;
+
+  color: #374151;
+}
+
+.field-input {
+  width: 100%;
+
+  padding: 0.75rem 0.9rem;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 12px;
+
+  font-size: 0.92rem;
+
+  color: #111827;
+
+  background: #fcfcfe;
+
+  transition: all 0.2s ease;
+}
+
+.field-input::placeholder {
+  color: #9ca3af;
+}
+
+.field-input:focus {
+  outline: none;
+
+  border-color: #6d5df6;
+
+  box-shadow: 0 0 0 3px rgba(109, 93, 246, 0.15);
+}
+
+.field-textarea {
+  resize: vertical;
+
+  min-height: 88px;
+}
+
+/* Select */
+
+.select-wrap {
+  position: relative;
+}
+
+.select-wrap select {
+  appearance: none;
+
+  padding-right: 2.25rem;
+
+  cursor: pointer;
+}
+
+.select-chevron {
+  position: absolute;
+
+  top: 50%;
+
+  right: 0.85rem;
+
+  transform: translateY(-50%);
+
+  color: #9ca3af;
+
+  pointer-events: none;
+}
+
+/* Accent color swatches */
+
+.color-swatches {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 0.65rem;
+}
+
+.swatch {
+  width: 34px;
+
+  height: 34px;
+
+  border: 2px solid transparent;
+
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.swatch:hover {
+  transform: scale(1.08);
+}
+
+.swatch.selected {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px currentColor;
+
+  border-color: #fff;
+}
+
+/* Team chips */
+
+.team-chips {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 0.6rem;
+}
+
+.team-chip {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 0.5rem;
+
+  padding: 0.35rem 0.85rem 0.35rem 0.35rem;
+
+  border: 1px solid #e5e7eb;
+
+  border-radius: 999px;
+
+  font-size: 0.85rem;
+
+  font-weight: 500;
+
+  color: #374151;
+
+  background: #fff;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.team-chip:hover {
+  border-color: #cdd3e8;
+}
+
+.team-chip.selected {
+  border-color: #6d5df6;
+
+  background: #f3f1ff;
+
+  color: #4f3fd6;
+}
+
+.chip-avatar {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 26px;
+
+  height: 26px;
+
+  border-radius: 50%;
+
+  overflow: hidden;
+
+  font-size: 0.62rem;
+
+  font-weight: 700;
+
+  color: #4f5bd5;
+
+  flex-shrink: 0;
+}
+
+.chip-avatar img {
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.chip-check {
+  color: #6d5df6;
+}
+
+/* Footer */
+
+.modal-footer {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 0.75rem;
+
+  margin-top: 1.75rem;
+}
+
+.btn {
+  height: 44px;
+
+  padding: 0 1.5rem;
+
+  border-radius: 12px;
+
+  font-size: 0.95rem;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.btn-ghost {
+  border: 1px solid #e5e7eb;
+
+  background: #fff;
+
+  color: #374151;
+}
+
+.btn-ghost:hover {
+  background: #f8fafc;
+}
+
+.btn-primary {
+  border: none;
+
+  color: #fff;
+
+  background: linear-gradient(90deg, #6d5df6, #4f6ef7);
+
+  box-shadow: 0 8px 20px rgba(79, 110, 247, 0.32);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+@media (max-width: 576px) {
+  .create-modal {
+    padding: 1.5rem;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+
+    gap: 0;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

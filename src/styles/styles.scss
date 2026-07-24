@@ -7,6 +7,11 @@
 @import "./abstracts/shadows";
 @import "./abstracts/breakpoints";
 @import "./abstracts/mixins";
+@import "./abstracts/motion";
+
+// Theme tokens (light = :root default, dark = [data-theme="dark"])
+@import "./themes/light";
+@import "./themes/dark";
 
 @import "./base/reset";
 @import "./base/global";
@@ -19,6 +24,5 @@
 @import "./components/modal";
 @import "./components/table";
 
-@import "./themes/light";
 @import "ngx-toastr/toastr";
 @import "./components/toastr";

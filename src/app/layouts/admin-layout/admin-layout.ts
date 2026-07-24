@@ -1,12 +1,47 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import {
+  LUCIDE_ICONS,
+  LucideAngularModule,
+  LucideIconProvider,
+  LogOut,
+  Moon,
+  ShieldCheck,
+  Sun,
+} from 'lucide-angular';
 
-/** Shell for the Admin portal (role: ADMIN). */
+import { AuthService } from '@core/auth/auth.service';
+import { ThemeService } from '@core/services/theme.service';
+import { AuthFacade } from '@features/auth/auth.facade';
+
+/** Shell for the platform Admin portal (Admin system role). */
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, LucideAngularModule],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.scss',
+  providers: [
+    {
+      provide: LUCIDE_ICONS,
+      multi: true,
+      useValue: new LucideIconProvider({ ShieldCheck, Sun, Moon, LogOut }),
+    },
+  ],
 })
-export class AdminLayout {}
+export class AdminLayout {
+  private readonly themeService = inject(ThemeService);
+  private readonly authService = inject(AuthService);
+  private readonly authFacade = inject(AuthFacade);
+
+  readonly isDark = this.themeService.isDark;
+  readonly user = this.authService.user;
+
+  toggleTheme(): void {
+    this.themeService.toggle();
+  }
+
+  logout(): void {
+    this.authFacade.logout();
+  }
+}

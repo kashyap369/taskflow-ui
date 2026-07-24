@@ -1,0 +1,269 @@
+<div
+  class="master-card"
+  [class.hoverable]="hoverable"
+  [class.shadow]="shadow"
+  [style.background]="cardBackground"
+  [style.border-color]="borderColor"
+  [style.border-radius.px]="borderRadius"
+>
+
+  @switch (config.variant) {
+
+    <!-- Achievement: icon + title + subtitle -->
+    @case ('achievement') {
+
+      @if (config.icon) {
+        <div
+          class="card-icon"
+          [style.background]="iconBackground"
+          [style.color]="iconColor">
+
+          <lucide-icon [img]="config.icon" [size]="20"></lucide-icon>
+
+        </div>
+      }
+
+      <h4 class="card-title">
+        {{ config.title }}
+      </h4>
+
+      @if (config.subtitle) {
+        <p class="card-subtitle">
+          {{ config.subtitle }}
+        </p>
+      }
+
+    }
+
+    <!-- Stat: label + icon + value + trend -->
+    @case ('stat') {
+
+      <div class="stat-header">
+
+        <span class="stat-label">
+          {{ config.label }}
+        </span>
+
+        @if (config.icon) {
+          <lucide-icon
+            class="stat-icon"
+            [img]="config.icon"
+            [size]="18"
+            [style.color]="iconBackground">
+          </lucide-icon>
+        }
+
+      </div>
+
+      <div class="stat-value">
+        {{ config.value }}
+      </div>
+
+      @if (config.trend) {
+        <div
+          class="stat-trend"
+          [style.color]="trendColor">
+
+          {{ config.trend }}
+
+        </div>
+      }
+
+    }
+
+    <!-- Task: badge + project + title + date + avatars -->
+    @case ('task') {
+
+      <div class="task-header">
+
+        @if (config.badge) {
+          <span
+            class="card-badge"
+            [style.color]="config.badge.color"
+            [style.background]="config.badge.background">
+
+            {{ config.badge.text }}
+
+          </span>
+        }
+
+        @if (config.project) {
+          <span class="task-project">
+            {{ config.project }}
+          </span>
+        }
+
+      </div>
+
+      <h4 class="card-title">
+        {{ config.title }}
+      </h4>
+
+      <div class="task-footer">
+
+        @if (config.date) {
+          <span class="card-date">
+
+            <lucide-icon [img]="calendarIcon" [size]="14"></lucide-icon>
+
+            {{ config.date }}
+
+          </span>
+        }
+
+        @if (config.avatars?.length) {
+          <div class="avatar-stack">
+
+            @for (avatar of config.avatars; track $index) {
+              <span
+                class="avatar"
+                [style.background]="avatar.background">
+
+                @if (avatar.image) {
+                  <img [src]="avatar.image" [alt]="avatar.initials ?? 'member'" />
+                } @else {
+                  {{ avatar.initials }}
+                }
+
+              </span>
+            }
+
+          </div>
+        }
+
+      </div>
+
+    }
+
+    <!-- Project: logo + title + description + menu + status + date + progress + members -->
+    @case ('project') {
+
+      <div class="project-header">
+
+        @if (config.icon) {
+          <div
+            class="card-icon large"
+            [style.background]="iconBackground"
+            [style.color]="iconColor">
+
+            <lucide-icon [img]="config.icon" [size]="22"></lucide-icon>
+
+          </div>
+        }
+
+        <div class="project-heading">
+
+          <h4 class="card-title">
+            {{ config.title }}
+          </h4>
+
+          @if (config.subtitle) {
+            <p class="card-subtitle">
+              {{ config.subtitle }}
+            </p>
+          }
+
+        </div>
+
+        @if (config.showMenu) {
+          <button class="menu-button" type="button" aria-label="Card menu">
+
+            <lucide-icon [img]="menuIcon" [size]="18"></lucide-icon>
+
+          </button>
+        }
+
+      </div>
+
+      <div class="project-meta">
+
+        @if (config.status) {
+          <span
+            class="card-badge"
+            [style.color]="config.status.color"
+            [style.background]="config.status.background">
+
+            @if (config.status.dot) {
+              <span
+                class="badge-dot"
+                [style.background]="config.status.color">
+              </span>
+            }
+
+            {{ config.status.text }}
+
+          </span>
+        }
+
+        @if (config.date) {
+          <span class="card-date">
+
+            <lucide-icon [img]="calendarIcon" [size]="14"></lucide-icon>
+
+            {{ config.date }}
+
+          </span>
+        }
+
+      </div>
+
+      @if (config.progress !== undefined) {
+
+        <div class="progress-header">
+
+          <span class="progress-text">
+            {{ config.progressText }}
+          </span>
+
+          <span class="progress-percent">
+            {{ progress }}%
+          </span>
+
+        </div>
+
+        <div class="progress-track">
+
+          <div
+            class="progress-fill"
+            [style.width.%]="progress">
+          </div>
+
+        </div>
+
+      }
+
+      <div class="project-footer">
+
+        @if (config.avatars?.length) {
+          <div class="avatar-stack">
+
+            @for (avatar of config.avatars; track $index) {
+              <span
+                class="avatar"
+                [style.background]="avatar.background">
+
+                @if (avatar.image) {
+                  <img [src]="avatar.image" [alt]="avatar.initials ?? 'member'" />
+                } @else {
+                  {{ avatar.initials }}
+                }
+
+              </span>
+            }
+
+          </div>
+        }
+
+        @if (config.membersText) {
+          <span class="members-text">
+            {{ config.membersText }}
+          </span>
+        }
+
+      </div>
+
+    }
+
+  }
+
+</div>

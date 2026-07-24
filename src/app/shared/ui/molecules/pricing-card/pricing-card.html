@@ -1,72 +1,91 @@
 <div
-    class="pricing-card"
-    [class.popular]="plan().popular">
+  class="pricing-card"
+  [class.hoverable]="hoverable"
+  [class.shadow]="shadow"
+  [style.background]="cardBackground"
+  [style.border-color]="borderColor"
+  [style.border-radius.px]="borderRadius"
+>
 
-    @if(plan().popular){
+  <!-- Badge -->
+  @if (plan.badge) {
+    <div
+      class="pricing-badge"
+      [style.background]="badgeColor">
 
-    <div class="popular-badge">
-
-        MOST POPULAR
+      {{ plan.badge }}
 
     </div>
+  }
+
+  <!-- Header -->
+  <div class="pricing-header">
+
+    <h3 class="pricing-title">
+      {{ plan.title }}
+    </h3>
+
+    <p class="pricing-description">
+      {{ plan.description }}
+    </p>
+
+  </div>
+
+  <!-- Price -->
+  <div class="pricing-price">
+
+    <span class="price">
+
+      {{ plan.price }}
+
+    </span>
+
+    @if (plan.duration) {
+
+      <span class="duration">
+
+        {{ plan.duration }}
+
+      </span>
 
     }
 
-    <h3>
+  </div>
 
-        {{plan().title}}
+  <!-- Button -->
+  <button
+    class="pricing-button"
+    [class.filled]="buttonVariant === 'filled'"
+    [class.outline]="buttonVariant === 'outline'">
 
-    </h3>
+    {{ plan.buttonText }}
 
-    <p class="description">
+  </button>
 
-        {{plan().description}}
+  <!-- Divider -->
+  <div class="divider"></div>
 
-    </p>
+  <!-- Features -->
+  <ul class="feature-list">
 
-    <div class="price-section">
+    @for (feature of plan.features; track feature) {
 
-        <span class="price">
+      <li class="feature-item">
 
-            {{plan().price}}
+        <lucide-icon
+          class="feature-icon"
+          [img]="featureIcon"
+          [size]="18">
+        </lucide-icon>
 
+        <span>
+          {{ feature }}
         </span>
 
-        @if(plan().duration){
+      </li>
 
-        <span class="duration">
+    }
 
-            {{plan().duration}}
-
-        </span>
-
-        }
-
-    </div>
-
-    <button
-        class="btn w-100 mt-4"
-        [class.btn-dark]="!plan().outlineButton"
-        [class.btn-outline-dark]="plan().outlineButton">
-
-        {{plan().buttonText}}
-
-    </button>
-
-    <ul class="feature-list">
-
-        @for(feature of plan().features; track feature){
-
-        <li>
-
-            <i class="bi bi-check-circle"></i>
-
-            {{feature}}
-
-        </li>
-
-        }
-
-    </ul>
+  </ul>
 
 </div>

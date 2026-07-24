@@ -1,0 +1,51 @@
+<div class="textarea-wrapper">
+  @if (label) {
+    <label class="textarea-label" [for]="id">
+      {{ label }}
+
+      @if (required) {
+        <span class="required">*</span>
+      }
+    </label>
+  }
+
+  <textarea
+    [id]="id"
+    class="textarea"
+    [rows]="rows"
+    [placeholder]="placeholder"
+    [value]="value"
+    [disabled]="disabled"
+    [maxLength]="maxLength"
+    [class.invalid]="invalid"
+    [class.success]="success"
+    (input)="onInput($event)"
+  ></textarea>
+  <div class="textarea-footer">
+    @if (showValidation) {
+      @if (invalid && errorMessage) {
+        <small class="error-text">
+          {{ errorMessage }}
+        </small>
+      } @else if (success && successMessage) {
+        <small class="success-text">
+          {{ successMessage }}
+        </small>
+      } @else {
+        <small class="helper-text">
+          {{ helperText }}
+        </small>
+      }
+    }
+
+    @if (showCounter) {
+      <small
+        class="counter"
+        [class.warning]="currentLength >= maxLength * 0.8"
+        [class.danger]="currentLength >= maxLength"
+      >
+        {{ currentLength }} / {{ maxLength }}
+      </small>
+    }
+  </div>
+</div>

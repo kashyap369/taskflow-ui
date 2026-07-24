@@ -1,12 +1,63 @@
+// ======================================
+// Light theme — the default token set (:root)
+// Components reference ONLY these semantic tokens, never raw palette.
+// See docs/DESIGN.md §3 & §6.
+// ======================================
+
 :root {
-  --primary: #8b5cf6;
+  color-scheme: light;
+
+  // ---- Type families ----
+  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  // ---- Brand ----
+  --primary: #7c3aed;
+  --primary-strong: #6d28d9;
+  --primary-soft: #f5f3ff;
   --secondary: #3b82f6;
+  --on-primary: #ffffff;
+  --ring: rgba(124, 58, 237, 0.35);
 
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
+  // ---- Surfaces & structure ----
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --surface-2: #f9fafb;
+  --surface-inset: #f1f5f9;
+  --elevated: #ffffff;
+  --border: #e9ecf2;
+  --border-strong: #d7dbe4;
 
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
+  // ---- Text ----
+  --text: #0f1222;
+  --text-muted: #5b6172;
+  --text-subtle: #878da0;
 
-  --border-color: #e5e7eb;
+  // ---- Status + soft tints ----
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.14);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --info: #3b82f6;
+  --info-soft: rgba(59, 130, 246, 0.12);
+
+  // ---- Gradients & atmosphere ----
+  --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+  --gradient-text: linear-gradient(90deg, #7c3aed, #3b82f6);
+  --mesh-1: rgba(124, 58, 237, 0.18);
+  --mesh-2: rgba(59, 130, 246, 0.16);
+  --mesh-3: rgba(236, 72, 153, 0.10);
+
+  // ---- Elevation ----
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.10);
+  --shadow-xl: 0 30px 60px rgba(15, 23, 42, 0.14);
+  --shadow-brand: 0 18px 38px rgba(124, 58, 237, 0.28);
+
+  // ---- Glass (sticky header, floating chips) ----
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(15, 23, 42, 0.06);
 }

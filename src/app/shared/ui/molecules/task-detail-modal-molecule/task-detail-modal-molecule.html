@@ -1,0 +1,193 @@
+@if (open) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+
+    <div
+      class="task-modal"
+      role="dialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()">
+
+      <button type="button" class="close-btn" aria-label="Close" (click)="onClose()">
+        <lucide-icon [img]="closeIcon" [size]="18"></lucide-icon>
+      </button>
+
+      <!-- Header -->
+      <div class="modal-header">
+
+        @if (config.project) {
+          <span class="project-ref">
+            <span class="project-dot" [style.background]="config.project.color ?? '#EC4899'"></span>
+            {{ config.project.name }}
+          </span>
+        }
+
+        <h4 class="task-title">{{ config.title }}</h4>
+
+        @if (config.description) {
+          <p class="task-description">{{ config.description }}</p>
+        }
+
+      </div>
+
+      <!-- Body: two columns -->
+      <div class="modal-body">
+
+        <!-- Main column -->
+        <div class="main-col">
+
+          @if (subtasks().length) {
+            <section class="block">
+
+              <h6 class="block-label">{{ config.subtasksLabel ?? 'SUBTASKS' }}</h6>
+
+              <ul class="subtask-list">
+
+                @for (task of subtasks(); track subtaskId(task)) {
+                  <li
+                    class="subtask-item"
+                    [class.done]="task.isDone"
+                    (click)="toggleSubtask(task)">
+
+                    <span class="checkbox" [class.checked]="task.isDone">
+                      @if (task.isDone) {
+                        <lucide-icon [img]="checkIcon" [size]="12"></lucide-icon>
+                      }
+                    </span>
+
+                    <span class="subtask-title">{{ task.title }}</span>
+
+                  </li>
+                }
+
+              </ul>
+
+            </section>
+          }
+
+          <section class="block">
+
+            <h6 class="block-label">{{ config.commentsLabel ?? 'COMMENTS' }}</h6>
+
+            @for (comment of config.comments; track $index) {
+              <div class="comment">
+
+                <span class="comment-avatar" [style.background]="comment.background ?? '#E5E7FB'">
+                  @if (comment.image) {
+                    <img [src]="comment.image" [alt]="comment.author" />
+                  } @else {
+                    {{ initials({ name: comment.author, initials: comment.initials }) }}
+                  }
+                </span>
+
+                <div class="comment-body">
+
+                  <div class="comment-meta">
+                    <span class="comment-author">{{ comment.author }}</span>
+                    <span class="comment-time">{{ comment.time }}</span>
+                  </div>
+
+                  <p class="comment-text">{{ comment.text }}</p>
+
+                </div>
+
+              </div>
+            }
+
+            <div class="comment-compose">
+
+              <input
+                type="text"
+                class="comment-input"
+                [placeholder]="config.commentPlaceholder ?? 'Add a comment...'"
+                [ngModel]="commentDraft()"
+                (ngModelChange)="commentDraft.set($event)"
+                (keyup.enter)="onSubmitComment()" />
+
+              <button type="button" class="btn-comment" (click)="onSubmitComment()">
+                {{ config.commentButtonLabel ?? 'Comment' }}
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+
+        <!-- Details column -->
+        <aside class="details-col">
+
+          @if (config.status) {
+            <div class="detail">
+              <span class="detail-label">{{ config.statusLabel ?? 'STATUS' }}</span>
+              <div class="status-box">
+                <span>{{ config.status }}</span>
+                <lucide-icon [img]="flagIcon" [size]="15"></lucide-icon>
+              </div>
+            </div>
+          }
+
+          @if (config.priority) {
+            <div class="detail">
+              <span class="detail-label">{{ config.priorityLabel ?? 'PRIORITY' }}</span>
+              <span
+                class="priority-badge"
+                [style.color]="config.priority.color ?? '#8B5CF6'"
+                [style.background]="config.priority.background ?? '#F3EEFF'">
+                {{ config.priority.label }}
+              </span>
+            </div>
+          }
+
+          @if (config.dueDate) {
+            <div class="detail">
+              <span class="detail-label">{{ config.dueDateLabel ?? 'DUE DATE' }}</span>
+              <span class="detail-value">{{ config.dueDate }}</span>
+            </div>
+          }
+
+          @if (config.assignees?.length) {
+            <div class="detail">
+              <span class="detail-label">{{ config.assigneesLabel ?? 'ASSIGNEES' }}</span>
+              <div class="assignee-list">
+                @for (person of config.assignees; track $index) {
+                  <span class="assignee-chip">
+                    <span class="chip-avatar" [style.background]="person.background ?? '#E5E7FB'">
+                      @if (person.image) {
+                        <img [src]="person.image" [alt]="person.name" />
+                      } @else {
+                        {{ initials(person) }}
+                      }
+                    </span>
+                    {{ person.name }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          @if (config.tags?.length) {
+            <div class="detail">
+              <span class="detail-label">{{ config.tagsLabel ?? 'TAGS' }}</span>
+              <div class="tag-list">
+                @for (tag of config.tags; track $index) {
+                  <span class="tag">{{ tag }}</span>
+                }
+              </div>
+            </div>
+          }
+
+          @if (config.showAttach ?? true) {
+            <button type="button" class="attach-btn" (click)="onAttach()">
+              <lucide-icon [img]="attachIcon" [size]="16"></lucide-icon>
+              {{ config.attachLabel ?? 'Attach file' }}
+            </button>
+          }
+
+        </aside>
+
+      </div>
+
+    </div>
+
+  </div>
+}

@@ -1,0 +1,67 @@
+<div class="email-input w-100">
+
+    <label for="email" class="form-label fw-semibold">
+
+        Email Address
+
+    </label>
+
+    <div
+        class="input-wrapper"
+        [class.error]="showError"
+        [class.success]="showSuccess">
+
+        <lucide-icon
+            [img]="Mail"
+            class="left-icon">
+        </lucide-icon>
+
+        <input
+            id="email"
+            type="email"
+            class="email-control"
+            placeholder="Enter your email"
+            [(ngModel)]="email"
+            (input)="onInput($event)">
+
+        @if(showSuccess){
+
+            <lucide-icon
+                [img]="CircleCheck"
+                class="right-icon success-icon">
+            </lucide-icon>
+
+        }
+
+        @if(showError){
+
+            <lucide-icon
+                [img]="CircleAlert"
+                class="right-icon error-icon">
+            </lucide-icon>
+
+        }
+
+    </div>
+
+    @if(showError){
+
+        <small class="text-danger mt-2 d-block">
+
+            Please enter a valid email address.
+
+        </small>
+
+    }
+
+    @if(showSuccess){
+
+        <small class="text-success mt-2 d-block">
+
+            Email looks good.
+
+        </small>
+
+    }
+
+</div>

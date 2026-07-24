@@ -1,27 +1,56 @@
+import { CommonModule } from '@angular/common';
 import { Component, computed, input } from '@angular/core';
-import { LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Stars } from 'lucide-angular';
+
+import {
+  LucideAngularModule,
+  Star,
+  BadgeCheck,
+  LUCIDE_ICONS,
+  LucideIconProvider
+} from 'lucide-angular';
 
 export interface ReviewCardModel {
-  name: string;
-  designation: string;
-  company: string;
+
+  title?: string;
+
   review: string;
-  rating?: number;
-  avatar?: string;
-  avatarColor?: string;
+
+  rating: number;
+
+  reviewerName: string;
+
+  reviewerDesignation: string;
+
+  reviewerCompany: string;
+
+  avatarText?: string;
+
+  avatarImage?: string;
+
+  avatarBackground?: string;
+
+  verified?: boolean;
+
 }
 
 @Component({
   selector: 'app-review-card',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [
+    CommonModule,
+    LucideAngularModule
+  ],
   templateUrl: './review-card.html',
   styleUrl: './review-card.scss',
-  providers:[
+
+  providers: [
     {
-      provide:LUCIDE_ICONS,
-      multi:true,
-      useValue:new LucideIconProvider({Stars})
+      provide: LUCIDE_ICONS,
+      multi: true,
+      useValue: new LucideIconProvider({
+        Star,
+        BadgeCheck
+      })
     }
   ]
 })
@@ -31,7 +60,7 @@ export class ReviewCard {
 
   stars = computed(() =>
     Array.from({
-      length: this.review().rating ?? 5
+      length: Math.min(5, Math.max(0, this.review().rating))
     })
   );
 

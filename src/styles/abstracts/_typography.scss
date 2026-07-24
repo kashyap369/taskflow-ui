@@ -2,8 +2,18 @@
 // Font Family _typography.scss
 // ======================================
 
+// Body / long-form — neutral, legible at small sizes
 $font-family-base:
   'Inter',
+  system-ui,
+  -apple-system,
+  sans-serif;
+
+// Display / headings / UI — geometric, characterful
+$font-family-display:
+  'Plus Jakarta Sans',
+  system-ui,
+  -apple-system,
   sans-serif;
 
 // ======================================

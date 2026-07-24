@@ -1,0 +1,46 @@
+<div class="deadline-card">
+
+  @if (config.title || (config.showAction ?? true)) {
+    <div class="deadline-header">
+
+      @if (config.title) {
+        <h5>{{ config.title }}</h5>
+      }
+
+      @if (config.showAction ?? true) {
+        <button type="button" class="action-link" (click)="onActionClick()">
+          {{ config.actionLabel ?? 'Calendar' }}
+        </button>
+      }
+
+    </div>
+  }
+
+  <ul class="deadline-list">
+
+    @for (item of items(); track $index) {
+      <li class="deadline-item" (click)="onItemClick(item)">
+
+        <span
+          class="deadline-icon"
+          [style.background]="item.resolvedBackground"
+          [style.color]="item.resolvedColor">
+
+          <lucide-icon [img]="item.resolvedIcon" [size]="16"></lucide-icon>
+
+        </span>
+
+        <div class="deadline-body">
+
+          <p class="deadline-title">{{ item.title }}</p>
+
+          <span class="deadline-due">{{ item.due }}</span>
+
+        </div>
+
+      </li>
+    }
+
+  </ul>
+
+</div>

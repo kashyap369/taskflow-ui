@@ -1,5 +1,10 @@
 import { Routes } from '@angular/router';
 
+/**
+ * Auth screens. All three login variants render the same `LoginPage`, differentiated by the
+ * `variant` in route `data` (branding/copy only). The post-login redirect is always resolved from
+ * the API response (system role + account type), not from which screen was used.
+ */
 export const AUTH_ROUTES: Routes = [
   {
     path: '',
@@ -8,9 +13,18 @@ export const AUTH_ROUTES: Routes = [
   },
   {
     path: 'login',
-    loadComponent: () =>
-      import('./presentation/pages/login-page/login-page').then((m) => m.LoginPage),
+    data: { variant: 'solo' },
+    loadComponent: () => import('./login-page/login-page').then((m) => m.LoginPage),
   },
-  // Additional auth screens (org-login, admin-login, register, forgot-password)
-  // are added here as pages under presentation/pages/.
+  {
+    path: 'organization',
+    data: { variant: 'organization' },
+    loadComponent: () => import('./login-page/login-page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'admin',
+    data: { variant: 'admin' },
+    loadComponent: () => import('./login-page/login-page').then((m) => m.LoginPage),
+  },
+  // Future auth screens (register, forgot-password) are added here as sibling routes.
 ];

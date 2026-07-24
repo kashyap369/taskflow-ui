@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 
 import { User } from '../models/user.model';
-import { Role } from './roles.enum';
+import { AccountType, Portal, SystemRole, resolvePortal } from './roles.enum';
 
 /**
  * Signal-based store for the current session principal.
@@ -15,7 +15,15 @@ export class AuthStore {
 
   readonly isAuthenticated = computed(() => this._user() !== null);
 
-  readonly roles = computed<Role[]>(() => this._user()?.roles ?? []);
+  readonly roles = computed<SystemRole[]>(() => this._user()?.roles ?? []);
+
+  readonly accountType = computed<AccountType | null>(() => this._user()?.accountType ?? null);
+
+  /** Which portal the current user belongs to, or null when signed out. */
+  readonly portal = computed<Portal | null>(() => {
+    const user = this._user();
+    return user ? resolvePortal(user.roles, user.accountType) : null;
+  });
 
   setUser(user: User): void {
     this._user.set(user);
@@ -25,7 +33,7 @@ export class AuthStore {
     this._user.set(null);
   }
 
-  hasRole(role: Role): boolean {
+  hasRole(role: SystemRole): boolean {
     return this.roles().includes(role);
   }
 }

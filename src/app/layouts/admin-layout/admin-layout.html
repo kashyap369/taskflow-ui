@@ -1,3 +1,42 @@
-<div class="admin-layout">
-  <router-outlet />
+<div class="portal-layout admin">
+  <header class="portal-topbar">
+    <a class="brand">
+      <span class="brand-logo">
+        <lucide-angular name="ShieldCheck" [size]="18"></lucide-angular>
+      </span>
+      <span class="brand-name">TaskFlow</span>
+      <span class="portal-tag">Admin</span>
+    </a>
+
+    <div class="topbar-actions">
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="toggleTheme()"
+        [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      >
+        @if (isDark()) {
+          <lucide-angular name="Sun" [size]="18"></lucide-angular>
+        } @else {
+          <lucide-angular name="Moon" [size]="18"></lucide-angular>
+        }
+      </button>
+
+      @if (user(); as u) {
+        <div class="user-chip">
+          <span class="user-avatar">{{ u.fullName.charAt(0) }}</span>
+          <span class="user-name">{{ u.fullName }}</span>
+        </div>
+      }
+
+      <button type="button" class="logout-btn" (click)="logout()">
+        <lucide-angular name="LogOut" [size]="16"></lucide-angular>
+        <span class="d-none d-sm-inline">Sign out</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="portal-content">
+    <router-outlet />
+  </main>
 </div>

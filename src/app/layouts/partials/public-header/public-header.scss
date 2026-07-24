@@ -3,105 +3,200 @@
   top: 0;
   z-index: 1000;
 
-  background: #ffffff;
-  border-bottom: 1px solid #edf0f5;
+  background: var(--glass-bg);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid var(--border);
 }
 
 .navbar {
-  min-height: 80px;
+  min-height: 76px;
 }
 
 .navbar-brand {
-  gap: .75rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #1f2937;
-
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text);
   text-decoration: none;
+  letter-spacing: -0.02em;
 }
 
 .logo {
-  width: 42px;
-  height: 42px;
-
-  border-radius: 50%;
-
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
+  background: var(--gradient-brand);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+  transition: transform var(--dur-2) var(--ease-spring);
 
-  background: linear-gradient(135deg, #7c4dff, #5b5fff);
-  color: white;
-  font-size: 18px;
-
-  box-shadow: 0 10px 20px rgba(124, 77, 255, .25);
-}
-
-.brand-name {
-  color: #1f2937;
+  .navbar-brand:hover & {
+    transform: rotate(-8deg) scale(1.06);
+  }
 }
 
 .navbar-nav {
-  gap: 1rem;
+  gap: 0.4rem;
 }
 
 .nav-link {
-  font-size: .95rem;
-  color: #64748b;
-  font-weight: 500;
-  transition: .25s;
+  position: relative;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  transition: color var(--dur-2) var(--ease-standard);
 
-  &:hover {
-    color: #111827;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: 0.1rem;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--gradient-brand);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur-2) var(--ease-out);
   }
 
-  &.active {
-    color: #111827;
+  &:hover {
+    color: var(--text);
+
+    &::after {
+      transform: scaleX(1);
+    }
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color var(--dur-2) var(--ease-standard),
+    border-color var(--dur-2) var(--ease-standard),
+    transform var(--dur-2) var(--ease-spring);
+
+  &:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: rotate(-18deg);
+  }
+
+  &:active {
+    transform: scale(0.92);
   }
 }
 
 .signin {
-  color: #374151;
+  font-family: var(--font-display);
   font-weight: 600;
+  color: var(--text);
   text-decoration: none;
+  padding: 0.4rem 0.5rem;
 
   &:hover {
-    color: #000;
+    color: var(--primary);
   }
 }
 
 .get-started {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
   border-radius: 999px;
-  padding: .7rem 1.4rem;
-  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--on-primary);
+  background: var(--gradient-brand);
+  box-shadow: var(--shadow-brand);
+  cursor: pointer;
+  transition:
+    transform var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-standard);
+
+  lucide-angular {
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+
+    lucide-angular {
+      transform: translateX(3px);
+    }
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
 }
 
+// Custom hamburger
 .navbar-toggler {
-  padding: .35rem;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 0;
+
+  span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text);
+  }
 }
 
 @media (max-width: 991px) {
+  .navbar-toggler {
+    display: inline-flex;
+  }
 
   .navbar-collapse {
-    padding-top: 1rem;
+    padding: 1rem 0 0.5rem;
   }
 
   .navbar-nav {
-    gap: .5rem;
-    margin-bottom: 1rem;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
   }
 
-  .d-flex {
-    flex-direction: column;
-    align-items: stretch !important;
+  .nav-link {
+    display: inline-block;
   }
-
-  .get-started {
-    width: 100%;
-  }
-
-  .signin {
-    text-align: center;
-  }
-
 }

@@ -1,0 +1,39 @@
+<div class="text-input">
+  @if (label) {
+    <label class="input-label" [for]="id">
+      {{ label }}
+
+      @if (required) {
+        <span class="required">*</span>
+      }
+    </label>
+  }
+
+  <input
+    [id]="id"
+    class="input-field"
+    [class.success]="success"
+    [class.error]="invalid"
+    [type]="type"
+    [placeholder]="placeholder"
+    [value]="value"
+    [disabled]="disabled"
+    (input)="onInput($event)"
+  />
+
+  @if (showValidation) {
+    @if (invalid && errorMessage) {
+      <small class="error-text">
+        {{ errorMessage }}
+      </small>
+    } @else if (success && successMessage) {
+      <small class="success-text">
+        {{ successMessage }}
+      </small>
+    } @else if (helperText) {
+      <small class="helper-text">
+        {{ helperText }}
+      </small>
+    }
+  }
+</div>

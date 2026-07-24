@@ -1,0 +1,26 @@
+<section class="admin-dashboard">
+  <div class="page-head" appReveal>
+    <span class="eyebrow">Platform administration</span>
+    <h1>
+      @if (user(); as u) { Admin console — {{ u.fullName }} } @else { Admin console }
+    </h1>
+    <p>Platform-wide overview. This portal is gated by the <code>Admin</code> system role.</p>
+  </div>
+
+  <div class="stat-grid">
+    @for (stat of stats; track stat.label; let i = $index) {
+      <div class="stat-card" appReveal [revealDelay]="i * 80">
+        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-label">{{ stat.label }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="placeholder-card" appReveal [revealDelay]="240">
+    <h3>Admin tools — coming soon</h3>
+    <p>
+      User management (the AdminOnly <code>GET /user</code> list), organizations overview, and
+      platform settings will live here.
+    </p>
+  </div>
+</section>

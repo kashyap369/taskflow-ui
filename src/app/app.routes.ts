@@ -3,9 +3,13 @@ import { Routes } from '@angular/router';
 import { PublicLayout } from '@layouts/public-layout/public-layout';
 import { AuthLayout } from '@layouts/auth-layout/auth-layout';
 import { OrganizationLayout } from '@layouts/organization-layout/organization-layout';
+import { MemberLayout } from '@layouts/member-layout/member-layout';
+import { AdminLayout } from '@layouts/admin-layout/admin-layout';
 
 import { authGuard } from '@core/guards/auth.guard';
 import { guestGuard } from '@core/guards/guest.guard';
+import { roleGuard } from '@core/guards/role.guard';
+import { portalGuard } from '@core/guards/portal.guard';
 
 export const routes: Routes = [
   // ── Public marketing site ──────────────────────────────
@@ -16,47 +20,46 @@ export const routes: Routes = [
       {
         path: '',
         loadChildren: () =>
-          import('@features/public/landing/public.routes').then((m) => m.PUBLIC_ROUTES),
+          import('@features/public/public.routes').then((m) => m.PUBLIC_ROUTES),
       },
     ],
   },
 
-  // ── Authentication (all login screens share this shell) ─
+  // ── Authentication (solo / organization / admin login) ──
   {
     path: 'auth',
     component: AuthLayout,
     canActivate: [guestGuard],
     loadChildren: () => import('@features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
+  // Legacy /login → canonical auth route
+  { path: 'login', redirectTo: 'auth/login', pathMatch: 'full' },
 
-  // ── Organization portal ────────────────────────────────
+  // ── Organization portal (AccountType.Organization) ──────
   {
     path: 'organization',
     component: OrganizationLayout,
-    canActivate: [authGuard],
-    children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      {
-        path: 'dashboard',
-        loadChildren: () =>
-          import('@features/organization/dashboard/dashboard.routes').then(
-            (m) => m.DASHBOARD_ROUTES,
-          ),
-      },
-      // Projects (scaffold) — wire when features/organization/projects has pages:
-      // {
-      //   path: 'projects',
-      //   loadChildren: () =>
-      //     import('@features/organization/projects/projects.routes').then((m) => m.PROJECTS_ROUTES),
-      // },
-    ],
+    canActivate: [authGuard, portalGuard('organization')],
+    loadChildren: () =>
+      import('@features/organization/organization.routes').then((m) => m.ORGANIZATION_ROUTES),
   },
 
-  // ── Admin & Member portals (scaffolded) ─────────────────
-  // Layouts exist at @layouts/admin-layout and @layouts/member-layout.
-  // Wire with role-based CanMatch once their features/pages exist, e.g.:
-  //   { path: 'admin', component: AdminLayout, canActivate: [authGuard],
-  //     canMatch: [roleGuard(Role.Admin)], loadChildren: () => import('@features/admin/...') }
+  // ── Member portal (AccountType.Individual / solo user) ──
+  {
+    path: 'member',
+    component: MemberLayout,
+    canActivate: [authGuard, portalGuard('member')],
+    loadChildren: () => import('@features/member/member.routes').then((m) => m.MEMBER_ROUTES),
+  },
+
+  // ── Admin portal (Admin system role) ────────────────────
+  {
+    path: 'admin',
+    component: AdminLayout,
+    canMatch: [roleGuard('Admin')],
+    canActivate: [authGuard],
+    loadChildren: () => import('@features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
 
   // ── Fallback ────────────────────────────────────────────
   { path: '**', redirectTo: '' },

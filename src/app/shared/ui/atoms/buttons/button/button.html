@@ -1,0 +1,29 @@
+<button
+  class="btn"
+  [ngClass]="[variant, size]"
+  [disabled]="disabled || loading"
+  (click)="handleClick()"
+>
+
+  <!-- left icon -->
+  @if (iconLeft) {
+    <span class="icon">
+      <ng-container [ngComponentOutlet]="iconLeft"></ng-container>
+    </span>
+  }
+
+  <!-- loading -->
+  @if (loading) {
+    <span>Loading...</span>
+  } @else {
+    <span>{{ text }}</span>
+  }
+
+  <!-- right icon -->
+  @if (iconRight) {
+    <span class="icon">
+      <ng-container [ngComponentOutlet]="iconRight"></ng-container>
+    </span>
+  }
+
+</button>

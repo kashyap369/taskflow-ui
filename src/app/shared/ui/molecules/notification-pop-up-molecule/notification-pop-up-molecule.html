@@ -1,0 +1,75 @@
+@if (open) {
+  <div class="notification-popup" role="dialog" aria-label="Notifications">
+
+    <div class="popup-header">
+
+      <h5>{{ config.title ?? 'Notifications' }}</h5>
+
+      @if (config.showMarkAll ?? true) {
+        <button type="button" class="mark-all" (click)="onMarkAllRead()">
+          {{ config.markAllLabel ?? 'Mark all read' }}
+        </button>
+      }
+
+    </div>
+
+    @if (isEmpty()) {
+
+      <div class="popup-empty">
+        {{ config.emptyText ?? 'You’re all caught up' }}
+      </div>
+
+    } @else {
+
+      <ul class="popup-list">
+
+        @for (item of items(); track $index) {
+          <li
+            class="popup-item"
+            [class.unread]="item.unread"
+            (click)="onItemClick(item)">
+
+            <span
+              class="popup-icon"
+              [style.background]="item.resolvedBackground"
+              [style.color]="item.resolvedColor">
+
+              <lucide-icon [img]="item.resolvedIcon" [size]="15"></lucide-icon>
+
+            </span>
+
+            <div class="popup-body">
+
+              <p class="popup-title">
+
+                {{ item.title }}
+
+                @if (item.unread) {
+                  <span class="unread-dot"></span>
+                }
+
+              </p>
+
+              @if (item.description) {
+                <span class="popup-description">{{ item.description }}</span>
+              }
+
+            </div>
+
+            <span class="popup-time">{{ item.time }}</span>
+
+          </li>
+        }
+
+      </ul>
+
+    }
+
+    @if (config.showFooter ?? true) {
+      <button type="button" class="popup-footer" (click)="onViewAll()">
+        {{ config.footerLabel ?? 'View all notifications' }}
+      </button>
+    }
+
+  </div>
+}

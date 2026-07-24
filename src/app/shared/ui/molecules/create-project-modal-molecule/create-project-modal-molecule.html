@@ -1,0 +1,164 @@
+@if (open) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+
+    <div
+      class="create-modal"
+      role="dialog"
+      aria-modal="true"
+      (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal-header">
+
+        <h4 class="modal-title">{{ config.title ?? 'Create new project' }}</h4>
+
+        <button type="button" class="close-btn" aria-label="Close" (click)="onClose()">
+          <lucide-icon [img]="closeIcon" [size]="18"></lucide-icon>
+        </button>
+
+      </div>
+
+      <!-- Project name -->
+      <div class="field">
+
+        <label class="field-label">{{ config.nameLabel ?? 'Project name' }}</label>
+
+        <input
+          type="text"
+          class="field-input"
+          [placeholder]="config.namePlaceholder ?? 'e.g. Atlas Design System'"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)" />
+
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+
+        <label class="field-label">{{ config.descriptionLabel ?? 'Description' }}</label>
+
+        <textarea
+          class="field-input field-textarea"
+          rows="3"
+          [placeholder]="config.descriptionPlaceholder ?? 'What is this project about?'"
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"></textarea>
+
+      </div>
+
+      <!-- Status + Due date -->
+      <div class="field-row">
+
+        <div class="field">
+
+          <label class="field-label">{{ config.statusLabel ?? 'Status' }}</label>
+
+          <div class="select-wrap">
+
+            <select
+              class="field-input"
+              [ngModel]="status()"
+              (ngModelChange)="status.set($event)">
+
+              @for (option of statusOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+
+            </select>
+
+            <lucide-icon class="select-chevron" [img]="chevronIcon" [size]="16"></lucide-icon>
+
+          </div>
+
+        </div>
+
+        <div class="field">
+
+          <label class="field-label">{{ config.dueDateLabel ?? 'Due date' }}</label>
+
+          <input
+            type="date"
+            class="field-input"
+            [ngModel]="dueDate()"
+            (ngModelChange)="dueDate.set($event)" />
+
+        </div>
+
+      </div>
+
+      <!-- Accent color -->
+      <div class="field">
+
+        <label class="field-label">{{ config.accentColorLabel ?? 'Accent color' }}</label>
+
+        <div class="color-swatches">
+
+          @for (color of accentColors(); track color) {
+            <button
+              type="button"
+              class="swatch"
+              [class.selected]="accentColor() === color"
+              [style.background]="color"
+              [attr.aria-label]="'Accent ' + color"
+              (click)="accentColor.set(color)">
+            </button>
+          }
+
+        </div>
+
+      </div>
+
+      <!-- Team -->
+      @if (teamOptions().length) {
+        <div class="field">
+
+          <label class="field-label">{{ config.teamLabel ?? 'Team' }}</label>
+
+          <div class="team-chips">
+
+            @for (member of teamOptions(); track memberId(member)) {
+              <button
+                type="button"
+                class="team-chip"
+                [class.selected]="isSelected(member)"
+                (click)="toggleMember(member)">
+
+                <span class="chip-avatar" [style.background]="member.background ?? '#E5E7FB'">
+                  @if (member.image) {
+                    <img [src]="member.image" [alt]="member.name" />
+                  } @else {
+                    {{ initials(member) }}
+                  }
+                </span>
+
+                {{ member.name }}
+
+                @if (isSelected(member)) {
+                  <lucide-icon class="chip-check" [img]="checkIcon" [size]="14"></lucide-icon>
+                }
+
+              </button>
+            }
+
+          </div>
+
+        </div>
+      }
+
+      <!-- Footer -->
+      <div class="modal-footer">
+
+        <button type="button" class="btn btn-ghost" (click)="onClose()">
+          {{ config.cancelLabel ?? 'Cancel' }}
+        </button>
+
+        <button type="button" class="btn btn-primary" (click)="onCreate()">
+          {{ config.confirmLabel ?? 'Create project' }}
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+}

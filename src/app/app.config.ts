@@ -15,7 +15,7 @@ import { provideEchartsCore } from 'ngx-echarts';
 
 import * as echarts from 'echarts/core';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
-import { LineChart, PieChart } from 'echarts/charts';
+import { LineChart, PieChart, BarChart } from 'echarts/charts';
 import { CanvasRenderer } from 'echarts/renderers';
 
 // Application
@@ -29,7 +29,15 @@ import { loggingInterceptor } from './core/interceptors/logging.interceptor';
 import { loadingInterceptor } from './core/interceptors/loading.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 
-echarts.use([LineChart, PieChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
+echarts.use([
+  LineChart,
+  PieChart,
+  BarChart,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  CanvasRenderer,
+]);
 
 export const appConfig: ApplicationConfig = {
   providers: [

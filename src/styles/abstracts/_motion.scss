@@ -1,0 +1,117 @@
+// ======================================
+// Motion _motion.scss
+// Duration + easing tokens, keyframes, and scroll-reveal utilities.
+// This is our "Framer Motion": CSS handles ambient + reveal; the
+// `reveal` directive toggles `.is-visible`. See docs/DESIGN.md §5.
+// ======================================
+
+// ---- SCSS tokens (for use inside component transitions) ----
+$dur-1: 120ms;
+$dur-2: 200ms;
+$dur-3: 320ms;
+$dur-4: 560ms;
+
+$ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+$ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+$ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+// ---- CSS custom properties (available everywhere, incl. components) ----
+:root {
+  --dur-1: #{$dur-1};
+  --dur-2: #{$dur-2};
+  --dur-3: #{$dur-3};
+  --dur-4: #{$dur-4};
+
+  --ease-standard: #{$ease-standard};
+  --ease-out: #{$ease-out};
+  --ease-spring: #{$ease-spring};
+}
+
+// ======================================
+// Keyframes
+// ======================================
+
+@keyframes tf-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tf-float-y {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+
+@keyframes tf-float-y-sm {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes tf-gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes tf-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes tf-shimmer {
+  from { background-position: -160% 0; }
+  to   { background-position: 260% 0; }
+}
+
+@keyframes tf-pulse-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 0.9;  transform: scale(1.06); }
+}
+
+@keyframes tf-spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+// ======================================
+// Scroll-reveal utility
+// Toggled by the `reveal` directive (adds `.is-visible`).
+// Optional variants set a starting transform.
+// ======================================
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity var(--dur-4) var(--ease-out),
+    transform var(--dur-4) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+[data-reveal='left']  { transform: translateX(-28px); }
+[data-reveal='right'] { transform: translateX(28px); }
+[data-reveal='scale'] { transform: scale(0.94); }
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+// ======================================
+// Reduced motion — disable non-essential movement
+// ======================================
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}

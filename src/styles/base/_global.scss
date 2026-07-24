@@ -1,14 +1,52 @@
-@import '../abstracts/colors';
 @import '../abstracts/typography';
 
-body {
-  font-family: $font-family-base;
-  color: $text-primary;
-  background-color: $bg-primary;
-  line-height: $lh-normal;
-  overflow-x: hidden;
+// ======================================
+// Global base — everything reads from semantic tokens so light/dark
+// "just work". See docs/DESIGN.md.
+// ======================================
+
+html {
+  scroll-behavior: smooth;
 }
 
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background-color: var(--bg);
+  line-height: $lh-normal;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color var(--dur-2) var(--ease-standard),
+    color var(--dur-2) var(--ease-standard);
+}
+
+// Headings use the display family with tight tracking
+h1, h2, h3, h4, h5, h6,
+.font-display {
+  font-family: var(--font-display);
+  color: var(--text);
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
+// Selection
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+
+// Focus visibility (accessibility — never remove outlines)
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+  border-radius: $radius-sm;
+}
+
+// Layout helpers
 .container-fluid {
   padding-inline: 1rem;
 }
@@ -25,12 +63,27 @@ body {
   padding: 8rem 0;
 }
 
+@media (max-width: 767px) {
+  .section { padding: 4rem 0; }
+  .section-lg { padding: 5rem 0; }
+}
+
+// Utilities
 .text-gradient {
-  background: $gradient-primary;
+  background: var(--gradient-text);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: $radius-2xl;
+  box-shadow: var(--shadow-md);
 }

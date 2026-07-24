@@ -1,0 +1,26 @@
+<section class="member-dashboard">
+  <div class="page-head" appReveal>
+    <span class="eyebrow">Personal workspace</span>
+    <h1>
+      @if (user(); as u) { Welcome back, {{ u.fullName }} } @else { Welcome back }
+    </h1>
+    <p>Here's what's on your plate today. This portal is the Individual (solo user) experience.</p>
+  </div>
+
+  <div class="stat-grid">
+    @for (stat of stats; track stat.label; let i = $index) {
+      <div class="stat-card" appReveal [revealDelay]="i * 80">
+        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-label">{{ stat.label }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="placeholder-card" appReveal [revealDelay]="240">
+    <h3>My Tasks — coming soon</h3>
+    <p>
+      Personal task lists, subtasks, calendar and weekly/monthly/yearly tracking will live here,
+      wired to the API's personal-task and reporting endpoints.
+    </p>
+  </div>
+</section>

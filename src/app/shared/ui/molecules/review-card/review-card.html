@@ -1,26 +1,109 @@
 <div class="review-card">
+
+  <!-- Rating -->
+
   <div class="rating">
+
     @for (star of stars(); track $index) {
-      <lucide-angular name="Stars" size="20"></lucide-angular>
+
+      <lucide-icon
+        name="Star"
+        class="star-icon"
+        [size]="18">
+      </lucide-icon>
+
     }
+
   </div>
 
-  <p class="review-text">"{{ review().review }}"</p>
+  <!-- Optional Title -->
+
+  @if (review().title) {
+
+    <h4 class="review-title">
+
+      {{ review().title }}
+
+    </h4>
+
+  }
+
+  <!-- Review -->
+
+  <p class="review-text">
+
+    "{{ review().review }}"
+
+  </p>
+
+  <!-- Reviewer -->
 
   <div class="reviewer">
-    <div class="avatar" [style.background]="review().avatarColor || '#7C4DFF'">
-      {{ review().avatar || review().name.charAt(0) }}
+
+    @if (review().avatarImage) {
+
+      <img
+        class="avatar-image"
+        [src]="review().avatarImage"
+        [alt]="review().reviewerName">
+
+    } @else {
+
+      <div
+        class="avatar"
+        [style.background]="review().avatarBackground ?? '#7C4DFF'">
+
+        {{
+
+          review().avatarText
+          ?? review().reviewerName.charAt(0).toUpperCase()
+
+        }}
+
+      </div>
+
+    }
+
+    <div class="reviewer-details">
+
+      <div class="reviewer-name-row">
+
+        <h6 class="reviewer-name">
+
+          {{ review().reviewerName }}
+
+        </h6>
+
+        @if (review().verified) {
+
+          <lucide-icon
+            name="BadgeCheck"
+            class="verified-icon"
+            [size]="16">
+          </lucide-icon>
+
+        }
+
+      </div>
+
+      <p class="reviewer-designation">
+
+        {{ review().reviewerDesignation }}
+
+        @if (review().reviewerCompany) {
+
+          <span>
+
+            , {{ review().reviewerCompany }}
+
+          </span>
+
+        }
+
+      </p>
+
     </div>
 
-    <div>
-      <h6>
-        {{ review().name }}
-      </h6>
-
-      <span>
-        {{ review().designation }},
-        {{ review().company }}
-      </span>
-    </div>
   </div>
+
 </div>
