@@ -24,9 +24,23 @@
         </a>
       </div>
     } @else if (loading() && !hasMembers()) {
-      <div class="lottie-state">
-        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading members" />
-        <p>Loading members…</p>
+      <div class="panel" aria-busy="true" aria-label="Loading members">
+        <div class="member-list">
+          @for (row of loadingRows; track row) {
+            <div class="member-row">
+              <div class="member-id">
+                <app-skeleton [circle]="true" width="40px" height="40px" />
+                <div class="sk-lines">
+                  <app-skeleton width="45%" height="0.9rem" />
+                  <app-skeleton width="65%" height="0.75rem" />
+                </div>
+              </div>
+              <app-skeleton width="90%" height="1.8rem" radius="10px" />
+              <app-skeleton width="64px" height="1.5rem" radius="999px" />
+              <app-skeleton width="74px" height="2rem" radius="10px" />
+            </div>
+          }
+        </div>
       </div>
     } @else {
       @if (!hasRoles()) {
@@ -47,8 +61,38 @@
             <p>No members yet. Invitations appear here once accepted.</p>
           </div>
         } @else {
+          <div class="list-toolbar">
+            <div class="list-search">
+              <lucide-angular name="Search" size="16"></lucide-angular>
+              <input
+                type="search"
+                placeholder="Search by name or email…"
+                [value]="search()"
+                (input)="onSearch($any($event.target).value)"
+                aria-label="Search members"
+              />
+            </div>
+            <select
+              class="list-filter"
+              [value]="activeFilter()"
+              (change)="onActiveFilter($any($event.target).value)"
+              aria-label="Filter by state"
+            >
+              <option value="">All members</option>
+              <option value="active">Active only</option>
+              <option value="inactive">Inactive only</option>
+            </select>
+          </div>
+
+          @if (pager.total() === 0) {
+            <div class="list-no-match">
+              <p>No members match your filters.</p>
+              <button type="button" (click)="clearFilters()">Clear filters</button>
+            </div>
+          }
+
           <div class="member-list">
-            @for (member of members(); track member.id) {
+            @for (member of pager.items(); track member.id) {
               <div class="member-row">
                 <div class="member-id">
                   <span class="avatar">{{ initials(member.userFullName) }}</span>
@@ -84,6 +128,17 @@
               </div>
             }
           </div>
+
+          <app-pagination
+            [page]="pager.page()"
+            [pageSize]="pager.pageSize()"
+            [total]="pager.total()"
+            [pageSizes]="pager.pageSizes"
+            itemLabel="members"
+            ariaLabel="Members pagination"
+            (pageChange)="pager.setPage($event)"
+            (pageSizeChange)="pager.setPageSize($event)"
+          />
         }
       </div>
 
@@ -117,7 +172,7 @@
   <!-- Invite drawer -->
   @if (showInvite()) {
     <div class="drawer-backdrop" (click)="closeInvite()"></div>
-    <aside class="drawer">
+    <aside class="drawer" appDialog (dismiss)="closeInvite()">
       <div class="drawer-head">
         <h2>Invite member</h2>
         <button class="icon-btn" (click)="closeInvite()" aria-label="Close">

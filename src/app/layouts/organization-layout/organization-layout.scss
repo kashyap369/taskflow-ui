@@ -218,6 +218,27 @@
       background: var(--primary);
     }
   }
+
+  /** Pending-invitation count; nudged left when active so it clears the active dot. */
+  .nav-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.32rem;
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .active .nav-badge {
+    margin-right: 16px;
+  }
 }
 
 .pinned-list {

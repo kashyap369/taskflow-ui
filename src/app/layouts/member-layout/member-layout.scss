@@ -59,6 +59,63 @@
   }
 }
 
+.portal-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: auto;
+  margin-left: 1.25rem;
+
+  a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition:
+      color var(--dur-2) var(--ease-standard),
+      background var(--dur-2) var(--ease-standard);
+
+    &:hover {
+      color: var(--text);
+      background: var(--surface-2);
+    }
+
+    &.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+  }
+}
+
+/** Pending-invitation count on the Invitations nav item. */
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.32rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (max-width: 575.98px) {
+  .portal-nav a span:not(.nav-badge) {
+    display: none;
+  }
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;

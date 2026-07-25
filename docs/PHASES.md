@@ -7,29 +7,53 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (org portal is theme-complete — pick a new bucket)
+## ▶ NEXT SESSION — START HERE (invitation flow done; org settings is the last CRUD gap)
 
-**No re-explaining needed.** Phases 8 (Team detail + Subtasks), 9 (Work-log + Org switcher), and 10
-(**dark-mode theming** across the org portal) are all DONE and live-verified. The **organization portal is
-now feature- and theme-complete** for the core work-management loop. Pick one of the remaining roadmap
-buckets below (in rough priority order); follow existing patterns; verify live; update these docs.
+**API coverage: 63 of 71 endpoints are now reachable from the UI.** The remaining 8, and what they'd need:
+
+| Not wired | What it would take |
+|---|---|
+| `PUT /organization`, `DELETE /{id}`, `GET /{id}` | An **org settings** screen (rename / delete the organization) — the last entity without edit/delete. Biggest remaining item. |
+| `GET /user/{id}` | Admin user-detail drawer (repo method `getUser` already exists, unused). |
+| `PUT /subtask` | Rename a subtask (repo method `updateSubTask` exists, unused). |
+| `GET /task/mine`, `/task/mine/personal`, `GET /worklog/mine` | Personal tasks in the member portal — still **backend-blocked** (no endpoint creates a task without an `OrganizationId`). |
+
+**Everything below still applies** — the running-the-app notes, the test logins, and the roadmap buckets.
+
+**No re-explaining needed.** Org portal is feature/theme-complete (Phases 8–10); Admin has a live Users
+page + dashboard (Phase 11); the **`shared/validations/` engine** is built + wired into register (Phase 12);
+**confirm dialogs** gate destructive actions (Phase 13); **loading skeletons** replace the generic loading
+states on the main list pages (Phase 14); an **accessible-drawer directive** (`appDialog`) gives every
+slide-in drawer focus-trap + Escape + `role=dialog` (Phase 15); and **client-side pagination + list
+filtering** ship on the four main list pages via a reusable `Pagination` molecule + `createPagination()`
+helper (Phase 16); and **edit + delete** now exist for projects, tasks, teams and roles (Phase 17). Pick one
+of the remaining roadmap buckets below (in rough priority order); follow existing patterns; verify live;
+update these docs.
 
 ### Candidate next buckets
-1. **Admin portal** (roadmap Phase 6) — currently a shell + placeholder. Build platform-admin pages: user
-   list (`GET /user`, AdminOnly), organizations overview, platform settings. Guarded by `roleGuard('Admin')`
-   at `/admin`. Test with the seeded `admin@taskflow.com` (Individual/Admin).
-2. **Polish & Hardening** (roadmap Phase 8) — the `shared/validations/` decorator engine (empty), loading
-   skeletons, real unit/component tests beyond "should create", list pagination/filtering, an a11y pass.
-3. **Reporting extras** (roadmap Phase 7) — CSV/PDF export, richer per-member trend charts.
-4. **Auth leftovers** (roadmap Phase 2) — forgot-password / email-verification screens, surface login
+0. **Org settings (update/delete organization)** — see the coverage table above.
+1. **Polish & Hardening cont.** (roadmap Phase 8) — validation engine ✅, confirm dialogs ✅, skeletons ✅,
+   drawer a11y ✅, pagination/filtering ✅ are done; the remaining item is a **broader a11y** pass (contrast
+   audit, form-label associations, the Storybook a11y addon). Also: adopt the validation engine in the
+   remaining forms (login + the org create-drawers), extend the `Skeleton` atom to the pages still on a
+   text/Lottie loading state (teams, roles, reports, project-detail, team-detail, dashboard), and apply the
+   **list pattern** (`.list-toolbar` + `createPagination` + `<app-pagination>`, see CONVENTIONS) to the
+   remaining lists (teams, roles, project-detail tasks, team-detail members, invitations).
+2. **Reporting extras** (roadmap Phase 7) — CSV/PDF export, richer per-member trend charts.
+3. **Auth leftovers** (roadmap Phase 2) — forgot-password / email-verification screens, surface login
    errors on the form, decide the Manager-role portal.
+4. **Admin portal extras** — organizations overview + platform settings are **backend-blocked**: only
+   `GET /organization/mine` exists (no list-all-orgs endpoint) and there is no settings endpoint. Needs new
+   backend endpoints before building. User **detail** (`GET /user/{id}`) could be surfaced as a drawer now.
 
 **Before building:** run the API (`https://localhost:7086/api`), dev server on **4200**, accept the
 self-signed cert once at `https://localhost:7086`. Test org = **Northwind Labs (orgId 2)**, owner
 **nadia.owens+org1@taskflow.test / Passw0rd!** (org login variant `/auth/organization`). Active member
 seeded: **Jane Doe (userId 2, Manager)** — on the **Engineering** team (teamId 2); taskId 3 has a 2.5h
-work log. BCrypt is slow (~5s) — one login at a time. See [[taskflow-api-integration-gotchas]] memory for
-the recurring traps (raw-vs-enveloped responses, email-verify DB step, org-seeds-no-roles).
+work log. BCrypt is slow (~5s) — one login at a time. Admin portal test login = **admin@taskflow.com /
+Admin@123** (seeded Individual/Admin → `/admin`, variant `/auth/admin`). See
+[[taskflow-api-integration-gotchas]] memory for the recurring traps (raw-vs-enveloped responses,
+email-verify DB step, org-seeds-no-roles).
 
 ### Still open / blocked
 - **Backend gap flagged (separate session/repo):** `POST /worklog/manual` returns a generic **500** when
@@ -40,6 +64,232 @@ the recurring traps (raw-vs-enveloped responses, email-verify DB step, org-seeds
   a non-null `OrganizationId`). Don't build it until the backend adds one — flag it, don't fake it.
 
 ---
+
+## Current Status (2026-07-26, Phase 18 — Invitation accept/reject (the invitee's side))
+- ✅ **The invitee's half of the invitation flow is built.** New `features/member/` slice —
+  `member.repository.ts` (`GET /organizationinvitation/mine`, `POST /accept`, `POST /reject`) and
+  `member.facade.ts` (invitations signal, `init`/`refresh`/`accept`/`decline`, `pendingCount`) — plus an
+  **invitations page** (4 files) listing each invitation as a card: org avatar, role chip, invited/expiry
+  dates, **Accept** and **Decline** (declining is confirm-gated). Endpoint coverage **60/71 → 63/71**.
+- ✅ **Mounted in BOTH portals.** Invitations are addressed to a **user**, not a portal — an Organization
+  account can be invited into another organization just as an Individual can. So the same standalone page
+  is routed at `/member/invitations` *and* `/organization/invitations`, with a red **pending-count badge**
+  on both navs (the layouts call `MemberFacade.init()` so the badge is right wherever the user lands).
+  Building it member-only would have hidden invitations from exactly the account type that owns an org.
+- ✅ **Shared models extracted** — `shared/models/tone.model.ts` (`Tone`, previously duplicated in the
+  organization *and* admin slices) and `shared/models/invitation.model.ts` (`InvitationStatus`,
+  `OrganizationInvitation`, `invitationStatusMeta`, plus an `isExpired()` helper). `organization.models.ts`
+  re-exports them, so every existing import still resolves. This filled the previously-empty
+  `shared/models/` folder with its first real citizens.
+- ✅ **Expired invitations are separated out.** `GET /mine` only returns Pending rows, but they can still
+  be past `expiryDate` — and the API rejects accepting those with a 400. The page splits **actionable**
+  from **Expired** (a dimmed section offering only Dismiss), so no one clicks Accept on something the
+  server will refuse. `pendingCount` (the badge) counts only actionable ones.
+- ✅ **Honest member dashboard.** It was showing hardcoded stats ("8 active tasks", "23 completed this
+  week") for a portal with no task data at all. Replaced with a real pending-invitations callout and a
+  straight explanation that personal tasks await an API endpoint — no fabricated numbers.
+- ✅ **Verified live end-to-end** as the org owner (who had no membership row, so she was a valid
+  invitee): invited her own address → the sidebar badge showed **1** and the card appeared (Jane's
+  invitation correctly **not** shown — `/mine` filters by the caller's email) → **Accept** →
+  `POST /accept 204` → she appeared in **Members** as an Active Manager. Then a second invite →
+  **Decline** → confirm dialog → `POST /reject 204` → list empty, badge cleared. Checked in dark mode;
+  no console errors. `ng build` passes; suite **184/184 green** (+7).
+- ⚠️ **Backend finding: `RemoveMember` and `DeactivateMember` are the same operation.** Both handlers
+  call `member.Deactivate()` — nothing is removed, so a "removed" member stays in the list as *Inactive*.
+  The frontend was promising a deletion the API doesn't perform; the confirm copy now says what actually
+  happens. Worth a backend decision: either hard-remove, or drop one of the two endpoints.
+- ⏭️ **Next:** org update/delete (an org-settings screen — the last entity CRUD gap), admin user-detail
+  drawer (`GET /user/{id}`), subtask rename (`PUT /subtask`); then the broader a11y pass. Personal tasks
+  stay backend-blocked.
+
+## Current Status (2026-07-26, Phase 17 — Edit & delete pass: projects, tasks, teams, roles)
+- ✅ **Closed the biggest API-coverage gap.** The backend had full CRUD; the frontend was create + read +
+  lifecycle only. Added the 8 missing calls — `updateProject`/`deleteProject`, `updateTask`/`deleteTask`,
+  `updateTeam`/`deleteTeam`, `updateRole`/`deleteRole` — plus `getTask` (`GET /task/{id}`), through
+  repository → facade → UI. Endpoint coverage went **51/71 → 60/71**.
+- ✅ **New payload models** (`UpdateProjectPayload`/`UpdateTaskPayload`/`UpdateTeamPayload`/
+  `UpdateRolePayload`) mirroring the API's commands exactly. They are deliberately **partial**: the update
+  commands take no status, start date, or project reassignment, so those fields are hidden in edit mode and
+  a `.drawer-note` explains why (status still moves via Start/Complete).
+- ⚠️ **Data-loss trap found and fixed:** `TaskListItem` (the list DTO) carries **no `description`**, but
+  `UpdateTaskCommand` requires one — filling an edit form from a table row and saving would have silently
+  blanked every task's description. Only `GET /task/{id}` → `TaskDetailDto` has it, so `openEdit()` now
+  opens the drawer from the row **and** calls `facade.loadTaskForEdit(id, …)` to fill the description
+  before save. Covered by a unit test on both pages.
+- ✅ **UI**: one drawer per page now serves create *and* edit (`editing` signal, `isEditing()` computed,
+  heading/CTA/fields switch on it) on **projects, tasks, teams, roles**; `project-detail` and `team-detail`
+  gained header **Edit + Delete**, and project-detail also gained per-task Edit/Delete. Every delete goes
+  through `DialogService.confirmDelete` with a consequence-specific message ("…and its 3 task(s) will be
+  deleted"). Detail-page deletes navigate back to the list via a new `onDeleted` callback on
+  `deleteProject`/`deleteTeam` (fires only on success, so a failed delete doesn't navigate).
+- ✅ **New global `styles/components/_actions.scss`** — `.icon-action` (+ `.danger`) and `.drawer-note`,
+  so row/card affordances are identical everywhere. Tasks table columns re-balanced
+  (`2fr .85fr .85fr .65fr 2.15fr`) so the wider action cluster stays on one line.
+- ✅ **Removed the phantom endpoints** `API.User.Update` / `API.User.Delete` — `UserController` is
+  read-only (no PUT/DELETE on `/user`), so the map was advertising routes that don't exist.
+- ✅ **Verified live end-to-end**: task edit → `PUT /api/task 204`, reopened the drawer and the
+  description **persisted** (the blank-out trap is really closed); temp task created → deleted
+  (`DELETE /api/task/4 204`) and the list reloaded; team edit → "Team updated." toast + card text changed;
+  temp project created → deleted from its **detail** page (`DELETE /api/project/2 204`) → **navigated back**
+  to `/organization/projects` with the card gone. Roles/edit drawer checked in **dark mode**. All seed data
+  restored; no console errors. `ng build` passes; suite **177/177 green** (+18).
+- ⏭️ **Next:** invitation accept/reject (the invitee's side — `POST /accept|/reject`, `GET /mine`), which is
+  the last big unwired cluster; then org update/delete, broader a11y, skeletons/list pattern on the
+  remaining pages.
+
+## Current Status (2026-07-26, Phase 16 — List pagination + filtering)
+- ✅ **`createPagination()` signal helper** (`shared/utils/pagination.ts`) — a client-side pager over any
+  source signal: `page`/`pageSize`/`pageSizes`/`total`/`totalPages`/`items`/`rangeStart`/`rangeEnd` plus
+  `setPage`/`next`/`prev`/`setPageSize`/`reset`. The exposed **`page` is a computed clamp** of a private
+  writable, so a shrinking source (typing in the search box while sitting on the last page) falls back to
+  the last real page automatically — no `effect()`, no manual reset, no empty slice. `setPageSize` returns
+  to page 1. 7 unit tests.
+- ✅ **`Pagination` molecule** (`shared/ui/molecules/pagination/`, 5 files) — presentational: derives
+  `totalPages`/range from `page`/`pageSize`/`total`, renders a "Showing 1–10 of 42 users" summary
+  (`aria-live="polite"`), an optional rows-per-page select (hidden unless `pageSizes` offers a choice), and
+  a windowed page list that collapses to `1 … 5 6 7 … 12` past `maxPageButtons` (default 7). A11y: the
+  `<nav>` takes `ariaLabel`, the active button gets `aria-current="page"`, prev/next are labelled and
+  disabled at the ends. Emits `pageChange`/`pageSizeChange`; tokenized for both themes. 10 unit tests +
+  6 stories.
+- ✅ **Global list-toolbar styles** (`styles/components/_toolbar.scss`, imported in `styles.scss`):
+  `.list-toolbar` / `.list-search` / `.list-filter` / `.list-no-match`. The admin users page's local
+  copies of those rules were deleted in favour of the shared ones (its markup migrated), so all list
+  pages now share one control shape.
+- ✅ **Wired filtering + paging into four list pages**: admin **users** (existing search + status/type
+  filters, 10/page), org **tasks** (**new** title search + status + priority filters, 10/page), org
+  **projects** (**new** title/description search + status filter, 9/page in the card grid, sizes 9/18/36),
+  org **members** (**new** name/email search + active/inactive filter, 10/page). Each page owns its filter
+  signals + a `filtered*` computed + `clearFilters()`; the facades stay pure data. Filter `<select>`s are
+  `[value]`-bound so Clear filters resets the controls too.
+- ✅ **Verified live** (org owner + admin): tasks page search narrows to 1 row and the summary tracks it;
+  search + a conflicting status filter shows the `.list-no-match` state, and Clear filters restores both
+  the box and the select; temporarily paging at 1 row/page confirmed real page buttons — clicking page 2
+  moved `aria-current="page"`, disabled Next, and swapped the row, and then filtering down to a single
+  match **dropped back to page 1** (the clamp). Members "Inactive only" → no-match state in **light**;
+  tasks/projects verified in **dark**; admin users page renders the migrated toolbar + pager. No console
+  errors. `ng build` passes; full suite **159/159 green** (+33: 7 pager util, 10 molecule, 16 page-level).
+- ⏭️ **Next:** broader a11y pass (contrast, labels, Storybook a11y addon); extend `Skeleton` + the list
+  pattern to the remaining pages (teams, roles, reports, project/team detail); validation engine in the
+  login + create-drawer forms.
+
+## Current Status (2026-07-25, Phase 15 — Accessible drawers (focus-trap dialog directive))
+- ✅ **`DialogDirective` (`appDialog`)** — a reusable a11y behaviour for the slide-in drawers
+  (`shared/directives/dialog.directive.ts`). On a `<aside class="drawer" appDialog (dismiss)="close()">`
+  it: sets `role="dialog"` + `aria-modal="true"` + `tabindex="-1"`; auto-wires `aria-labelledby` to the
+  drawer's first heading (minting an id if missing); moves focus into the panel on open (first **form
+  field**, else first focusable, else the panel); **traps** Tab / Shift+Tab within the panel; emits
+  `(dismiss)` on **Escape**; and **restores focus** to the trigger element on close. Pure DOM + `output()`;
+  relies on the drawers being `@if`-created (open = init, close = destroy).
+- ✅ **Wired onto all 10 drawers** across the org portal: projects/teams/roles(create)/tasks(create)/
+  project-detail create drawers, members invite, team-detail add-member, roles permissions, tasks subtask +
+  time-tracking drawers. Each `(dismiss)` calls that drawer's existing close handler; backdrop-click close
+  stays as-is.
+- ✅ **Verified live** (create-project drawer): inspected DOM → `role=dialog`, `aria-modal=true`,
+  `aria-labelledby` → the "New project" heading; on open focus lands on the **title field**
+  (`INPUT[fc=title]`); pressing **Escape** closes the drawer and **returns focus to the "New project"
+  trigger button**. `ng build` passes; full suite **126/126 green** (+4 directive tests: aria wiring,
+  labelledby, Escape-dismiss, Tab-wrap).
+- ⏭️ **Next:** list pagination + a broader a11y pass (contrast, labels, Storybook a11y addon); extend the
+  `Skeleton` atom to the remaining pages; adopt the validation engine in login + create-drawers.
+
+## Current Status (2026-07-25, Phase 14 — Loading skeletons)
+- ✅ **Theme-aware `Skeleton` atom** (`shared/ui/atoms/skeletons/skeleton/`, 5 files) — a thin wrapper over
+  `ngx-skeleton-loader` (installed but previously unused). Inputs: `circle`, `width`, `height`, `radius`,
+  `count`. It paints the base in the `--surface-inset` token and picks the shimmer animation from
+  `ThemeService` (`progress` in light / `progress-dark` in dark) via `[theme]` + `[animation]`, so loading
+  states match the design system in **both themes** without per-usage styling. 4 unit tests.
+- ✅ **Replaced the generic loading states with content-shaped skeletons** on the four main list pages:
+  admin **users** (row: avatar + 2 lines + 2 pills + id), org **projects** (6 card skeletons: avatar, badge,
+  title, 2 desc lines, progress bar, footer), org **tasks** (table rows matching the 5 columns), org
+  **members** (rows matching the member grid). Each loading branch gets `aria-busy="true"` + an aria-label.
+  Small per-page `.sk-lines`/`.sk-card` flex helpers handle the stacked-line spacing.
+- ✅ **Verified live** (org owner): reloaded `/organization/projects` and captured the 6-card skeleton grid
+  in **light**, toggled dark and reloaded to confirm the skeleton is fully theme-aware (dark card surfaces,
+  lighter `--surface-inset` placeholders). `ng build` passes; full suite **122/122 green** (+4 skeleton tests).
+- ⏭️ **Next:** list pagination + a11y pass; extend the `Skeleton` atom to the remaining pages (teams, roles,
+  reports, project-detail, team-detail, dashboard); adopt the validation engine in login + create-drawers.
+
+## Current Status (2026-07-25, Phase 13 — Confirm dialogs on destructive actions)
+- ✅ **Theme-aware `DialogService`** — the existing sweetalert2 wrapper (`core/services/dialog.service.ts`)
+  was hardcoding hex colors and rendering white in dark mode (sweetalert portals at the document root,
+  outside Angular's theming). Rewrote it to read the live design tokens off `:root` at call time
+  (`getComputedStyle(documentElement).getPropertyValue('--surface' | '--text' | '--danger' | …)`) and pass
+  `background`/`color`/button colors through, so every dialog is on-palette in both themes. Added a
+  **`confirmDelete(title, text?, confirmText?)`** convenience (red `--danger` confirm, warning icon,
+  Cancel focused) alongside the generic `confirm`.
+- ✅ **Wired confirmations into every destructive action** (at the page/handler level, keeping facades pure
+  orchestration): members-page **remove member** (`confirmDelete`) + **cancel invitation** (`confirm`),
+  team-detail **remove from team** (`confirmDelete`), tasks-page **delete subtask** + **delete work log**
+  (`confirmDelete`). Handlers became `async` and only call the facade when the user confirms. Deactivate
+  member stayed un-gated (it's a reversible toggle, not destructive).
+- ✅ **Verified live** (org owner, Engineering team / teamId 2): clicking **Remove** on Jane shows
+  "Remove from team? Jane Doe will be removed from Engineering." with a red Remove + focused Cancel;
+  cancelling leaves her in place. Confirmed the dialog is fully themed in **dark mode** too (dark card,
+  light text, red button — all from tokens). `ng build` passes.
+- ✅ **Got the whole test suite green** (was 15 pre-existing broken "should create" specs). Every failure
+  was a missing TestBed provider, not a real defect: org/auth facade-backed pages needed
+  `{ provide: APP_SETTINGS, useValue: AppSettings }` (+ http/toastr/router for login & org-layout); the two
+  echarts organisms needed `provideEchartsCore({ echarts })`; the public partials + landing card needed
+  `provideRouter([])`; `LandingFeatureCard` needed its required `feature` input set via `setInput` and its
+  lucide icon provided; and the stale App "should render title" scaffold test became a router-outlet
+  assertion. **118/118 tests now pass** (a few real assertions added along the way).
+- ⏭️ **Next:** rest of Polish & Hardening — loading skeletons (`ngx-skeleton-loader`), pagination, a11y;
+  adopt the validation engine in the login + org create-drawer forms.
+
+## Current Status (2026-07-25, Phase 12 — Validation engine + register form wiring)
+- ✅ **Built the `shared/validations/` FluentValidation-style decorator engine** (was 4 empty folders).
+  Structure: `models/validation-types.ts` (`ValidationRule`/`ValidationFailure` + immutable
+  `ValidationResult` with `isValid`/`firstError`/`errorsFor`/`hasError`), `metadata/validation-registry.ts`
+  (rule store keyed by class constructor via `WeakMap`, prototype-chain-aware so subclasses inherit rules —
+  no `emitDecoratorMetadata`, the registry is the source of truth), `decorators/validation-decorators.ts`
+  (`@Required @IsTrue @MinLength @MaxLength @Email @Pattern @Min @Max @Matches @Custom` — every rule except
+  Required/IsTrue passes on empty, FluentValidation-style), `engine/validation-engine.ts`, and an `index.ts`
+  barrel (import from `@shared/validations`).
+- ✅ **Engine runtime** = a pure `validate(Model, obj) → ValidationResult` plus Angular reactive-form
+  adapters: `controlValidators(Model)` (per-property `ValidatorFn`s for field-scoped rules — controls get
+  `.ng-invalid` naturally), `crossFieldValidator(Model)` (one group-level `ValidatorFn` for model-scoped
+  rules like `@Matches`), and `messageFor(group, prop)` (touched/dirty-gated message: control's own error,
+  then a cross-field error targeting that property). The adapters are **pure** (never `setErrors`), so no
+  recursive-update pitfall.
+- ✅ **Wired into `features/auth/register-page`** as the first consumer. New `register-page.model.ts`
+  (`RegisterFormModel` with decorators mirroring the backend `RegisterUserCommandValidator` — names ≤100,
+  email, phone 10–20, password ≥8 upper/lower/digit — plus `@Matches('password')` and `@IsTrue` on terms).
+  The form builds its validators from `controlValidators` + `crossFieldValidator`; templates show messages
+  via a `fieldError(prop)` helper → `messageFor`. Removed the ad-hoc `passwordsMatch` fn and all inline
+  `Validators.*`.
+- ✅ **Tests:** 16 engine unit tests (every decorator, empty-passes, decoration order, `@Pattern`
+  statelessness, inheritance, all three Angular adapters) + 4 register-page tests (starts invalid, required
+  message, cross-field mismatch message, becomes valid) — **all green**. (Fixed the pre-existing register
+  spec which lacked the `APP_SETTINGS` provider.)
+- ✅ **Verified live**: on `/auth/register`, invalid email / short phone / weak password / mismatched
+  confirm each show the decorator's message (incl. the cross-field "Passwords don't match."). `ng build`
+  passes (register-page chunk 24.3 kB / 6.2 kB gz).
+- ⏭️ **Next:** rest of Polish & Hardening — skeletons, confirm dialogs (`DialogService` exists), pagination,
+  a11y; and adopt the engine in the login + org create-drawer forms.
+
+## Current Status (2026-07-25, Phase 11 — Admin portal: Users + real dashboard)
+- ✅ **Admin portal Users page** (`features/admin/users-page`, 4 page files at `/admin/users`) wired to the
+  **AdminOnly** `GET /user` → **UserListItemDto[]** `{ id, fullName, email, status (UserStatus), accountType
+  (AccountType) }` (raw). Shows four **stat tiles** (total / active / organization-accounts / pending-
+  verification), a **search** box (name/email), **status** + **account-type** filter selects, and a table of
+  accounts (initials avatar, account-type badge with icon, status badge, `#id`). Filtering is client-side via
+  a `filteredUsers` computed. New feature slice: `admin.models.ts` (UserStatus/AccountType enums exact-int +
+  `userStatusMeta`/`accountTypeMeta` tone helpers), `admin.repository.ts` (`getUsers`/`getUser`), and
+  `admin.facade.ts` (users signal + `init()` once-load + derived `totalUsers`/`activeUsers`/`pendingUsers`/
+  `organizationAccounts` computeds).
+- ✅ **Real admin dashboard** — replaced the hardcoded placeholder stats with the facade's derived counts
+  (total users, organization accounts, active, pending) + a **User-management link card** to `/admin/users`.
+  The "organizations & settings — coming soon" note now states honestly that those are **backend-blocked**.
+- ✅ **Admin layout nav** — added a top-bar nav (Dashboard / Users) with `routerLinkActive`, matching the
+  org portal's active-pill style; brand links to the dashboard. Theme toggle + Sign-out already existed.
+- ✅ **Verified live** as **admin@taskflow.com / Admin@123** (seeded Individual/Admin → `/admin`): dashboard
+  shows real counts (3 users, 1 org account, 3 active, 0 pending), Users page lists all 3 seeded users
+  (Nadia Owens/org, Jane Doe/individual, Admin User/individual), the **Organization account-type filter**
+  narrows to 1, and **dark mode** is fully tokenized (surfaces, badges, filters, active nav pill). `ng build`
+  passes (users-page 12.5 kB / 3.4 kB gz, dashboard-page 18.8 kB / 5.0 kB gz); **4 real unit tests** on
+  users-page pass (create + stats derivation + search + status filter).
+- ⏭️ **Next:** org overview + platform settings are backend-blocked; move to Polish & Hardening, reporting
+  export, or auth leftovers. Member portal stays backend-blocked.
 
 ## Current Status (2026-07-25, Phase 10 — Dark-mode theming of the org portal)
 - ✅ **Tokenized the entire organization portal for dark mode.** Converted all light-only hardcoded colors
@@ -363,7 +613,8 @@ the recurring traps (raw-vs-enveloped responses, email-verify DB step, org-seeds
 - ✅ Molecules (5 files each): `pricing-card`, `review-card`, `feature-card`, `landing-feature-card`,
   `master-card`, `deadline-molecule`, `recent-activity-molecule`, `project-overview-molecule`,
   `notification-pop-up-molecule`, `bar-chart-molecule`, `donut-chart-molecule`,
-  `create-project-modal-molecule`, `view-project-modal-molecule`, `task-detail-modal-molecule`.
+  `create-project-modal-molecule`, `view-project-modal-molecule`, `task-detail-modal-molecule`,
+  `pagination` (list pager — summary, rows-per-page, windowed page buttons).
 - ✅ Organisms: `productivity-chart`, `project-health-chart`.
 - 🟡 Placeholder-only (`.gitkeep`): atoms `avatars`/`badges`/`icons`/`spinners`; molecules
   `form-field`, `search-bar` (folders exist, 5 files not filled); organisms `data-table`/`navbar`/`sidebar`.
@@ -424,17 +675,27 @@ the recurring traps (raw-vs-enveloped responses, email-verify DB step, org-seeds
 - ✅ Project **detail** + task **assign/unassign** (Phase 7); **reports** (Phase 6/7); **team detail** +
   member add/remove and **subtasks** UI (Phase 8); **work-log / time-tracking** + **org switcher** (Phase 9);
   **dark-mode theming** via design tokens (Phase 10) — all built and live-verified.
+- ✅ **Edit + delete** for projects, tasks, teams and roles (Phase 17) — create/edit share one drawer per
+  page; detail pages carry header Edit/Delete; every delete is confirm-gated. Org update/delete is the
+  only entity CRUD still missing (needs an org-settings screen).
 - ✅ Org portal is feature- and theme-complete. Next work moves to other portals/polish (see START HERE).
 - ⬜ Sidebar is inline in the layout (fine); a dedicated sidebar organism is optional.
 
-## Phase 5 — Member (Individual) Portal ⬜
-- ✅ `MemberLayout` shell + placeholder dashboard; `/member` branch guarded with `portalGuard('member')`.
+## Phase 5 — Member (Individual) Portal 🟡 (invitations done)
+- ✅ `MemberLayout` shell + Dashboard/Invitations nav (with a pending-invitation badge); `/member` branch
+  guarded with `portalGuard('member')`.
+- ✅ **My invitations** page (Phase 18) — accept/decline invitations addressed to your email. Also mounted
+  at `/organization/invitations`, because invitations are user-scoped, not portal-scoped.
+- ✅ Dashboard shows real invitation data instead of the old hardcoded task stats.
 - ⬜ Personal task pages (create/subtasks/lifecycle), personal tracking/reports (weekly/monthly/yearly)
-  against the API's personal-task + report endpoints.
+  — **backend-blocked**: `CreateTask` requires an `OrganizationId`, so there is no personal-task endpoint.
 
-## Phase 6 — Admin Portal ⬜
-- ✅ `AdminLayout` shell + placeholder dashboard; `/admin` branch guarded with `roleGuard('Admin')`.
-- ⬜ Platform admin pages: user list (`GET /user`, AdminOnly), organizations overview, platform settings.
+## Phase 6 — Admin Portal 🟡 (Users done)
+- ✅ `AdminLayout` shell (now with Dashboard/Users nav); `/admin` branch guarded with `roleGuard('Admin')`.
+- ✅ **User list** page (`GET /user`, AdminOnly) with search + status/account-type filters + stat tiles;
+  real dashboard fed from the derived user counts. Feature slice: `admin.models/repository/facade`.
+- ⬜ Organizations overview + platform settings — **backend-blocked** (no list-all-orgs or settings
+  endpoint; only `GET /organization/mine`). User detail (`GET /user/{id}`) drawer is buildable now.
 
 ## Phase 7 — Reporting & Dashboard (headline feature) 🟡 (reports page done)
 - ✅ Reports page consuming dashboard summary + member/team/project report endpoints; echarts team
@@ -443,12 +704,29 @@ the recurring traps (raw-vs-enveloped responses, email-verify DB step, org-seeds
 - ✅ Work-log durations UI (Phase 9) — time-tracking drawer feeds `trackedHours` on dashboard/reports.
 - ⬜ Richer per-member trend charts; export (CSV/PDF).
 
-## Phase 8 — Polish & Hardening ⬜
-- ⬜ Custom `shared/validations/` decorator engine (FluentValidation-style) — folders exist, empty.
-- ⬜ Loading skeletons (`ngx-skeleton-loader`), empty states, dialog confirmations (`sweetalert2`).
-- ⬜ Real unit/component tests beyond "should create"; a11y pass (Storybook a11y addon is installed).
-- ⬜ Pagination/filtering for list views (mirrors the API's pending pagination work).
-- ⬜ `PagedResponse<T>` envelope support in `core/api` when the API adds pagination.
+## Phase 8 — Polish & Hardening 🟡 (validation engine done)
+- ✅ Custom `shared/validations/` decorator engine (FluentValidation-style) — built + unit-tested + wired
+  into the register form. See CONVENTIONS.md "shared/validations engine". Import from `@shared/validations`.
+- 🟡 Real unit/component tests — the **whole suite is green (118/118)** after fixing 15 pre-existing specs
+  that were missing TestBed providers (APP_SETTINGS / echarts / router / required inputs). 16 engine + 4
+  register + 4 admin-users are real assertions; most others are still "should create" (but now actually run).
+- ✅ **Dialog confirmations** — `core/services/dialog.service.ts` (sweetalert2) is now theme-aware (reads
+  design tokens off `:root`) with a `confirmDelete` helper, and gates every destructive action (member/
+  team-member remove, invitation cancel, subtask/worklog delete). See Phase 13 status.
+- ✅ **Loading skeletons** — theme-aware `Skeleton` atom (`shared/ui/atoms/skeletons/skeleton/`) over
+  `ngx-skeleton-loader`, applied to the users/projects/tasks/members loading states. See Phase 14.
+- ⬜ Extend skeletons to the remaining list pages (teams, roles, reports, project-detail, team-detail,
+  dashboard); empty states.
+- ⬜ Adopt the validation engine in the remaining forms (login + org create-drawers).
+- ✅ **Drawer a11y** — `DialogDirective` (`appDialog`) gives all 10 slide-in drawers focus-trap, Escape,
+  focus-restore, and `role=dialog`/`aria-modal`/`aria-labelledby`. See Phase 15.
+- ⬜ Broader a11y pass (contrast audit, form-label associations, Storybook a11y addon).
+- ✅ **Pagination/filtering for list views** — `createPagination()` (`@shared/utils/pagination`) + the
+  `Pagination` molecule + the global `.list-toolbar` styles, on the admin-users / tasks / projects /
+  members pages. Client-side until the API pages. See Phase 16 status and CONVENTIONS "List pages".
+- ⬜ Apply the list pattern to the remaining lists (teams, roles, invitations, project/team detail).
+- ⬜ `PagedResponse<T>` envelope support in `core/api` when the API adds pagination (then swap the
+  client-side `createPagination` source for a server-driven one).
 
 ## Backlog (unscheduled)
 - Dark/light theme toggle (theme SCSS exists), i18n, PWA/offline.

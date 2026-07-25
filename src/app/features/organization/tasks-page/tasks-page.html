@@ -24,7 +24,24 @@
         </a>
       </div>
     } @else if (loading() && !hasTasks()) {
-      <div class="loading-hint">Loading tasks…</div>
+      <div class="task-table" aria-busy="true" aria-label="Loading tasks">
+        <div class="task-row task-row--head">
+          <span class="col-title">Task</span>
+          <span class="col-status">Status</span>
+          <span class="col-priority">Priority</span>
+          <span class="col-sub">Subtasks</span>
+          <span class="col-actions">Actions</span>
+        </div>
+        @for (row of loadingRows; track row) {
+          <div class="task-row">
+            <div class="col-title"><app-skeleton width="65%" height="1rem" /></div>
+            <div class="col-status"><app-skeleton width="72px" height="1.4rem" radius="999px" /></div>
+            <div class="col-priority"><app-skeleton width="60px" height="1.4rem" radius="999px" /></div>
+            <div class="col-sub"><app-skeleton width="48px" height="0.8rem" /></div>
+            <div class="col-actions"><app-skeleton width="90px" height="1.6rem" radius="10px" /></div>
+          </div>
+        }
+      </div>
     } @else if (!hasTasks()) {
       <div class="empty-state">
         <span class="empty-icon"><lucide-angular name="CheckSquare" size="24"></lucide-angular></span>
@@ -35,6 +52,42 @@
         </button>
       </div>
     } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search tasks by title…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search tasks"
+          />
+        </div>
+        <select
+          class="list-filter"
+          [value]="statusFilter()"
+          (change)="onStatusFilter($any($event.target).value)"
+          aria-label="Filter by status"
+        >
+          <option value="">All statuses</option>
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <select
+          class="list-filter"
+          [value]="priorityFilter()"
+          (change)="onPriorityFilter($any($event.target).value)"
+          aria-label="Filter by priority"
+        >
+          <option value="">All priorities</option>
+          @for (opt of priorityOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
       <div class="task-table">
         <div class="task-row task-row--head">
           <span class="col-title">Task</span>
@@ -44,7 +97,14 @@
           <span class="col-actions">Actions</span>
         </div>
 
-        @for (task of tasks(); track task.id) {
+        @if (pager.total() === 0) {
+          <div class="list-no-match">
+            <p>No tasks match your filters.</p>
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        }
+
+        @for (task of pager.items(); track task.id) {
           <div class="task-row">
             <div class="col-title">
               <div class="task-title">{{ task.title }}</div>
@@ -100,20 +160,49 @@
                   <lucide-angular name="CircleCheckBig" size="14"></lucide-angular> Complete
                 </button>
               }
+              <button
+                type="button"
+                class="icon-action"
+                (click)="openEdit(task)"
+                [attr.aria-label]="'Edit ' + task.title"
+                title="Edit task"
+              >
+                <lucide-angular name="Pencil" size="14"></lucide-angular>
+              </button>
+              <button
+                type="button"
+                class="icon-action danger"
+                (click)="remove(task)"
+                [attr.aria-label]="'Delete ' + task.title"
+                title="Delete task"
+              >
+                <lucide-angular name="Trash2" size="14"></lucide-angular>
+              </button>
             </span>
           </div>
         }
+
+        <app-pagination
+          [page]="pager.page()"
+          [pageSize]="pager.pageSize()"
+          [total]="pager.total()"
+          [pageSizes]="pager.pageSizes"
+          itemLabel="tasks"
+          ariaLabel="Tasks pagination"
+          (pageChange)="pager.setPage($event)"
+          (pageSizeChange)="pager.setPageSize($event)"
+        />
       </div>
     }
   </div>
 
-  <!-- Create task drawer -->
-  @if (showCreate()) {
-    <div class="drawer-backdrop" (click)="closeCreate()"></div>
-    <aside class="drawer">
+  <!-- Create / edit task drawer -->
+  @if (showDrawer()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
-        <h2>New task</h2>
-        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+        <h2>{{ isEditing() ? 'Edit task' : 'New task' }}</h2>
+        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -141,32 +230,48 @@
               }
             </select>
           </div>
-          <div class="field">
-            <label for="projectId" class="form-label">Project <span>(optional)</span></label>
-            <select id="projectId" class="form-control" formControlName="projectId">
-              <option value="">No project</option>
-              @for (opt of projectOptions(); track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-          </div>
+          <!-- Reassigning a task to another project isn't in the API's update command. -->
+          @if (!isEditing()) {
+            <div class="field">
+              <label for="projectId" class="form-label">Project <span>(optional)</span></label>
+              <select id="projectId" class="form-control" formControlName="projectId">
+                <option value="">No project</option>
+                @for (opt of projectOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          }
         </div>
 
         <div class="field-row">
-          <div class="field">
-            <label for="startDate" class="form-label">Start date</label>
-            <input id="startDate" type="date" class="form-control" formControlName="startDate" />
-          </div>
+          @if (!isEditing()) {
+            <div class="field">
+              <label for="startDate" class="form-label">Start date</label>
+              <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+            </div>
+          }
           <div class="field">
             <label for="expectedCompletionDate" class="form-label">Due date <span>(optional)</span></label>
             <input id="expectedCompletionDate" type="date" class="form-control" formControlName="expectedCompletionDate" />
           </div>
         </div>
 
+        @if (isEditing()) {
+          <p class="drawer-note">
+            Status, start date and project aren't editable here — use Start / Complete on the row to
+            move a task through its lifecycle.
+          </p>
+        }
+
         <div class="drawer-actions">
-          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
           <button type="submit" class="btn-primary-cta" [disabled]="saving()">
-            {{ saving() ? 'Creating…' : 'Create task' }}
+            @if (saving()) {
+              {{ isEditing() ? 'Saving…' : 'Creating…' }}
+            } @else {
+              {{ isEditing() ? 'Save changes' : 'Create task' }}
+            }
           </button>
         </div>
       </form>
@@ -176,7 +281,7 @@
   <!-- Subtasks drawer -->
   @if (activeTask(); as at) {
     <div class="drawer-backdrop" (click)="closeSubtasks()"></div>
-    <aside class="drawer">
+    <aside class="drawer" appDialog (dismiss)="closeSubtasks()">
       <div class="drawer-head">
         <div class="drawer-title">
           <h2>Subtasks</h2>
@@ -225,7 +330,7 @@
   <!-- Time-tracking drawer -->
   @if (timeTask(); as tt) {
     <div class="drawer-backdrop" (click)="closeTime()"></div>
-    <aside class="drawer">
+    <aside class="drawer" appDialog (dismiss)="closeTime()">
       <div class="drawer-head">
         <div class="drawer-title">
           <h2>Time tracking</h2>

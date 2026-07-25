@@ -1,12 +1,28 @@
 <div class="portal-layout">
   <header class="portal-topbar">
-    <a class="brand">
+    <a class="brand" routerLink="/member/dashboard">
       <span class="brand-logo">
         <lucide-angular name="Sparkles" [size]="18"></lucide-angular>
       </span>
       <span class="brand-name">TaskFlow</span>
       <span class="portal-tag">Personal</span>
     </a>
+
+    <nav class="portal-nav">
+      <a routerLink="/member/dashboard" routerLinkActive="active">
+        <lucide-angular name="LayoutDashboard" [size]="16"></lucide-angular>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/member/invitations" routerLinkActive="active">
+        <lucide-angular name="Mail" [size]="16"></lucide-angular>
+        <span>Invitations</span>
+        @if (pendingInvitations() > 0) {
+          <span class="nav-badge" [attr.aria-label]="pendingInvitations() + ' pending invitations'">
+            {{ pendingInvitations() }}
+          </span>
+        }
+      </a>
+    </nav>
 
     <div class="topbar-actions">
       <button

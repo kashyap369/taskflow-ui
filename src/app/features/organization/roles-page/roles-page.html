@@ -40,7 +40,29 @@
       <div class="role-grid">
         @for (role of roles(); track role.id) {
           <article class="role-card">
-            <span class="role-icon"><lucide-angular name="ShieldCheck" size="18"></lucide-angular></span>
+            <div class="role-card-top">
+              <span class="role-icon"><lucide-angular name="ShieldCheck" size="18"></lucide-angular></span>
+              <div class="role-card-actions">
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="openEdit(role)"
+                  [attr.aria-label]="'Edit ' + role.name"
+                  title="Edit role"
+                >
+                  <lucide-angular name="Pencil" size="15"></lucide-angular>
+                </button>
+                <button
+                  type="button"
+                  class="icon-action danger"
+                  (click)="remove(role)"
+                  [attr.aria-label]="'Delete ' + role.name"
+                  title="Delete role"
+                >
+                  <lucide-angular name="Trash2" size="15"></lucide-angular>
+                </button>
+              </div>
+            </div>
             <h3>{{ role.name }}</h3>
             @if (role.description) {
               <p>{{ role.description }}</p>
@@ -55,13 +77,13 @@
     }
   </div>
 
-  <!-- Create role drawer -->
-  @if (showCreate()) {
-    <div class="drawer-backdrop" (click)="closeCreate()"></div>
-    <aside class="drawer">
+  <!-- Create / edit role drawer -->
+  @if (showDrawer()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
-        <h2>New role</h2>
-        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+        <h2>{{ isEditing() ? 'Edit role' : 'New role' }}</h2>
+        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -78,9 +100,13 @@
           <textarea id="description" rows="3" class="form-control" placeholder="What can this role do?" formControlName="description"></textarea>
         </div>
         <div class="drawer-actions">
-          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
           <button type="submit" class="btn-primary-cta" [disabled]="saving()">
-            {{ saving() ? 'Creating…' : 'Create role' }}
+            @if (saving()) {
+              {{ isEditing() ? 'Saving…' : 'Creating…' }}
+            } @else {
+              {{ isEditing() ? 'Save changes' : 'Create role' }}
+            }
           </button>
         </div>
       </form>
@@ -90,7 +116,7 @@
   <!-- Manage permissions drawer -->
   @if (selectedRole(); as role) {
     <div class="drawer-backdrop" (click)="closeManage()"></div>
-    <aside class="drawer">
+    <aside class="drawer" appDialog (dismiss)="closeManage()">
       <div class="drawer-head">
         <div>
           <h2>{{ role.name }}</h2>

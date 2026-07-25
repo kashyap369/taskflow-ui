@@ -7,6 +7,8 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideEchartsCore } from 'ngx-echarts';
 import * as echarts from 'echarts/core';
 
+import { APP_SETTINGS } from '@core/config/app.tokens';
+import { AppSettings } from '@core/config/app.settings';
 import { DashboardPage } from './dashboard-page';
 
 describe('DashboardPage', () => {
@@ -22,6 +24,7 @@ describe('DashboardPage', () => {
         provideHttpClientTesting(),
         provideToastr(),
         provideAnimations(),
+        { provide: APP_SETTINGS, useValue: AppSettings },
         provideEchartsCore({ echarts }),
       ],
     }).compileComponents();

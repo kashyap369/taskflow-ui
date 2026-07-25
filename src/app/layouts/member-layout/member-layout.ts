@@ -1,10 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
+  LayoutDashboard,
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
   LogOut,
+  Mail,
   Moon,
   Sparkles,
   Sun,
@@ -13,19 +15,27 @@ import {
 import { AuthService } from '@core/auth/auth.service';
 import { ThemeService } from '@core/services/theme.service';
 import { AuthFacade } from '@features/auth/auth.facade';
+import { MemberFacade } from '@features/member/member.facade';
 
 /** Shell for the Member (Individual / solo user) portal. */
 @Component({
   selector: 'app-member-layout',
   standalone: true,
-  imports: [RouterOutlet, LucideAngularModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
   templateUrl: './member-layout.html',
   styleUrl: './member-layout.scss',
   providers: [
     {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider({ Sparkles, Sun, Moon, LogOut }),
+      useValue: new LucideIconProvider({
+        Sparkles,
+        Sun,
+        Moon,
+        LogOut,
+        LayoutDashboard,
+        Mail,
+      }),
     },
   ],
 })
@@ -33,9 +43,17 @@ export class MemberLayout {
   private readonly themeService = inject(ThemeService);
   private readonly authService = inject(AuthService);
   private readonly authFacade = inject(AuthFacade);
+  private readonly memberFacade = inject(MemberFacade);
 
   readonly isDark = this.themeService.isDark;
   readonly user = this.authService.user;
+  /** Badge on the Invitations nav item — invitations this user can still act on. */
+  readonly pendingInvitations = this.memberFacade.pendingCount;
+
+  constructor() {
+    // Loaded here (not just on the page) so the badge is right wherever the user lands.
+    this.memberFacade.init();
+  }
 
   toggleTheme(): void {
     this.themeService.toggle();

@@ -6,6 +6,8 @@ import { provideToastr } from 'ngx-toastr';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideLottieOptions } from 'ngx-lottie';
 
+import { APP_SETTINGS } from '@core/config/app.tokens';
+import { AppSettings } from '@core/config/app.settings';
 import { TeamDetailPage } from './team-detail-page';
 
 describe('TeamDetailPage', () => {
@@ -22,6 +24,7 @@ describe('TeamDetailPage', () => {
         provideToastr(),
         provideAnimations(),
         provideLottieOptions({ player: () => import('lottie-web') }),
+        { provide: APP_SETTINGS, useValue: AppSettings },
       ],
     }).compileComponents();
 

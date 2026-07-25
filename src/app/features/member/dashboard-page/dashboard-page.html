@@ -7,20 +7,44 @@
     <p>Here's what's on your plate today. This portal is the Individual (solo user) experience.</p>
   </div>
 
-  <div class="stat-grid">
-    @for (stat of stats; track stat.label; let i = $index) {
-      <div class="stat-card" appReveal [revealDelay]="i * 80">
-        <span class="stat-value">{{ stat.value }}</span>
-        <span class="stat-label">{{ stat.label }}</span>
-      </div>
-    }
-  </div>
+  @if (pendingInvitations() > 0) {
+    <a class="invite-callout" routerLink="/member/invitations" appReveal>
+      <span class="callout-icon">
+        <lucide-angular name="Mail" [size]="20"></lucide-angular>
+      </span>
+      <span class="callout-main">
+        <strong>
+          {{ pendingInvitations() }}
+          {{ pendingInvitations() === 1 ? 'invitation' : 'invitations' }} waiting
+        </strong>
+        <span class="callout-sub">
+          {{ pendingInvitations() === 1 ? 'An organization has' : 'Organizations have' }} invited you
+          to join. Review and accept.
+        </span>
+      </span>
+      <lucide-angular name="ArrowRight" [size]="18" class="callout-arrow"></lucide-angular>
+    </a>
+  } @else {
+    <a class="invite-callout is-quiet" routerLink="/member/invitations" appReveal>
+      <span class="callout-icon quiet">
+        <lucide-angular name="Mail" [size]="20"></lucide-angular>
+      </span>
+      <span class="callout-main">
+        <strong>No pending invitations</strong>
+        <span class="callout-sub">
+          Invitations from organizations show up here and on the Invitations page.
+        </span>
+      </span>
+      <lucide-angular name="ArrowRight" [size]="18" class="callout-arrow"></lucide-angular>
+    </a>
+  }
 
-  <div class="placeholder-card" appReveal [revealDelay]="240">
+  <div class="placeholder-card" appReveal [revealDelay]="120">
     <h3>My Tasks — coming soon</h3>
     <p>
-      Personal task lists, subtasks, calendar and weekly/monthly/yearly tracking will live here,
-      wired to the API's personal-task and reporting endpoints.
+      Personal task lists, subtasks, calendar and weekly/monthly/yearly tracking will live here. This
+      is waiting on the API: creating a task currently requires an <code>OrganizationId</code>, so
+      there's no endpoint for a personal task yet.
     </p>
   </div>
 </section>

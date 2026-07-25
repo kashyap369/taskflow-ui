@@ -89,6 +89,15 @@ describe('Button', () => {
 });
 ```
 
+**TestBed providers a component needs (else `should create` fails with NG0201):** a component (or its
+facade chain) that reaches `ApiService` needs `{ provide: APP_SETTINGS, useValue: AppSettings }`
+(from `@core/config`) **and** `provideHttpClient()` (+ `provideHttpClientTesting()`); anything that shows a
+toast (via `NotificationService`) needs `provideToastr()` + `provideAnimations()`; `RouterLink`/`routerLink`
+needs `provideRouter([])`; a `LottiePlayer` needs `provideLottieOptions({ player: () => import('lottie-web') })`;
+an echarts chart needs `provideEchartsCore({ echarts })`. For a **required `input()`**, set it before
+`detectChanges()` with `fixture.componentRef.setInput('name', value)`. For a **lucide icon** used in the
+template, provide it: `{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ IconName }) }`.
+
 ### `<name>.stories.ts`
 Storybook `Meta`/`StoryObj` pattern with a `title` reflecting the atomic level:
 - Atoms → `title: 'Atoms/<Name>'`
@@ -143,10 +152,115 @@ Rules:
 ## Forms
 
 - Use **reactive forms** with `FormBuilder.nonNullable.group({...})`.
-- Angular `Validators` for now (`Validators.required`, `Validators.email`). On submit, guard with
-  `if (form.invalid) { form.markAllAsTouched(); return; }` then `form.getRawValue()`.
-- The custom `shared/validations/` decorator engine is the intended long-term validation home
-  (not built yet).
+- On submit, guard with `if (form.invalid) { form.markAllAsTouched(); return; }` then `form.getRawValue()`.
+- **Validation:** two options —
+  - Angular `Validators` (`Validators.required`, `Validators.email`) for simple, one-off forms.
+  - The **`shared/validations/` decorator engine** (FluentValidation-style) for forms with reusable/
+    cross-field rules — this is the preferred home. Declare a decorated model class, then build the
+    reactive form's validators from it. First consumer: `features/auth/register-page`.
+
+### `shared/validations` engine (built)
+
+A decorator-driven validator that mirrors FluentValidation. Import everything from `@shared/validations`.
+
+1. Declare a model with property decorators (`@Required @MaxLength @Email @Pattern @MinLength @Min @Max
+   @IsTrue @Matches @Custom`). Messages are optional (sensible defaults). `@Matches('other')` is
+   cross-field (model-scoped); the rest are field-scoped.
+2. Build the reactive form from it:
+   ```ts
+   private readonly rules = controlValidators(MyModel);           // per-control ValidatorFns
+   form = this.fb.nonNullable.group(
+     { email: ['', this.rules['email']], /* … */ },
+     { validators: crossFieldValidator(MyModel) },                // cross-field rules at group level
+   );
+   fieldError(p: string) { return messageFor(this.form, p); }     // touched-gated message for templates
+   ```
+3. Template: `@if (fieldError('email'); as msg) { <small class="field-msg">{{ msg }}</small> }`.
+4. Pure check (no forms): `validate(MyModel, obj)` → `ValidationResult` (`isValid`, `firstError(p)`,
+   `errorsFor(p)`, `hasError(p)`). Rules are inherited across a model subclass.
+
+Structure: `models/` (types + `ValidationResult`), `metadata/` (rule registry keyed by class,
+prototype-chain aware), `decorators/` (the property decorators), `engine/` (`validate` + the Angular
+adapters). Relies on `experimentalDecorators` (legacy `(target, key)` signature) — no
+`emitDecoratorMetadata`, so the registry is the single source of truth. Add new decorators in
+`decorators/validation-decorators.ts` and re-export from `index.ts`.
+
+## List pages: filtering + pagination (built)
+
+Every list view follows the same three-piece pattern. The API has **no paging yet**, so filtering and
+paging are entirely client-side over the full list the facade already holds.
+
+1. **Filter signals + a `filtered*` computed on the page** (never in the facade — the facade owns data,
+   the page owns view state):
+   ```ts
+   readonly search = signal('');
+   readonly statusFilter = signal<'' | TaskStatus>('');   // '' = all
+   readonly filteredTasks = computed(() => this.tasks().filter(t => /* term + filters */));
+   onSearch(v: string) { this.search.set(v); }
+   onStatusFilter(v: string) { this.statusFilter.set(v === '' ? '' : Number(v) as TaskStatus); }
+   clearFilters() { /* reset every filter signal */ }
+   ```
+2. **`createPagination()` from `@shared/utils/pagination`** over that computed:
+   ```ts
+   readonly pager = createPagination(this.filteredTasks, { pageSize: 10 });
+   // template: @for (t of pager.items(); track t.id)
+   ```
+   `page` is a *computed clamp*, so shrinking the source (typing in the search box while on the last
+   page) silently falls back to the last real page — no effect, no manual reset.
+3. **The `Pagination` molecule** (`@shared/ui/molecules/pagination/pagination`) under the list —
+   summary line, rows-per-page select, windowed page buttons (`aria-current="page"`, `nav[aria-label]`):
+   ```html
+   <app-pagination [page]="pager.page()" [pageSize]="pager.pageSize()" [total]="pager.total()"
+     [pageSizes]="pager.pageSizes" itemLabel="tasks" ariaLabel="Tasks pagination"
+     (pageChange)="pager.setPage($event)" (pageSizeChange)="pager.setPageSize($event)" />
+   ```
+
+Markup for the toolbar uses the **global** classes from `styles/components/_toolbar.scss` (not
+per-page SCSS): `.list-toolbar` wrapper, `.list-search` (icon + `input[type=search]`), `.list-filter`
+(a `<select>`, bound `[value]` so `clearFilters()` resets the control too), and `.list-no-match`
+(the "nothing matched" state + a Clear-filters button). Keep the page's own **empty state** (no rows
+at all) separate from `.list-no-match` (rows exist, filters excluded them).
+
+## Create / edit drawers, and delete (built)
+
+One drawer per page serves **both** create and edit — don't build a second one.
+
+```ts
+readonly showDrawer = signal(false);
+readonly editing = signal<Project | null>(null);   // null = create
+readonly isEditing = computed(() => this.editing() !== null);
+
+openCreate() { this.editing.set(null);  this.form.reset({ …defaults }); this.showDrawer.set(true); }
+openEdit(row) { this.editing.set(row);  this.form.reset({ …fromRow(row) }); this.showDrawer.set(true); }
+closeDrawer() { this.showDrawer.set(false); this.editing.set(null); }   // always clear `editing`
+submit() { … this.editing() ? facade.updateX({ id, … }) : facade.createX({ … }); this.closeDrawer(); }
+```
+
+The template switches the heading, the submit label (`Save changes` / `Create …`) and the saving label
+off `isEditing()`. Both branches keep `appDialog` on the `<aside class="drawer">`.
+
+**Two rules that are easy to get wrong:**
+
+1. **Diff the list DTO against the update command before writing the form.** The API's update commands
+   are *whole-record* — every field you don't send is overwritten. `TaskListItem` has no `description`
+   but `UpdateTaskCommand` requires one, so a form filled from a table row would blank it. Where the
+   list DTO is short, fetch the detail first: `facade.loadTaskForEdit(id, (detail) => …)` patches the
+   missing field in after the drawer opens.
+2. **Don't render inputs the update command ignores.** These commands are partial (no status, start
+   date, or project reassignment), so hide those fields under `@if (!isEditing())` and explain the
+   absence with a `<p class="drawer-note">` — a control that silently does nothing is worse than none.
+
+**Delete** always goes through `DialogService.confirmDelete(title, text, confirmLabel)` at the *page*
+handler (async), never in the facade, and the message names the consequence ("…and its 3 task(s) will be
+deleted"). Deleting the record a **detail page** is showing must navigate away, but only on success — the
+facade's delete takes an optional `onDeleted` callback for exactly that:
+
+```ts
+this.facade.deleteProject(p.id, () => this.router.navigate(['/organization/projects']));
+```
+
+Row/card affordances use the global `.icon-action` (and `.icon-action.danger` for delete) from
+`styles/components/_actions.scss`.
 
 ## Routing
 

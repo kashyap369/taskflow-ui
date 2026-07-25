@@ -3,9 +3,182 @@
 > Append-only. 3–5 lines per session. Focus on gotchas, dead ends, and decisions — things git
 > history doesn't capture.
 >
-> **▶ Next session: the org portal is feature- AND theme-complete. Pick a new roadmap bucket (Admin portal,
-> Polish & Hardening, reporting export, or auth leftovers) — see the "▶ NEXT SESSION — START HERE" block at
-> the top of [PHASES.md](PHASES.md).**
+> **▶ Next session: the org portal is feature/theme-complete with full edit + delete; the invitation flow
+> now works from both sides; Admin has Users + dashboard; validation engine, confirm dialogs, skeletons,
+> accessible drawers and list pagination/filtering are all in. **63 of the API's 71 endpoints are wired.**
+> The last entity without edit/delete is the **organization itself** (needs a settings screen). See the
+> coverage table in the "▶ NEXT SESSION — START HERE" block at the top of [PHASES.md](PHASES.md).**
+
+## 2026-07-26 (Phase 18 — Invitation accept/reject: the invitee's side)
+- **The design call that mattered:** the roadmap said "a my-invitations screen on the member portal", but
+  invitations are addressed to a **user**, not a portal — an Organization account can be invited into
+  another org too. Building it member-only would have hidden invitations from exactly the account type
+  that owns an organization. So the standalone page is mounted at **both** `/member/invitations` and
+  `/organization/invitations`, one component, badge on both navs.
+- That decision also made the feature **testable with existing credentials**. The only Individual test
+  account is Jane, whose password isn't recorded anywhere, and registering a new user is a dead end (new
+  accounts are `PendingVerification`, login throws `EMAIL_NOT_VERIFIED`, and there's still no verify
+  endpoint). But the **org owner had no membership row**, so she was a legitimate invitee: she invited her
+  own address and ran the whole loop. **No DB writes were needed** — worth remembering next time this
+  looks blocked.
+- `GET /mine` only returns **Pending** rows, but a pending row can still be past `expiryDate`, and the
+  API 400s if you accept one. The page therefore splits actionable from expired (dimmed, Dismiss only) and
+  the badge counts only actionable — otherwise the UI would offer a button the server always refuses.
+- Extracted `Tone` and the invitation DTO into `shared/models/` (first real occupants of that folder).
+  `Tone` had been copy-pasted in both the organization and admin slices; a third copy in `member` was the
+  push to share it. `organization.models.ts` re-exports both, so no existing import changed.
+- Replaced the member dashboard's hardcoded stats ("8 active tasks", "23 completed this week") with the
+  real invitation count. Those numbers were pure fiction for a portal with no task data.
+- ⚠️ **Backend finding: `RemoveMember` and `DeactivateMember` are literally the same handler** — both call
+  `member.Deactivate()`. So "Remove" doesn't remove: the member stays listed as *Inactive*. Found it while
+  restoring test state and wondering why the owner was still in the list. Frontend copy now tells the
+  truth; the backend should pick one behaviour. **184/184 green.**
+
+## 2026-07-26 (Phase 17 — Edit & delete pass: projects, tasks, teams, roles)
+- Audited the API against the frontend before starting: **71 endpoints, 51 reachable from the UI**. The gap
+  wasn't random — 9 of the 20 unused endpoints were update/delete, i.e. nothing in the app could be edited
+  or deleted. That audit set this phase's scope; coverage is now **60/71**.
+- **The trap of the session:** `UpdateTaskCommand` requires `Description`, but `TaskListItemDto` — what
+  every task table renders — **doesn't carry one**. Filling an edit form from a row and saving would have
+  silently wiped the description on every task edited. Only `GET /task/{id}` (`TaskDetailDto`) has it, so
+  the edit flow opens the drawer from the row and then patches the description in from the detail call.
+  **Lesson: before writing an edit form, diff the list DTO against the update command — a missing field is
+  a silent data-loss bug, not a compile error.** Two tests pin it.
+- The update commands are all **partial** (no status / start date / project reassignment). Rather than
+  ship inputs that silently do nothing, edit mode hides those fields and shows a `.drawer-note` saying why.
+  Same idea on projects: status follows the tasks, so it isn't editable by hand.
+- Detail-page deletes need to navigate away, but only if the delete actually succeeded — so
+  `deleteProject`/`deleteTeam` take an optional `onDeleted` callback that fires in the `next` handler.
+  Kept the facade signal-based everywhere else; the callback is only for "the record I'm looking at is gone".
+- Also deleted `API.User.Update` / `API.User.Delete` from the endpoint map — `UserController` has no PUT or
+  DELETE, so the map was advertising routes that never existed.
+- Verified live with throwaway records so the dev DB is left exactly as found: temp task created→deleted,
+  temp project created→deleted from its detail page (navigated back), Engineering's description edited,
+  task description round-tripped through an edit to prove the blank-out trap is closed. **177/177 green.**
+
+## 2026-07-26 (Phase 16 — List pagination + filtering)
+- Built the pager as **two independent pieces**: `createPagination()` (`shared/utils/pagination.ts`, pure
+  signal state) and a dumb `Pagination` molecule that only takes `page`/`pageSize`/`total` and emits intent.
+  The molecule never imports the helper, so either can be used alone (and the molecule stays testable with
+  plain inputs).
+- **Key design decision:** the pager's public `page` is a `computed()` clamp over a private writable, not
+  the writable itself. Filtering while on the last page then just resolves to the last real page — with an
+  `effect()` you'd get a second change-detection pass and an intermediate empty render. Re-widening the
+  filter even restores the originally requested page, which falls out of the same trick for free.
+- Toolbar styles went **global** (`styles/components/_toolbar.scss` → `.list-toolbar`/`.list-search`/
+  `.list-filter`/`.list-no-match`) rather than being copy-pasted per page. Deliberately used `list-`
+  prefixed names instead of the admin page's generic `.toolbar`/`.search`/`.filter-select`: global rules
+  pierce component encapsulation, so generic names would have collided with page-local `.search` blocks.
+  The admin users page was migrated to the shared classes and its local copies deleted.
+- Gotcha: `TaskListItem` has **no `description`** (unlike `Project`), so the tasks search is title-only —
+  check the DTO before writing a search predicate.
+- Testing: the org pages get real data by stubbing **`OrganizationRepository`** (all 9 methods
+  `OrganizationFacade.init()` fans out to, each returning `of(...)`) — much simpler than faking the facade,
+  and it exercises the real facade→page signal wiring. Verified live at 1 row/page (temporarily) to see real
+  page buttons, since the test org only has 2 tasks. `ng build` passes; suite **159/159**.
+
+## 2026-07-25 (Phase 15 — Accessible drawers: focus-trap dialog directive)
+- Built `DialogDirective` (`appDialog`, `shared/directives/dialog.directive.ts`) and put it on all **10**
+  slide-in drawers in the org portal. It marks the panel `role="dialog"` + `aria-modal="true"` +
+  `tabindex="-1"`, auto-links `aria-labelledby` to the drawer's first heading, moves focus to the first form
+  field on open, traps Tab/Shift+Tab, emits `(dismiss)` on Escape (each wired to the drawer's existing close
+  handler), and restores focus to the trigger on close. Pure DOM; uses `output()`; relies on the drawers
+  being `@if`-created so open=ngAfterViewInit, close=ngOnDestroy.
+- **Focus-restore gotcha while verifying:** opening the drawer via a programmatic `element.click()` in the
+  console does NOT focus the trigger button, so `document.activeElement` at init was `<body>` and focus
+  "returned" to body on Escape — looked like a bug but wasn't. A **real mouse click** focuses the button, so
+  a real click → Escape correctly returned focus to the "New project" trigger. Lesson: verify focus-restore
+  with a real click, not JS `.click()`.
+- Refined `focusFirst()` to prefer the first INPUT/TEXTAREA/SELECT over a leading close button (nicer for
+  form drawers) — confirmed focus lands on `INPUT[fc=title]` on open.
+- Verified live on the create-project drawer (aria attrs + focus-in + Escape-close + focus-restore); 4 unit
+  tests via a test-host component (aria wiring, labelledby, Escape-dismiss, Tab-wrap). `ng build` passes,
+  full suite **126/126**.
+
+## 2026-07-25 (Phase 14 — Loading skeletons)
+- Built a theme-aware `Skeleton` atom (`shared/ui/atoms/skeletons/skeleton/`, 5 files) wrapping
+  `ngx-skeleton-loader` (installed but unused). The wrapper exists because ngx-skeleton-loader renders a
+  light shimmer that looks wrong in dark mode — the atom paints the base with the `--surface-inset` token
+  and picks `progress` / `progress-dark` animation from `ThemeService.isDark()` via the `[theme]` +
+  `[animation]` inputs, so every skeleton matches the design system in both themes with no per-usage styling.
+- Replaced the generic loading states (plain "Loading…" text on projects/tasks, Lottie dots on
+  users/members) with **content-shaped** skeletons: users → member-row shape, projects → 6 card skeletons,
+  tasks → table rows matching the 5 columns, members → member-grid rows. Each loading branch is
+  `aria-busy="true"` + aria-labelled. Tiny per-page `.sk-lines`/`.sk-card` flex helpers space the stacked lines.
+- **Verifying a transient skeleton:** the org facade caches its data, so SPA nav doesn't refetch and the
+  skeleton never re-shows; a **full page reload** re-bootstraps the app → `loadOrgData` forkJoins ~7 calls →
+  a wide enough loading window. Issue `navigate` + `screenshot` back-to-back (same turn) to catch it — doing
+  them in separate turns is too slow. Caught the projects card-grid skeleton in light, toggled dark + reloaded
+  to confirm theme-awareness.
+- `ng build` passes; full suite **122/122** (+4 skeleton tests). Remaining list pages (teams/roles/reports/
+  project-detail/team-detail/dashboard) still use the old loading states — same atom applies when wanted.
+
+## 2026-07-25 (Phase 13 — Confirm dialogs on destructive actions)
+- Wired confirmation dialogs into every destructive action so nothing deletes on a single click. Used the
+  pre-existing `core/services/dialog.service.ts` (sweetalert2), but first **made it theme-aware**: sweetalert
+  renders in a portal at the document root (outside Angular's `[data-theme]` scope), so it was white in dark
+  mode. Fix: read the design tokens off `:root` at call time via
+  `getComputedStyle(documentElement).getPropertyValue('--surface'|'--text'|'--danger'|…)` and pass
+  `background`/`color`/button colors through — now on-palette in both themes with zero token duplication.
+  Added a `confirmDelete(title, text?, confirmText?)` helper (red confirm, Cancel focused).
+- **Layering decision:** put the confirm at the **page/handler** level (presentation), not in the facade —
+  the dialog is a UI concern, and the facades stay pure orchestration. Handlers (`remove`, `cancelInvite`,
+  `deleteSubtask`, `deleteLog`) became `async` and only call the facade after `await dialog.confirm…`
+  returns true. Covered: member remove, invitation cancel (members-page), team-member remove (team-detail),
+  subtask + worklog delete (tasks-page). Left `deactivateMember` un-gated (reversible toggle, not destructive).
+- **Verified live** as the org owner on Engineering (teamId 2): Remove → "Remove from team? Jane Doe will be
+  removed from Engineering." with a red Remove + focused Cancel; cancelled both times so Jane stays seeded.
+  Confirmed themed correctly in dark mode too (dark card / light text / red button). `ng build` passes.
+- **Turned the test suite green** while here: 15 specs were failing on missing TestBed providers (not real
+  bugs), surfaced once I ran the full suite. Fixes by category: facade-backed pages → `APP_SETTINGS`
+  (+ http/toastr/router for login & org-layout); echarts organisms → `provideEchartsCore({ echarts })`;
+  public partials + landing card → `provideRouter([])`; `LandingFeatureCard` → set its required `feature`
+  input via `fixture.componentRef.setInput` + provide the lucide icon; replaced the stale CLI App "should
+  render title" test with a router-outlet check. **118/118 green.** Reusable rule: any page whose facade
+  reaches `ApiService` needs `APP_SETTINGS` provided in TestBed.
+
+## 2026-07-25 (Phase 12 — Validation engine + register form)
+- Built the `shared/validations/` decorator engine (the flagship Polish item; folders were empty). Design:
+  property decorators register rules into a class-keyed `WeakMap` registry (prototype-chain-aware for
+  inheritance); `validate(Model, obj)` runs them into an immutable `ValidationResult`. Angular glue:
+  `controlValidators` (per-control, field-scoped) + `crossFieldValidator` (group-level, model-scoped like
+  `@Matches`) + `messageFor` (touched-gated template message). Import from `@shared/validations`.
+- **Decorator flavor matters:** tsconfig has `experimentalDecorators: true` and **no** `emitDecoratorMetadata`,
+  so property decorators use the legacy `(target, propertyKey)` signature (`target` = prototype) and there's
+  no `design:type` metadata — hence the explicit registry as the single source of truth. Rules PASS on empty
+  (except `@Required`/`@IsTrue`) so an optional field isn't flagged by `@MaxLength` etc., mirroring
+  FluentValidation's `.NotEmpty().MaximumLength()` chaining.
+- **Kept the Angular adapters pure** (return error maps, never `setErrors`) to dodge the classic
+  validator-setting-errors recursion. Controls still get `.ng-invalid` because field rules become real
+  per-control `ValidatorFn`s; cross-field lives on the group and `messageFor` routes it back to the target
+  property.
+- **Wired into register** (`register-page.model.ts` = `RegisterFormModel` mirroring `RegisterUserCommandValidator`).
+  Replaced inline `Validators.*` + the ad-hoc `passwordsMatch` fn; templates now use `fieldError(prop)`.
+  Verified live: bad email / short phone / weak password / mismatched confirm each show the decorator's
+  message (incl. cross-field "Passwords don't match.").
+- **Spec gotcha:** the pre-existing register spec was already broken — a facade-backed page needs
+  `APP_SETTINGS` provided (AuthFacade → AuthRepository → ApiService → APP_SETTINGS), on top of the usual
+  toastr/animations. Added it. 16 engine + 4 register tests green. `ng build` passes.
+
+## 2026-07-25 (Phase 11 — Admin portal: Users + real dashboard)
+- Built the first real Admin-portal features, mirroring the org feature-slice shape exactly:
+  `admin.models.ts` (UserStatus/AccountType exact-int enums + `userStatusMeta`/`accountTypeMeta` tone
+  helpers), `admin.repository.ts` (`getUsers` → `GET /user`, `getUser` → `GET /user/{id}`), `admin.facade.ts`
+  (users signal, once-only `init()`, derived stat computeds). **Users page** (4 files) = stat tiles + search +
+  status/account-type filter selects + accounts table; **dashboard** rewired to real counts + a link card.
+- **`GET /user` is AdminOnly** (`AuthorizationPolicies.AdminOnly`) — the only platform-wide admin endpoint
+  that exists. There is **no list-all-organizations** endpoint (`GET /organization/mine` is per-user) and
+  **no platform-settings** endpoint, so the dashboard's "organizations & settings" card is an honest
+  backend-blocked note, not a fake page. `GET /user/{id}` (UserDetailDto) exists for a future detail drawer.
+- **Seeded admin creds** (found in `TaskFlow.Infra/Seeder/Identity/User/UserSeader.cs`):
+  **admin@taskflow.com / Admin@123**, Individual account + Admin system role, email pre-verified → lands on
+  `/admin`. Verified the login API + `GET /user` returns 3 users with the exact DTO shape before driving the UI.
+- **Spec gotcha (same as org pages):** a page whose facade injects `NotificationService` pulls in
+  `ToastrService` → needs `provideToastr()` + `provideAnimations()` in TestBed, and `provideLottieOptions()`
+  for the `LottiePlayer` atom. Without them even "should create" fails with NG0201 (No provider for
+  ToastConfig). Wrote 4 real tests (stats/search/status) with a mocked `AdminRepository` — all green.
+- Verified live as admin: dashboard real counts, Users filters (Organization → 1 row), dark mode fully
+  tokenized. `ng build` passes.
 
 ## 2026-07-25 (Phase 10 — Dark-mode theming of the org portal)
 - Broad, mechanical SCSS sweep: converted every light-only hardcoded color in the org portal to the

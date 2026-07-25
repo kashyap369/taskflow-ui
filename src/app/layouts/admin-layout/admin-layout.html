@@ -1,12 +1,23 @@
 <div class="portal-layout admin">
   <header class="portal-topbar">
-    <a class="brand">
+    <a class="brand" routerLink="/admin/dashboard">
       <span class="brand-logo">
         <lucide-angular name="ShieldCheck" [size]="18"></lucide-angular>
       </span>
       <span class="brand-name">TaskFlow</span>
       <span class="portal-tag">Admin</span>
     </a>
+
+    <nav class="portal-nav">
+      <a routerLink="/admin/dashboard" routerLinkActive="active">
+        <lucide-angular name="LayoutDashboard" [size]="16"></lucide-angular>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/admin/users" routerLinkActive="active">
+        <lucide-angular name="Users" [size]="16"></lucide-angular>
+        <span>Users</span>
+      </a>
+    </nav>
 
     <div class="topbar-actions">
       <button

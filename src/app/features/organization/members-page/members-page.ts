@@ -10,13 +10,19 @@ import {
   LucideIconProvider,
   Mail,
   Power,
+  Search,
   Trash2,
   UserPlus,
   Users,
   X,
 } from 'lucide-angular';
 
+import { DialogService } from '@core/services/dialog.service';
+import { DialogDirective } from '@shared/directives/dialog.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { Pagination } from '@shared/ui/molecules/pagination/pagination';
+import { createPagination } from '@shared/utils/pagination';
 import {
   InvitationStatus,
   OrganizationInvitation,
@@ -28,7 +34,16 @@ import { OrganizationFacade } from '../organization.facade';
 @Component({
   selector: 'app-members-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, LottiePlayer],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    LottiePlayer,
+    Skeleton,
+    DialogDirective,
+    Pagination,
+  ],
   templateUrl: './members-page.html',
   styleUrl: './members-page.scss',
   providers: [
@@ -44,6 +59,7 @@ import { OrganizationFacade } from '../organization.facade';
         Trash2,
         ArrowRight,
         Building2,
+        Search,
       }),
     },
   ],
@@ -51,6 +67,7 @@ import { OrganizationFacade } from '../organization.facade';
 export class MembersPage {
   private readonly facade = inject(OrganizationFacade);
   private readonly fb = inject(FormBuilder);
+  private readonly dialog = inject(DialogService);
 
   readonly loading = this.facade.loading;
   readonly saving = this.facade.saving;
@@ -65,10 +82,34 @@ export class MembersPage {
 
   readonly showInvite = signal(false);
   readonly hasMembers = computed(() => this.members().length > 0);
+
+  /** Placeholder rows rendered while members load. */
+  readonly loadingRows = [0, 1, 2, 3, 4];
   readonly pendingInvitations = computed(() =>
     this.invitations().filter((i) => i.status === InvitationStatus.Pending),
   );
   readonly hasRoles = computed(() => this.roles().length > 0);
+
+  // ── Filters + paging (client-side: the API returns the whole member list) ──
+  readonly search = signal('');
+  /** '' = all, 'active' / 'inactive' = membership state. */
+  readonly activeFilter = signal<'' | 'active' | 'inactive'>('');
+
+  readonly filteredMembers = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    const state = this.activeFilter();
+    return this.members().filter((m) => {
+      const matchesTerm =
+        !term ||
+        m.userFullName.toLowerCase().includes(term) ||
+        m.email.toLowerCase().includes(term);
+      const matchesState =
+        state === '' || (state === 'active' ? m.isActive : !m.isActive);
+      return matchesTerm && matchesState;
+    });
+  });
+
+  readonly pager = createPagination(this.filteredMembers, { pageSize: 10 });
 
   readonly inviteForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -77,6 +118,21 @@ export class MembersPage {
 
   constructor() {
     this.facade.init();
+  }
+
+  // ── Filters ──
+
+  onSearch(value: string): void {
+    this.search.set(value);
+  }
+
+  onActiveFilter(value: string): void {
+    this.activeFilter.set(value === 'active' || value === 'inactive' ? value : '');
+  }
+
+  clearFilters(): void {
+    this.search.set('');
+    this.activeFilter.set('');
   }
 
   openInvite(): void {
@@ -98,8 +154,16 @@ export class MembersPage {
     this.closeInvite();
   }
 
-  cancelInvite(invitation: OrganizationInvitation): void {
-    this.facade.cancelInvitation(invitation.id);
+  async cancelInvite(invitation: OrganizationInvitation): Promise<void> {
+    const ok = await this.dialog.confirm(
+      'Cancel invitation?',
+      `The invitation to ${invitation.email} will be withdrawn.`,
+      'Cancel invitation',
+      'Keep it',
+    );
+    if (ok) {
+      this.facade.cancelInvitation(invitation.id);
+    }
   }
 
   toggleActive(member: OrganizationMember): void {
@@ -110,8 +174,20 @@ export class MembersPage {
     }
   }
 
-  remove(member: OrganizationMember): void {
-    this.facade.removeMember(member.userId);
+  /**
+   * NOTE: the API's `RemoveMember` and `DeactivateMember` handlers are identical — both just
+   * deactivate the membership, so the row stays in this list as **Inactive** rather than
+   * disappearing. The copy says so instead of promising a deletion the backend doesn't perform.
+   */
+  async remove(member: OrganizationMember): Promise<void> {
+    const ok = await this.dialog.confirmDelete(
+      'Remove member?',
+      `${member.userFullName} will lose access to this organization. They stay listed as Inactive and can be reactivated later.`,
+      'Remove',
+    );
+    if (ok) {
+      this.facade.removeMember(member.userId);
+    }
   }
 
   changeRole(member: OrganizationMember, event: Event): void {

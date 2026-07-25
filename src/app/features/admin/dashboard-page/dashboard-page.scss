@@ -41,7 +41,7 @@
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -61,6 +61,18 @@
     box-shadow: var(--shadow-md);
   }
 
+  .stat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    margin-bottom: 0.9rem;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #fff;
+  }
+
   .stat-value {
     display: block;
     font-family: var(--font-display);
@@ -73,6 +85,68 @@
   .stat-label {
     color: var(--text-muted);
     font-size: 0.9rem;
+  }
+}
+
+.tool-card {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-standard),
+    border-color var(--dur-2) var(--ease-standard);
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+    .tool-arrow { transform: translateX(4px); color: var(--primary); }
+  }
+
+  .tool-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #fff;
+  }
+
+  .tool-main {
+    flex: 1;
+    min-width: 0;
+
+    h3 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 0.25rem;
+    }
+
+    p {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+  }
+
+  .tool-arrow {
+    flex-shrink: 0;
+    color: var(--text-subtle);
+    transition:
+      transform var(--dur-2) var(--ease-standard),
+      color var(--dur-2) var(--ease-standard);
   }
 }
 
@@ -106,7 +180,13 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 991.98px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
   .stat-grid {
     grid-template-columns: 1fr;
   }

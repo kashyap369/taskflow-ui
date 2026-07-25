@@ -8,6 +8,8 @@ import { provideLottieOptions } from 'ngx-lottie';
 import { provideEchartsCore } from 'ngx-echarts';
 import * as echarts from 'echarts/core';
 
+import { APP_SETTINGS } from '@core/config/app.tokens';
+import { AppSettings } from '@core/config/app.settings';
 import { ReportsPage } from './reports-page';
 
 describe('ReportsPage', () => {
@@ -23,6 +25,7 @@ describe('ReportsPage', () => {
         provideHttpClientTesting(),
         provideToastr(),
         provideAnimations(),
+        { provide: APP_SETTINGS, useValue: AppSettings },
         provideLottieOptions({ player: () => import('lottie-web') }),
         provideEchartsCore({ echarts }),
       ],

@@ -8,19 +8,29 @@
   </div>
 
   <div class="stat-grid">
-    @for (stat of stats; track stat.label; let i = $index) {
+    @for (stat of stats(); track stat.label; let i = $index) {
       <div class="stat-card" appReveal [revealDelay]="i * 80">
-        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-icon"><lucide-angular [name]="stat.icon" [size]="20"></lucide-angular></span>
+        <span class="stat-value">{{ loading() ? '—' : stat.value }}</span>
         <span class="stat-label">{{ stat.label }}</span>
       </div>
     }
   </div>
 
-  <div class="placeholder-card" appReveal [revealDelay]="240">
-    <h3>Admin tools — coming soon</h3>
+  <a class="tool-card" routerLink="/admin/users" appReveal [revealDelay]="240">
+    <span class="tool-icon"><lucide-angular name="Users" [size]="22"></lucide-angular></span>
+    <div class="tool-main">
+      <h3>User management</h3>
+      <p>Browse every account on the platform — search and filter by status and account type.</p>
+    </div>
+    <lucide-angular name="ArrowRight" [size]="20" class="tool-arrow"></lucide-angular>
+  </a>
+
+  <div class="placeholder-card" appReveal [revealDelay]="320">
+    <h3>Organizations &amp; platform settings — coming soon</h3>
     <p>
-      User management (the AdminOnly <code>GET /user</code> list), organizations overview, and
-      platform settings will live here.
+      A platform-wide organizations overview and settings need new backend endpoints
+      (only <code>GET /organization/mine</code> exists today).
     </p>
   </div>
 </section>

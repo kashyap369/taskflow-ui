@@ -1,0 +1,74 @@
+<nav class="pagination" [attr.aria-label]="ariaLabel()">
+  <p class="summary" aria-live="polite">
+    @if (total() === 0) {
+      No {{ itemLabel() }} to show
+    } @else {
+      Showing <strong>{{ rangeStart() }}–{{ rangeEnd() }}</strong> of
+      <strong>{{ total() }}</strong> {{ itemLabel() }}
+    }
+  </p>
+
+  <div class="controls">
+    @if (showPageSizes()) {
+      <label class="page-size">
+        <span class="page-size-label">Rows</span>
+        <select
+          [value]="pageSize()"
+          (change)="onPageSize($any($event.target).value)"
+          aria-label="Rows per page"
+        >
+          @for (size of pageSizes(); track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </label>
+    }
+
+    @if (totalPages() > 1) {
+      <ul class="pages">
+        <li>
+          <button
+            type="button"
+            class="page-btn nav-btn"
+            [disabled]="isFirst()"
+            (click)="prev()"
+            aria-label="Previous page"
+          >
+            <lucide-angular name="ChevronLeft" size="16"></lucide-angular>
+          </button>
+        </li>
+
+        @for (p of pages(); track $index) {
+          @if (p === ellipsis) {
+            <li class="gap" aria-hidden="true">…</li>
+          } @else {
+            <li>
+              <button
+                type="button"
+                class="page-btn"
+                [class.current]="p === page()"
+                [attr.aria-current]="p === page() ? 'page' : null"
+                [attr.aria-label]="'Page ' + p"
+                (click)="goTo(p)"
+              >
+                {{ p }}
+              </button>
+            </li>
+          }
+        }
+
+        <li>
+          <button
+            type="button"
+            class="page-btn nav-btn"
+            [disabled]="isLast()"
+            (click)="next()"
+            aria-label="Next page"
+          >
+            <lucide-angular name="ChevronRight" size="16"></lucide-angular>
+          </button>
+        </li>
+      </ul>
+    }
+  </div>
+</nav>

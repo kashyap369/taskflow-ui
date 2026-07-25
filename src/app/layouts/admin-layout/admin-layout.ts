@@ -1,13 +1,15 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
+  LayoutDashboard,
   LogOut,
   Moon,
   ShieldCheck,
   Sun,
+  Users,
 } from 'lucide-angular';
 
 import { AuthService } from '@core/auth/auth.service';
@@ -18,14 +20,21 @@ import { AuthFacade } from '@features/auth/auth.facade';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [RouterOutlet, LucideAngularModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.scss',
   providers: [
     {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider({ ShieldCheck, Sun, Moon, LogOut }),
+      useValue: new LucideIconProvider({
+        ShieldCheck,
+        Sun,
+        Moon,
+        LogOut,
+        LayoutDashboard,
+        Users,
+      }),
     },
   ],
 })

@@ -4,6 +4,8 @@
 // controller except Auth, so these types are the bare response shapes.
 // ============================================================
 
+import { Tone } from '@shared/models/tone.model';
+
 // ── Enums (exact API int values) ──────────────────────────
 export enum OrganizationStatus {
   Active = 1,
@@ -35,13 +37,14 @@ export enum TaskPriority {
   Critical = 4,
 }
 
-export enum InvitationStatus {
-  Pending = 1,
-  Accepted = 2,
-  Rejected = 3,
-  Expired = 4,
-  Cancelled = 5,
-}
+// Invitations are shared with the member portal (the invitee's side), so their model lives in
+// `shared/models`. Re-exported here so `organization.models` stays the one import for org pages.
+export {
+  INVITATION_STATUS_META,
+  InvitationStatus,
+  invitationStatusMeta,
+} from '@shared/models/invitation.model';
+export type { OrganizationInvitation } from '@shared/models/invitation.model';
 
 // ── Response DTOs (mirror the API query DTOs) ─────────────
 
@@ -134,18 +137,8 @@ export interface OrganizationMember {
   joinedAt: string;
 }
 
-/** `GET /organizationinvitation/organization/{id}` → OrganizationInvitationDto[] */
-export interface OrganizationInvitation {
-  id: number;
-  organizationId: number;
-  organizationName: string;
-  email: string;
-  organizationRoleId: number;
-  roleName: string;
-  status: InvitationStatus;
-  expiryDate: string;
-  createdAt: string;
-}
+// `OrganizationInvitation` (`GET /organizationinvitation/organization/{id}` →
+// OrganizationInvitationDto[]) is re-exported from `@shared/models/invitation.model` at the top.
 
 /** `GET /team/organization/{id}` → TeamDto[] */
 export interface Team {
@@ -276,10 +269,66 @@ export interface CreateTaskPayload {
   projectId: number | null;
 }
 
+/**
+ * `GET /task/{id}` → TaskDetailDto. The **only** shape that carries `description` — `TaskListItem`
+ * (the list DTO) does not, so an edit form must load this first or it would blank the description.
+ */
+export interface TaskDetail {
+  id: number;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  startDate: string;
+  expectedCompletionDate: string | null;
+  actualCompletionDate: string | null;
+  projectId: number | null;
+  organizationId: number | null;
+  createdByUserId: number;
+  assignedToUserId: number | null;
+  assignedToFullName: string | null;
+  subTasks: SubTask[];
+}
+
+/**
+ * `PUT /project` → UpdateProjectCommand. Deliberately **partial**: the API's update command takes
+ * only these fields, so status/startDate/organization are not editable (status moves through the
+ * task lifecycle, not by hand).
+ */
+export interface UpdateProjectPayload {
+  projectId: number;
+  title: string;
+  description: string;
+  expectedCompletionDate: string | null;
+}
+
+/** `PUT /task` → UpdateTaskCommand. Partial: no status/startDate/project reassignment. */
+export interface UpdateTaskPayload {
+  taskId: number;
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  expectedCompletionDate: string | null;
+}
+
+/** `PUT /team` → UpdateTeamCommand. */
+export interface UpdateTeamPayload {
+  teamId: number;
+  name: string;
+  description: string;
+}
+
+/** `PUT /organizationrole` → UpdateRoleCommand. */
+export interface UpdateRolePayload {
+  roleId: number;
+  name: string;
+  description: string;
+}
+
 // ── UI label / tone helpers ───────────────────────────────
 
-/** A tone maps to the design-system color families used by badges/cards. */
-export type Tone = 'neutral' | 'info' | 'success' | 'warning' | 'danger' | 'purple';
+/** A tone maps to the design-system color families used by badges/cards (see `@shared/models`). */
+export type { Tone };
 
 export const TASK_STATUS_META: Record<TaskStatus, { label: string; tone: Tone }> = {
   [TaskStatus.Todo]: { label: 'To do', tone: 'neutral' },
@@ -317,14 +366,5 @@ export function projectStatusMeta(status: ProjectStatus): { label: string; tone:
   return PROJECT_STATUS_META[status] ?? { label: 'Unknown', tone: 'neutral' };
 }
 
-export const INVITATION_STATUS_META: Record<InvitationStatus, { label: string; tone: Tone }> = {
-  [InvitationStatus.Pending]: { label: 'Pending', tone: 'warning' },
-  [InvitationStatus.Accepted]: { label: 'Accepted', tone: 'success' },
-  [InvitationStatus.Rejected]: { label: 'Rejected', tone: 'danger' },
-  [InvitationStatus.Expired]: { label: 'Expired', tone: 'neutral' },
-  [InvitationStatus.Cancelled]: { label: 'Cancelled', tone: 'neutral' },
-};
-
-export function invitationStatusMeta(status: InvitationStatus): { label: string; tone: Tone } {
-  return INVITATION_STATUS_META[status] ?? { label: 'Unknown', tone: 'neutral' };
-}
+// `INVITATION_STATUS_META` / `invitationStatusMeta` are re-exported from
+// `@shared/models/invitation.model` at the top of this file.

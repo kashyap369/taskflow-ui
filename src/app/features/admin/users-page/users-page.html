@@ -1,0 +1,155 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Users</h1>
+        <p>Every account on the platform — the AdminOnly <code>GET /user</code> list.</p>
+      </div>
+      <button class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+        <lucide-angular name="RefreshCw" size="16"></lucide-angular>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Stat tiles -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ totalUsers() }}</span>
+        <span class="stat-label">Total users</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ activeUsers() }}</span>
+        <span class="stat-label">Active</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ organizationAccounts() }}</span>
+        <span class="stat-label">Organization accounts</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ pendingUsers() }}</span>
+        <span class="stat-label">Pending verification</span>
+      </div>
+    </div>
+
+    @if (loading() && !hasUsers()) {
+      <div class="panel" aria-busy="true" aria-label="Loading users">
+        <div class="user-list">
+          @for (row of loadingRows; track row) {
+            <div class="user-row sk-row">
+              <div class="user-id">
+                <app-skeleton [circle]="true" width="40px" height="40px" />
+                <div class="sk-lines">
+                  <app-skeleton width="40%" height="0.9rem" />
+                  <app-skeleton width="65%" height="0.75rem" />
+                </div>
+              </div>
+              <app-skeleton width="96px" height="1.5rem" radius="999px" />
+              <app-skeleton width="70px" height="1.5rem" radius="999px" />
+              <app-skeleton width="28px" height="0.85rem" />
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (error()) {
+      <div class="notice error">
+        <lucide-angular name="Users" size="18"></lucide-angular>
+        {{ error() }} <button class="link-btn" (click)="refresh()">Try again</button>
+      </div>
+    } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search by name or email…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search users"
+          />
+        </div>
+        <select
+          class="list-filter"
+          [value]="statusFilter()"
+          (change)="onStatusFilter($any($event.target).value)"
+          aria-label="Filter by status"
+        >
+          <option value="">All statuses</option>
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <select
+          class="list-filter"
+          [value]="typeFilter()"
+          (change)="onTypeFilter($any($event.target).value)"
+          aria-label="Filter by account type"
+        >
+          <option value="">All account types</option>
+          @for (opt of typeOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Accounts</h2>
+          <span class="count">{{ filteredUsers().length }}</span>
+        </div>
+
+        @if (!hasUsers()) {
+          <div class="lottie-state compact">
+            <app-lottie-player src="/lottie/empty.json" [width]="130" [height]="130" ariaLabel="No users" />
+            <p>No users found.</p>
+          </div>
+        } @else if (filteredUsers().length === 0) {
+          <div class="list-no-match">
+            <p>No users match your filters.</p>
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        } @else {
+          <div class="user-list">
+            @for (u of pager.items(); track trackById($index, u)) {
+              <div class="user-row">
+                <div class="user-id">
+                  <span class="avatar">{{ initials(u.fullName) }}</span>
+                  <div class="who">
+                    <div class="name">{{ u.fullName }}</div>
+                    <div class="email">{{ u.email }}</div>
+                  </div>
+                </div>
+
+                <span class="badge type" [attr.data-tone]="accountTypeMeta(u.accountType).tone">
+                  <lucide-angular
+                    [name]="u.accountType === 2 ? 'Building2' : 'User'"
+                    size="13"
+                  ></lucide-angular>
+                  {{ accountTypeMeta(u.accountType).label }}
+                </span>
+
+                <span class="badge" [attr.data-tone]="userStatusMeta(u.status).tone">
+                  {{ userStatusMeta(u.status).label }}
+                </span>
+
+                <span class="user-ref">#{{ u.id }}</span>
+              </div>
+            }
+          </div>
+
+          <app-pagination
+            [page]="pager.page()"
+            [pageSize]="pager.pageSize()"
+            [total]="pager.total()"
+            [pageSizes]="pager.pageSizes"
+            itemLabel="users"
+            ariaLabel="Users pagination"
+            (pageChange)="pager.setPage($event)"
+            (pageSizeChange)="pager.setPageSize($event)"
+          />
+        }
+      </div>
+    }
+  </div>
+</section>

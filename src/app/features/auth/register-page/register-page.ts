@@ -1,12 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import {
@@ -27,15 +21,10 @@ import {
 
 import { AccountType } from '@core/auth/roles.enum';
 import { RevealDirective } from '@shared/directives/reveal.directive';
+import { controlValidators, crossFieldValidator, messageFor } from '@shared/validations';
 import { AuthFacade } from '../auth.facade';
 import { RegisterRequest } from '../auth.models';
-
-/** Cross-field validator: confirmPassword must equal password. */
-function passwordsMatch(group: AbstractControl): ValidationErrors | null {
-  const password = group.get('password')?.value;
-  const confirm = group.get('confirmPassword')?.value;
-  return password && confirm && password !== confirm ? { passwordsMismatch: true } : null;
-}
+import { RegisterFormModel } from './register-page.model';
 
 @Component({
   selector: 'app-register-page',
@@ -74,29 +63,28 @@ export class RegisterPage {
 
   showPassword = signal(false);
 
+  /** Per-control validators derived from `RegisterFormModel`'s decorators (field-scoped rules). */
+  private readonly rules = controlValidators(RegisterFormModel);
+
   registerForm = this.fb.nonNullable.group(
     {
-      accountType: [AccountType.Individual as AccountType, Validators.required],
-      firstName: ['', [Validators.required, Validators.maxLength(100)]],
-      lastName: ['', [Validators.required, Validators.maxLength(100)]],
-      email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
-      phoneNumber: [
-        '',
-        [Validators.required, Validators.minLength(10), Validators.maxLength(20)],
-      ],
-      password: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/),
-        ],
-      ],
-      confirmPassword: ['', [Validators.required]],
-      acceptTerms: [false, Validators.requiredTrue],
+      accountType: [AccountType.Individual as AccountType],
+      firstName: ['', this.rules['firstName']],
+      lastName: ['', this.rules['lastName']],
+      email: ['', this.rules['email']],
+      phoneNumber: ['', this.rules['phoneNumber']],
+      password: ['', this.rules['password']],
+      confirmPassword: ['', this.rules['confirmPassword']],
+      acceptTerms: [false, this.rules['acceptTerms']],
     },
-    { validators: passwordsMatch },
+    // Cross-field (`@Matches`) rules run at the group level.
+    { validators: crossFieldValidator(RegisterFormModel) },
   );
+
+  /** Message to show for a field (own error, then a cross-field error targeting it); touched-gated. */
+  fieldError(property: string): string | null {
+    return messageFor(this.registerForm, property);
+  }
 
   /** Whether the Organization account type is currently selected. */
   readonly isOrganization = computed(() => this.selectedType() === AccountType.Organization);

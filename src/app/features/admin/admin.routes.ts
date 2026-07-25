@@ -11,5 +11,10 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () =>
       import('./dashboard-page/dashboard-page').then((m) => m.AdminDashboardPage),
   },
-  // Additional admin pages (users, organizations, settings) go here.
+  {
+    path: 'users',
+    loadComponent: () => import('./users-page/users-page').then((m) => m.AdminUsersPage),
+  },
+  // Organizations overview + platform settings need new backend endpoints
+  // (only GET /organization/mine exists today) — see PHASES.md.
 ];

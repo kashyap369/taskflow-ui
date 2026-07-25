@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideEchartsCore } from 'ngx-echarts';
+import * as echarts from 'echarts/core';
 
 import { ProjectHealthChart } from './project-health-chart';
 
@@ -8,7 +10,8 @@ describe('ProjectHealthChart', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProjectHealthChart]
+      imports: [ProjectHealthChart],
+      providers: [provideEchartsCore({ echarts })],
     })
     .compileComponents();
 

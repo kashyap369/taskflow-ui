@@ -40,7 +40,29 @@
       <div class="team-grid">
         @for (team of teams(); track team.id) {
           <article class="team-card">
-            <span class="team-icon"><lucide-angular name="Users" size="18"></lucide-angular></span>
+            <div class="team-card-top">
+              <span class="team-icon"><lucide-angular name="Users" size="18"></lucide-angular></span>
+              <div class="team-card-actions">
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="openEdit(team)"
+                  [attr.aria-label]="'Edit ' + team.name"
+                  title="Edit team"
+                >
+                  <lucide-angular name="Pencil" size="15"></lucide-angular>
+                </button>
+                <button
+                  type="button"
+                  class="icon-action danger"
+                  (click)="remove(team)"
+                  [attr.aria-label]="'Delete ' + team.name"
+                  title="Delete team"
+                >
+                  <lucide-angular name="Trash2" size="15"></lucide-angular>
+                </button>
+              </div>
+            </div>
             <h3>{{ team.name }}</h3>
             @if (team.description) {
               <p>{{ team.description }}</p>
@@ -59,13 +81,13 @@
     }
   </div>
 
-  <!-- Create team drawer -->
-  @if (showCreate()) {
-    <div class="drawer-backdrop" (click)="closeCreate()"></div>
-    <aside class="drawer">
+  <!-- Create / edit team drawer -->
+  @if (showDrawer()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
-        <h2>New team</h2>
-        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+        <h2>{{ isEditing() ? 'Edit team' : 'New team' }}</h2>
+        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -82,9 +104,13 @@
           <textarea id="description" rows="3" class="form-control" placeholder="What does this team do?" formControlName="description"></textarea>
         </div>
         <div class="drawer-actions">
-          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
           <button type="submit" class="btn-primary-cta" [disabled]="saving()">
-            {{ saving() ? 'Creating…' : 'Create team' }}
+            @if (saving()) {
+              {{ isEditing() ? 'Saving…' : 'Creating…' }}
+            } @else {
+              {{ isEditing() ? 'Save changes' : 'Create team' }}
+            }
           </button>
         </div>
       </form>

@@ -19,10 +19,15 @@ import {
   Project,
   ProjectReport,
   SubTask,
+  TaskDetail,
   TaskListItem,
   Team,
   TeamDetail,
   TeamPerformanceReport,
+  UpdateProjectPayload,
+  UpdateRolePayload,
+  UpdateTaskPayload,
+  UpdateTeamPayload,
   WorkLog,
 } from './organization.models';
 
@@ -220,6 +225,54 @@ export class OrganizationFacade {
     });
   }
 
+  /**
+   * `PUT /project`. The command is partial (title/description/expected date only) — status and
+   * start date aren't editable through the API.
+   */
+  updateProject(payload: UpdateProjectPayload): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+
+    this._saving.set(true);
+    this.repository.updateProject(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Project updated.');
+        this.reloadProjects(organizationId);
+        if (this._projectDetail()?.id === payload.projectId) {
+          this.reloadProjectDetail(payload.projectId);
+        }
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  /**
+   * `DELETE /project/{id}`. `onDeleted` fires only on success, so a caller can navigate away
+   * without guessing (the project-detail page uses it to go back to the list).
+   */
+  deleteProject(projectId: number, onDeleted?: () => void): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+
+    this.repository.deleteProject(projectId).subscribe({
+      next: () => {
+        this.notification.success('Project deleted.');
+        if (this._projectDetail()?.id === projectId) {
+          this.clearProjectDetail();
+        }
+        this.reloadProjects(organizationId);
+        this.reloadTasks(organizationId);
+        this.refreshSummary(organizationId);
+        onDeleted?.();
+      },
+    });
+  }
+
   createTask(payload: Omit<CreateTaskPayload, 'organizationId'>): void {
     const organizationId = this.currentOrgId();
     if (organizationId == null) {
@@ -235,6 +288,46 @@ export class OrganizationFacade {
         this.refreshSummary(organizationId);
       },
       error: () => this._saving.set(false),
+    });
+  }
+
+  /**
+   * Fetch a task's full detail before editing it. `TaskListItem` (what the tables render) has no
+   * `description`, so an edit form filled from a row would blank it on save — always come through
+   * here. `onLoaded` runs once, on success, with the shape the form needs.
+   */
+  loadTaskForEdit(taskId: number, onLoaded: (task: TaskDetail) => void): void {
+    this.repository.getTask(taskId).subscribe({ next: onLoaded });
+  }
+
+  /** `PUT /task`. Partial: status, start date and project stay where they are. */
+  updateTask(payload: UpdateTaskPayload): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+
+    this._saving.set(true);
+    this.repository.updateTask(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Task updated.');
+        this.afterTaskChange(organizationId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  deleteTask(taskId: number): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this.repository.deleteTask(taskId).subscribe({
+      next: () => {
+        this.notification.success('Task deleted.');
+        this.afterTaskChange(organizationId);
+      },
     });
   }
 
@@ -292,13 +385,17 @@ export class OrganizationFacade {
     });
   }
 
-  /** Refresh org tasks + summary, and the open project's tasks (if any) after a task change. */
+  /**
+   * Refresh org tasks + summary, and the open project's tasks *and header* (if any) after a task
+   * change — the header's task counts / completion % move with its tasks.
+   */
   private afterTaskChange(organizationId: number): void {
     this.reloadTasks(organizationId);
     this.refreshSummary(organizationId);
     const project = this._projectDetail();
     if (project) {
       this.reloadProjectTasks(project.id);
+      this.reloadProjectDetail(project.id);
     }
   }
 
@@ -339,9 +436,7 @@ export class OrganizationFacade {
         this._saving.set(false);
         this.notification.success('Task created.');
         this.reloadProjectTasks(projectId);
-        this.repository.getProject(projectId).subscribe({
-          next: (project) => this._projectDetail.set(project),
-        });
+        this.reloadProjectDetail(projectId);
         this.reloadTasks(organizationId);
         this.refreshSummary(organizationId);
       },
@@ -352,6 +447,13 @@ export class OrganizationFacade {
   private reloadProjectTasks(projectId: number): void {
     this.repository.getProjectTasks(projectId).subscribe({
       next: (tasks) => this._projectTasks.set(tasks),
+    });
+  }
+
+  /** Re-fetch a project's header (its counts/progress are server-computed). */
+  private reloadProjectDetail(projectId: number): void {
+    this.repository.getProject(projectId).subscribe({
+      next: (project) => this._projectDetail.set(project),
     });
   }
 
@@ -382,6 +484,43 @@ export class OrganizationFacade {
         this.reloadRoles(organizationId);
       },
       error: () => this._saving.set(false),
+    });
+  }
+
+  updateRole(payload: UpdateRolePayload): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this._saving.set(true);
+    this.repository.updateRole(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Role updated.');
+        this.reloadRoles(organizationId);
+        if (this._selectedRole()?.id === payload.roleId) {
+          this.selectRole(payload.roleId);
+        }
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  deleteRole(roleId: number): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this.repository.deleteRole(roleId).subscribe({
+      next: () => {
+        this.notification.success('Role deleted.');
+        if (this._selectedRole()?.id === roleId) {
+          this.clearSelectedRole();
+        }
+        this.reloadRoles(organizationId);
+        // Members carry a role name, so a deleted role changes what the members list shows.
+        this.reloadMembers(organizationId);
+      },
     });
   }
 
@@ -515,6 +654,44 @@ export class OrganizationFacade {
         this.refreshSummary(organizationId);
       },
       error: () => this._saving.set(false),
+    });
+  }
+
+  updateTeam(payload: UpdateTeamPayload): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this._saving.set(true);
+    this.repository.updateTeam(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Team updated.');
+        this.reloadTeams(organizationId);
+        if (this._teamDetail()?.id === payload.teamId) {
+          this.loadTeamDetail(payload.teamId);
+        }
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  /** `DELETE /team/{id}`; `onDeleted` fires on success so the detail page can navigate back. */
+  deleteTeam(teamId: number, onDeleted?: () => void): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this.repository.deleteTeam(teamId).subscribe({
+      next: () => {
+        this.notification.success('Team deleted.');
+        if (this._teamDetail()?.id === teamId) {
+          this.clearTeamDetail();
+        }
+        this.reloadTeams(organizationId);
+        this.refreshSummary(organizationId);
+        onDeleted?.();
+      },
     });
   }
 

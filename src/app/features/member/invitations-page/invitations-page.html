@@ -1,0 +1,132 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Invitations</h1>
+        <p>Organizations that have invited you to join.</p>
+      </div>
+      <button class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+        <lucide-angular name="RefreshCw" size="16"></lucide-angular>
+        Refresh
+      </button>
+    </div>
+
+    @if (loading() && !hasInvitations()) {
+      <div class="invite-list" aria-busy="true" aria-label="Loading invitations">
+        @for (card of loadingCards; track card) {
+          <article class="invite-card">
+            <div class="invite-top">
+              <app-skeleton [circle]="true" width="44px" height="44px" />
+              <div class="sk-lines">
+                <app-skeleton width="45%" height="1rem" />
+                <app-skeleton width="30%" height="0.8rem" />
+              </div>
+            </div>
+            <app-skeleton width="100%" height="2.2rem" radius="12px" />
+          </article>
+        }
+      </div>
+    } @else if (error()) {
+      <div class="notice error">
+        <lucide-angular name="Mail" size="18"></lucide-angular>
+        {{ error() }}
+        <button class="link-btn" (click)="refresh()">Try again</button>
+      </div>
+    } @else if (!hasInvitations()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Mail" size="24"></lucide-angular></span>
+        <h3>No invitations</h3>
+        <p>
+          When an organization invites you, it shows up here. Invitations are matched to the email on
+          your account.
+        </p>
+      </div>
+    } @else {
+      @if (actionable().length > 0) {
+        <div class="invite-list">
+          @for (invite of actionable(); track invite.id) {
+            <article class="invite-card">
+              <div class="invite-top">
+                <span class="org-avatar">{{ initials(invite.organizationName) }}</span>
+                <div class="invite-main">
+                  <h2>{{ invite.organizationName }}</h2>
+                  <p class="invite-meta">
+                    <span class="role-chip">
+                      <lucide-angular name="ShieldCheck" size="13"></lucide-angular>
+                      {{ invite.roleName }}
+                    </span>
+                    <span class="dot">·</span>
+                    <span>Invited {{ invite.createdAt | date: 'mediumDate' }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <p class="invite-note">
+                You were invited as <strong>{{ invite.roleName }}</strong>. Accepting adds your
+                account to this organization; the invitation expires
+                {{ invite.expiryDate | date: 'mediumDate' }}.
+              </p>
+
+              <div class="invite-actions">
+                <button
+                  type="button"
+                  class="btn-decline"
+                  [disabled]="saving()"
+                  (click)="decline(invite)"
+                >
+                  <lucide-angular name="X" size="15"></lucide-angular>
+                  Decline
+                </button>
+                <button
+                  type="button"
+                  class="btn-primary-cta"
+                  [disabled]="saving()"
+                  (click)="accept(invite)"
+                >
+                  <lucide-angular name="Check" size="15"></lucide-angular>
+                  {{ saving() ? 'Working…' : 'Accept invitation' }}
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+      @if (expired().length > 0) {
+        <h2 class="section-h">Expired</h2>
+        <div class="invite-list">
+          @for (invite of expired(); track invite.id) {
+            <article class="invite-card is-expired">
+              <div class="invite-top">
+                <span class="org-avatar muted">{{ initials(invite.organizationName) }}</span>
+                <div class="invite-main">
+                  <h2>{{ invite.organizationName }}</h2>
+                  <p class="invite-meta">
+                    <span class="badge" data-tone="neutral">Expired</span>
+                    <span class="dot">·</span>
+                    <span>Expired {{ invite.expiryDate | date: 'mediumDate' }}</span>
+                  </p>
+                </div>
+              </div>
+              <p class="invite-note">
+                This invitation can no longer be accepted — ask {{ invite.organizationName }} to send
+                a new one.
+              </p>
+              <div class="invite-actions">
+                <button
+                  type="button"
+                  class="btn-decline"
+                  [disabled]="saving()"
+                  (click)="decline(invite)"
+                >
+                  <lucide-angular name="X" size="15"></lucide-angular>
+                  Dismiss
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    }
+  </div>
+</section>

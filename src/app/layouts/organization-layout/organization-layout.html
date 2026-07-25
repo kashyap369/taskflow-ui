@@ -113,6 +113,17 @@
 
         Reports
       </a>
+
+      <a routerLink="/organization/invitations" routerLinkActive="active">
+        <lucide-angular name="Mail"></lucide-angular>
+
+        Invitations
+        @if (pendingInvitations() > 0) {
+          <span class="nav-badge" [attr.aria-label]="pendingInvitations() + ' pending invitations'">
+            {{ pendingInvitations() }}
+          </span>
+        }
+      </a>
     </nav>
 
     <!-- Pinned -->

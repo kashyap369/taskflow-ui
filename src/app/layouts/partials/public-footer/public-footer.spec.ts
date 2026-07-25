@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { PublicFooter } from './public-footer';
 
@@ -8,7 +9,8 @@ describe('PublicFooter', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PublicFooter]
+      imports: [PublicFooter],
+      providers: [provideRouter([])],
     })
     .compileComponents();
 

@@ -6,12 +6,11 @@ export const API = {
     Logout: '/auth/logout',
   },
 
+  // `UserController` is read-only — there is no PUT/DELETE on /user.
   User: {
     Me: '/user/me',
     GetAll: '/user',
     GetById: (id: number) => `/user/${id}`,
-    Update: (id: number) => `/user/${id}`,
-    Delete: (id: number) => `/user/${id}`,
   },
 
   Organization: {

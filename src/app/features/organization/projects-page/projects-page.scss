@@ -58,6 +58,16 @@
   text-align: center;
 }
 
+/* Skeleton placeholder cards */
+.sk-card {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+
+  .pc-head { margin-bottom: 0; }
+  .pc-progress { margin: .2rem 0; }
+}
+
 .empty-state {
   max-width: 460px;
   margin: 3rem auto;
@@ -86,6 +96,11 @@
   gap: 1.25rem;
 }
 
+/* The card grid has no panel to sit in, so the pager rides its own separator. */
+.pager-bar {
+  margin-top: 1.5rem;
+}
+
 .project-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -107,6 +122,11 @@
   margin-bottom: 1rem;
 }
 
+.pc-head-right {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
 .pc-icon {
   width: 40px;
   height: 40px;

@@ -24,7 +24,22 @@
         </a>
       </div>
     } @else if (loading() && !hasProjects()) {
-      <div class="loading-hint">Loading projects…</div>
+      <div class="project-grid" aria-busy="true" aria-label="Loading projects">
+        @for (card of loadingCards; track card) {
+          <article class="project-card sk-card">
+            <header class="pc-head">
+              <app-skeleton [circle]="true" width="40px" height="40px" />
+              <app-skeleton width="72px" height="1.5rem" radius="999px" />
+            </header>
+            <app-skeleton width="70%" height="1.15rem" />
+            <app-skeleton width="100%" height="0.8rem" [count]="2" />
+            <div class="pc-progress">
+              <app-skeleton width="100%" height="0.5rem" radius="999px" />
+            </div>
+            <app-skeleton width="45%" height="0.75rem" />
+          </article>
+        }
+      </div>
     } @else if (!hasProjects()) {
       <div class="empty-state">
         <span class="empty-icon"><lucide-angular name="FolderKanban" size="24"></lucide-angular></span>
@@ -35,14 +50,66 @@
         </button>
       </div>
     } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search projects…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search projects"
+          />
+        </div>
+        <select
+          class="list-filter"
+          [value]="statusFilter()"
+          (change)="onStatusFilter($any($event.target).value)"
+          aria-label="Filter by status"
+        >
+          <option value="">All statuses</option>
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      @if (pager.total() === 0) {
+        <div class="list-no-match">
+          <p>No projects match your filters.</p>
+          <button type="button" (click)="clearFilters()">Clear filters</button>
+        </div>
+      }
+
       <div class="project-grid">
-        @for (project of projects(); track project.id) {
+        @for (project of pager.items(); track project.id) {
           <article class="project-card">
             <header class="pc-head">
               <span class="pc-icon"><lucide-angular name="FolderKanban" size="18"></lucide-angular></span>
-              <span class="badge" [attr.data-tone]="projectStatusMeta(project.status).tone">
-                {{ projectStatusMeta(project.status).label }}
-              </span>
+              <div class="pc-head-right">
+                <span class="badge" [attr.data-tone]="projectStatusMeta(project.status).tone">
+                  {{ projectStatusMeta(project.status).label }}
+                </span>
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="openEdit(project)"
+                  [attr.aria-label]="'Edit ' + project.title"
+                  title="Edit project"
+                >
+                  <lucide-angular name="Pencil" size="15"></lucide-angular>
+                </button>
+                <button
+                  type="button"
+                  class="icon-action danger"
+                  (click)="remove(project)"
+                  [attr.aria-label]="'Delete ' + project.title"
+                  title="Delete project"
+                >
+                  <lucide-angular name="Trash2" size="15"></lucide-angular>
+                </button>
+              </div>
             </header>
 
             <h3 class="pc-title">{{ project.title }}</h3>
@@ -72,16 +139,29 @@
           </article>
         }
       </div>
+
+      <div class="pager-bar">
+        <app-pagination
+          [page]="pager.page()"
+          [pageSize]="pager.pageSize()"
+          [total]="pager.total()"
+          [pageSizes]="pager.pageSizes"
+          itemLabel="projects"
+          ariaLabel="Projects pagination"
+          (pageChange)="pager.setPage($event)"
+          (pageSizeChange)="pager.setPageSize($event)"
+        />
+      </div>
     }
   </div>
 
-  <!-- Create project drawer -->
-  @if (showCreate()) {
-    <div class="drawer-backdrop" (click)="closeCreate()"></div>
-    <aside class="drawer">
+  <!-- Create / edit project drawer -->
+  @if (showDrawer()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
-        <h2>New project</h2>
-        <button class="icon-btn" (click)="closeCreate()" aria-label="Close">
+        <h2>{{ isEditing() ? 'Edit project' : 'New project' }}</h2>
+        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -101,20 +181,33 @@
         </div>
 
         <div class="field-row">
-          <div class="field">
-            <label for="startDate" class="form-label">Start date</label>
-            <input id="startDate" type="date" class="form-control" formControlName="startDate" />
-          </div>
+          <!-- The API's update command can't change the start date, so it's create-only. -->
+          @if (!isEditing()) {
+            <div class="field">
+              <label for="startDate" class="form-label">Start date</label>
+              <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+            </div>
+          }
           <div class="field">
             <label for="expectedCompletionDate" class="form-label">Target date <span>(optional)</span></label>
             <input id="expectedCompletionDate" type="date" class="form-control" formControlName="expectedCompletionDate" />
           </div>
         </div>
 
+        @if (isEditing()) {
+          <p class="drawer-note">
+            Start date and status aren't editable — status follows the project's tasks.
+          </p>
+        }
+
         <div class="drawer-actions">
-          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
           <button type="submit" class="btn-primary-cta" [disabled]="saving()">
-            {{ saving() ? 'Creating…' : 'Create project' }}
+            @if (saving()) {
+              {{ isEditing() ? 'Saving…' : 'Creating…' }}
+            } @else {
+              {{ isEditing() ? 'Save changes' : 'Create project' }}
+            }
           </button>
         </div>
       </form>

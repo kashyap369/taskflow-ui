@@ -46,5 +46,14 @@ export const ORGANIZATION_ROUTES: Routes = [
     path: 'reports',
     loadComponent: () => import('./reports-page/reports-page').then((m) => m.ReportsPage),
   },
+  {
+    // Invitations are addressed to a *user*, not a portal — an Organization account can be invited
+    // into another organization too. Same standalone page the member portal mounts.
+    path: 'invitations',
+    loadComponent: () =>
+      import('@features/member/invitations-page/invitations-page').then(
+        (m) => m.MemberInvitationsPage,
+      ),
+  },
   // Additional organization pages (settings) are added here.
 ];

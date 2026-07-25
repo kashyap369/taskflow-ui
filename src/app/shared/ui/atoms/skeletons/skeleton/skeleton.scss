@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// ngx-skeleton-loader wraps each item in a <span class="skeleton-loader"> with a bottom margin and
+// an inline-block display we don't want here — collapse that so our geometry (via [theme]) is exact.
+:host ::ng-deep ngx-skeleton-loader {
+  display: block;
+  line-height: 0;
+}
+
+:host ::ng-deep .skeleton-loader {
+  display: block;
+  margin-bottom: 0;
+}

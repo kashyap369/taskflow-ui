@@ -90,7 +90,7 @@
 
 .task-row {
   display: grid;
-  grid-template-columns: 2.4fr 1fr 1fr .8fr 1.1fr;
+  grid-template-columns: 2fr .85fr .85fr .65fr 2.15fr;
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.4rem;
@@ -167,8 +167,9 @@
 
 .col-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
-  gap: .5rem;
+  gap: .4rem;
   flex-wrap: wrap;
 }
 

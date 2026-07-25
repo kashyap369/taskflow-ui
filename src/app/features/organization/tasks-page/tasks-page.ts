@@ -13,9 +13,11 @@ import {
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
+  Pencil,
   Play,
   Plus,
   RotateCcw,
+  Search,
   Square,
   Trash2,
   User,
@@ -31,6 +33,11 @@ import {
   taskPriorityMeta,
   taskStatusMeta,
 } from '../organization.models';
+import { DialogService } from '@core/services/dialog.service';
+import { DialogDirective } from '@shared/directives/dialog.directive';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { Pagination } from '@shared/ui/molecules/pagination/pagination';
+import { createPagination } from '@shared/utils/pagination';
 import { OrganizationFacade } from '../organization.facade';
 
 interface Option {
@@ -41,7 +48,15 @@ interface Option {
 @Component({
   selector: 'app-tasks-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    Skeleton,
+    DialogDirective,
+    Pagination,
+  ],
   templateUrl: './tasks-page.html',
   styleUrl: './tasks-page.scss',
   providers: [
@@ -63,6 +78,8 @@ interface Option {
         Trash2,
         Clock,
         Square,
+        Search,
+        Pencil,
       }),
     },
   ],
@@ -70,6 +87,7 @@ interface Option {
 export class TasksPage {
   private readonly facade = inject(OrganizationFacade);
   private readonly fb = inject(FormBuilder);
+  private readonly dialog = inject(DialogService);
 
   readonly loading = this.facade.loading;
   readonly saving = this.facade.saving;
@@ -91,8 +109,44 @@ export class TasksPage {
   readonly taskPriorityMeta = taskPriorityMeta;
   readonly TaskStatus = TaskStatus;
 
-  readonly showCreate = signal(false);
+  /** One drawer serves create and edit; `editing` holds the row being edited (null = create). */
+  readonly showDrawer = signal(false);
+  readonly editing = signal<TaskListItem | null>(null);
+  readonly isEditing = computed(() => this.editing() !== null);
+
   readonly hasTasks = computed(() => this.tasks().length > 0);
+
+  /** Placeholder rows rendered while tasks load. */
+  readonly loadingRows = [0, 1, 2, 3, 4, 5];
+
+  // ── Filters + paging (client-side: the API returns the whole org list) ──
+  readonly search = signal('');
+  /** '' = all, otherwise a TaskStatus int. */
+  readonly statusFilter = signal<'' | TaskStatus>('');
+  /** '' = all, otherwise a TaskPriority int. */
+  readonly priorityFilter = signal<'' | TaskPriority>('');
+
+  readonly statusOptions: Option[] = [
+    { value: TaskStatus.Todo, label: 'To do' },
+    { value: TaskStatus.InProgress, label: 'In progress' },
+    { value: TaskStatus.Completed, label: 'Completed' },
+    { value: TaskStatus.Blocked, label: 'Blocked' },
+    { value: TaskStatus.Cancelled, label: 'Cancelled' },
+  ];
+
+  readonly filteredTasks = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    const status = this.statusFilter();
+    const priority = this.priorityFilter();
+    return this.tasks().filter((t) => {
+      const matchesTerm = !term || t.title.toLowerCase().includes(term);
+      const matchesStatus = status === '' || t.status === status;
+      const matchesPriority = priority === '' || t.priority === priority;
+      return matchesTerm && matchesStatus && matchesPriority;
+    });
+  });
+
+  readonly pager = createPagination(this.filteredTasks, { pageSize: 10 });
 
   readonly subTaskForm = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
@@ -142,7 +196,28 @@ export class TasksPage {
     this.facade.init();
   }
 
+  // ── Filters ──
+
+  onSearch(value: string): void {
+    this.search.set(value);
+  }
+
+  onStatusFilter(value: string): void {
+    this.statusFilter.set(value === '' ? '' : (Number(value) as TaskStatus));
+  }
+
+  onPriorityFilter(value: string): void {
+    this.priorityFilter.set(value === '' ? '' : (Number(value) as TaskPriority));
+  }
+
+  clearFilters(): void {
+    this.search.set('');
+    this.statusFilter.set('');
+    this.priorityFilter.set('');
+  }
+
   openCreate(): void {
+    this.editing.set(null);
     this.createForm.reset({
       title: '',
       description: '',
@@ -151,11 +226,33 @@ export class TasksPage {
       expectedCompletionDate: '',
       projectId: '',
     });
-    this.showCreate.set(true);
+    this.showDrawer.set(true);
   }
 
-  closeCreate(): void {
-    this.showCreate.set(false);
+  openEdit(task: TaskListItem): void {
+    this.editing.set(task);
+    this.createForm.reset({
+      title: task.title,
+      description: '',
+      priority: task.priority,
+      startDate: this.toDateInput(task.startDate),
+      expectedCompletionDate: task.expectedCompletionDate
+        ? this.toDateInput(task.expectedCompletionDate)
+        : '',
+      projectId: task.projectId ? String(task.projectId) : '',
+    });
+    this.showDrawer.set(true);
+    // The row carries no description — pull it from the detail endpoint so saving doesn't blank it.
+    this.facade.loadTaskForEdit(task.id, (detail) => {
+      if (this.editing()?.id === detail.id) {
+        this.createForm.controls.description.setValue(detail.description ?? '');
+      }
+    });
+  }
+
+  closeDrawer(): void {
+    this.showDrawer.set(false);
+    this.editing.set(null);
   }
 
   submit(): void {
@@ -165,17 +262,39 @@ export class TasksPage {
     }
 
     const v = this.createForm.getRawValue();
+    const target = v.expectedCompletionDate ? this.toIso(v.expectedCompletionDate) : null;
+    const editing = this.editing();
 
-    this.facade.createTask({
-      title: v.title,
-      description: v.description,
-      priority: Number(v.priority) as TaskPriority,
-      startDate: this.toIso(v.startDate),
-      expectedCompletionDate: v.expectedCompletionDate ? this.toIso(v.expectedCompletionDate) : null,
-      projectId: v.projectId ? Number(v.projectId) : null,
-    });
+    if (editing) {
+      this.facade.updateTask({
+        taskId: editing.id,
+        title: v.title,
+        description: v.description,
+        priority: Number(v.priority) as TaskPriority,
+        expectedCompletionDate: target,
+      });
+    } else {
+      this.facade.createTask({
+        title: v.title,
+        description: v.description,
+        priority: Number(v.priority) as TaskPriority,
+        startDate: this.toIso(v.startDate),
+        expectedCompletionDate: target,
+        projectId: v.projectId ? Number(v.projectId) : null,
+      });
+    }
 
-    this.closeCreate();
+    this.closeDrawer();
+  }
+
+  async remove(task: TaskListItem): Promise<void> {
+    const ok = await this.dialog.confirmDelete(
+      'Delete task?',
+      `"${task.title}" and its subtasks and work logs will be deleted.`,
+    );
+    if (ok) {
+      this.facade.deleteTask(task.id);
+    }
   }
 
   start(task: TaskListItem): void {
@@ -230,12 +349,15 @@ export class TasksPage {
     }
   }
 
-  deleteSubtask(sub: SubTask): void {
+  async deleteSubtask(sub: SubTask): Promise<void> {
     const task = this.activeTask();
     if (!task) {
       return;
     }
-    this.facade.deleteSubTask(task.id, sub.id);
+    const ok = await this.dialog.confirmDelete('Delete subtask?', `"${sub.title}" will be deleted.`);
+    if (ok) {
+      this.facade.deleteSubTask(task.id, sub.id);
+    }
   }
 
   isDone(sub: SubTask): boolean {
@@ -309,12 +431,18 @@ export class TasksPage {
     return new Date(now.getTime() - off).toISOString().slice(0, 16);
   }
 
-  deleteLog(log: WorkLog): void {
+  async deleteLog(log: WorkLog): Promise<void> {
     const task = this.timeTask();
     if (!task) {
       return;
     }
-    this.facade.deleteWorkLog(task.id, log.id);
+    const ok = await this.dialog.confirmDelete(
+      'Delete work log?',
+      `This ${this.formatDuration(log.durationMinutes)} entry will be deleted.`,
+    );
+    if (ok) {
+      this.facade.deleteWorkLog(task.id, log.id);
+    }
   }
 
   /** "2h 15m" / "45m" / "0m" from a minutes value. */
@@ -330,6 +458,11 @@ export class TasksPage {
 
   private today(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  /** API ISO timestamp → the `YYYY-MM-DD` a date input expects. */
+  private toDateInput(iso: string): string {
+    return iso.slice(0, 10);
   }
 
   private toIso(date: string): string {

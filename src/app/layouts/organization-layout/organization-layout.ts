@@ -15,6 +15,7 @@ import {
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
+  Mail,
   Menu,
   Moon,
   Plus,
@@ -28,6 +29,7 @@ import {
 import { AuthService } from '@core/auth/auth.service';
 import { ThemeService } from '@core/services/theme.service';
 import { AuthFacade } from '@features/auth/auth.facade';
+import { MemberFacade } from '@features/member/member.facade';
 import { OrganizationFacade } from '@features/organization/organization.facade';
 import { OrganizationListItem } from '@features/organization/organization.models';
 
@@ -60,6 +62,7 @@ import { OrganizationListItem } from '@features/organization/organization.models
         Sun,
         Moon,
         Check,
+        Mail,
       }),
     },
   ],
@@ -69,9 +72,12 @@ export class OrganizationLayout {
   private readonly authService = inject(AuthService);
   private readonly authFacade = inject(AuthFacade);
   private readonly orgFacade = inject(OrganizationFacade);
+  /** Invitations are user-scoped, so an org account can have them too — see the sidebar badge. */
+  private readonly memberFacade = inject(MemberFacade);
 
   readonly isDark = this.themeService.isDark;
   readonly user = this.authService.user;
+  readonly pendingInvitations = this.memberFacade.pendingCount;
 
   readonly organizations = this.orgFacade.organizations;
   readonly currentOrg = this.orgFacade.currentOrg;
@@ -81,6 +87,7 @@ export class OrganizationLayout {
 
   constructor() {
     this.orgFacade.init();
+    this.memberFacade.init();
   }
 
   toggleSwitcher(): void {

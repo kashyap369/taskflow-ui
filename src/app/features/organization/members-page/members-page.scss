@@ -67,6 +67,7 @@
   & + .member-row { border-top: 1px solid var(--border); }
 }
 .member-id { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.sk-lines { display: flex; flex-direction: column; gap: .45rem; flex: 1; min-width: 0; }
 .avatar {
   width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;

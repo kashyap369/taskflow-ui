@@ -18,6 +18,24 @@
             <span class="badge" [attr.data-tone]="projectStatusMeta(p.status).tone">
               {{ projectStatusMeta(p.status).label }}
             </span>
+            <button
+              type="button"
+              class="icon-action"
+              (click)="editProject(p)"
+              aria-label="Edit project"
+              title="Edit project"
+            >
+              <lucide-angular name="Pencil" size="15"></lucide-angular>
+            </button>
+            <button
+              type="button"
+              class="icon-action danger"
+              (click)="removeProject(p)"
+              aria-label="Delete project"
+              title="Delete project"
+            >
+              <lucide-angular name="Trash2" size="15"></lucide-angular>
+            </button>
           </div>
           @if (p.description) {
             <p class="head-desc">{{ p.description }}</p>
@@ -90,9 +108,25 @@
                   <button class="action-btn start" (click)="start(task)"><lucide-angular name="Play" size="14"></lucide-angular> Start</button>
                 } @else if (task.status === TaskStatus.InProgress) {
                   <button class="action-btn complete" (click)="complete(task)"><lucide-angular name="CircleCheckBig" size="14"></lucide-angular> Complete</button>
-                } @else {
-                  <span class="action-none">—</span>
                 }
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="openEditTask(task)"
+                  [attr.aria-label]="'Edit ' + task.title"
+                  title="Edit task"
+                >
+                  <lucide-angular name="Pencil" size="14"></lucide-angular>
+                </button>
+                <button
+                  type="button"
+                  class="icon-action danger"
+                  (click)="removeTask(task)"
+                  [attr.aria-label]="'Delete ' + task.title"
+                  title="Delete task"
+                >
+                  <lucide-angular name="Trash2" size="14"></lucide-angular>
+                </button>
               </span>
             </div>
           }
@@ -106,13 +140,13 @@
     }
   </div>
 
-  <!-- Create task drawer -->
-  @if (showCreate()) {
-    <div class="drawer-backdrop" (click)="closeCreate()"></div>
-    <aside class="drawer">
+  <!-- Create / edit task drawer -->
+  @if (showDrawer()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
-        <h2>New task</h2>
-        <button class="icon-btn" (click)="closeCreate()" aria-label="Close"><lucide-angular name="X" size="18"></lucide-angular></button>
+        <h2>{{ isEditingTask() ? 'Edit task' : 'New task' }}</h2>
+        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close"><lucide-angular name="X" size="18"></lucide-angular></button>
       </div>
       <form class="drawer-form" [formGroup]="createForm" (ngSubmit)="submit()">
         <div class="field">
@@ -135,18 +169,66 @@
               }
             </select>
           </div>
-          <div class="field">
-            <label for="startDate" class="form-label">Start date</label>
-            <input id="startDate" type="date" class="form-control" formControlName="startDate" />
-          </div>
+          @if (!isEditingTask()) {
+            <div class="field">
+              <label for="startDate" class="form-label">Start date</label>
+              <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+            </div>
+          }
         </div>
         <div class="field">
           <label for="expectedCompletionDate" class="form-label">Due date <span>(optional)</span></label>
           <input id="expectedCompletionDate" type="date" class="form-control" formControlName="expectedCompletionDate" />
         </div>
+        @if (isEditingTask()) {
+          <p class="drawer-note">Status and start date aren't editable — use Start / Complete on the row.</p>
+        }
         <div class="drawer-actions">
-          <button type="button" class="btn-ghost" (click)="closeCreate()">Cancel</button>
-          <button type="submit" class="btn-primary-cta" [disabled]="saving()">{{ saving() ? 'Creating…' : 'Create task' }}</button>
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            @if (saving()) {
+              {{ isEditingTask() ? 'Saving…' : 'Creating…' }}
+            } @else {
+              {{ isEditingTask() ? 'Save changes' : 'Create task' }}
+            }
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+
+  <!-- Edit project drawer -->
+  @if (showProjectDrawer()) {
+    <div class="drawer-backdrop" (click)="closeProjectDrawer()"></div>
+    <aside class="drawer" appDialog (dismiss)="closeProjectDrawer()">
+      <div class="drawer-head">
+        <h2>Edit project</h2>
+        <button class="icon-btn" (click)="closeProjectDrawer()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+      <form class="drawer-form" [formGroup]="projectForm" (ngSubmit)="submitProject()">
+        <div class="field">
+          <label for="p-title" class="form-label">Title</label>
+          <input id="p-title" type="text" class="form-control" formControlName="title" />
+          @if (projectForm.controls.title.touched && projectForm.controls.title.invalid) {
+            <small class="field-msg">A title is required.</small>
+          }
+        </div>
+        <div class="field">
+          <label for="p-description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="p-description" rows="3" class="form-control" formControlName="description"></textarea>
+        </div>
+        <div class="field">
+          <label for="p-target" class="form-label">Target date <span>(optional)</span></label>
+          <input id="p-target" type="date" class="form-control" formControlName="expectedCompletionDate" />
+        </div>
+        <p class="drawer-note">Start date and status aren't editable — status follows the project's tasks.</p>
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeProjectDrawer()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : 'Save changes' }}
+          </button>
         </div>
       </form>
     </aside>

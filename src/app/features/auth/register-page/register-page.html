@@ -70,8 +70,8 @@
                     formControlName="firstName"
                   />
                 </div>
-                @if (registerForm.controls.firstName.touched && registerForm.controls.firstName.invalid) {
-                  <small class="field-msg">First name is required.</small>
+                @if (fieldError('firstName'); as msg) {
+                  <small class="field-msg">{{ msg }}</small>
                 }
               </div>
 
@@ -88,8 +88,8 @@
                     formControlName="lastName"
                   />
                 </div>
-                @if (registerForm.controls.lastName.touched && registerForm.controls.lastName.invalid) {
-                  <small class="field-msg">Last name is required.</small>
+                @if (fieldError('lastName'); as msg) {
+                  <small class="field-msg">{{ msg }}</small>
                 }
               </div>
             </div>
@@ -108,11 +108,8 @@
                   formControlName="email"
                 />
               </div>
-              @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
-                <small class="field-msg">
-                  @if (registerForm.controls.email.hasError('required')) { Email is required. }
-                  @else if (registerForm.controls.email.hasError('email')) { Enter a valid email address. }
-                </small>
+              @if (fieldError('email'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
               }
             </div>
 
@@ -130,11 +127,8 @@
                   formControlName="phoneNumber"
                 />
               </div>
-              @if (registerForm.controls.phoneNumber.touched && registerForm.controls.phoneNumber.invalid) {
-                <small class="field-msg">
-                  @if (registerForm.controls.phoneNumber.hasError('required')) { Phone number is required. }
-                  @else { Enter a valid phone number (at least 10 digits). }
-                </small>
+              @if (fieldError('phoneNumber'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
               }
             </div>
 
@@ -155,11 +149,8 @@
                   <lucide-angular [name]="showPassword() ? 'EyeOff' : 'Eye'" [size]="16"></lucide-angular>
                 </button>
               </div>
-              @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
-                <small class="field-msg">
-                  @if (registerForm.controls.password.hasError('required')) { Password is required. }
-                  @else { Min 8 chars with an uppercase, a lowercase, and a number. }
-                </small>
+              @if (fieldError('password'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
               }
             </div>
 
@@ -177,14 +168,8 @@
                   formControlName="confirmPassword"
                 />
               </div>
-              @if (
-                registerForm.controls.confirmPassword.touched &&
-                (registerForm.controls.confirmPassword.invalid || registerForm.hasError('passwordsMismatch'))
-              ) {
-                <small class="field-msg">
-                  @if (registerForm.controls.confirmPassword.hasError('required')) { Please confirm your password. }
-                  @else if (registerForm.hasError('passwordsMismatch')) { Passwords don't match. }
-                </small>
+              @if (fieldError('confirmPassword'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
               }
             </div>
 
@@ -198,6 +183,9 @@
                 I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
               </span>
             </label>
+            @if (fieldError('acceptTerms'); as msg) {
+              <small class="field-msg">{{ msg }}</small>
+            }
 
             <button
               type="submit"

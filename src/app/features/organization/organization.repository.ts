@@ -20,10 +20,15 @@ import {
   Project,
   ProjectReport,
   SubTask,
+  TaskDetail,
   TaskListItem,
   Team,
   TeamDetail,
   TeamPerformanceReport,
+  UpdateProjectPayload,
+  UpdateRolePayload,
+  UpdateTaskPayload,
+  UpdateTeamPayload,
   WorkLog,
 } from './organization.models';
 
@@ -58,6 +63,14 @@ export class OrganizationRepository {
     return this.api.post<number>(API.Project.Create, payload);
   }
 
+  updateProject(payload: UpdateProjectPayload): Observable<void> {
+    return this.api.put<void>(API.Project.Update, payload);
+  }
+
+  deleteProject(projectId: number): Observable<void> {
+    return this.api.delete<void>(API.Project.Delete(projectId));
+  }
+
   // ── Tasks ──
   getTasks(organizationId: number): Observable<TaskListItem[]> {
     return this.api.get<TaskListItem[]>(API.Task.ByOrganization(organizationId));
@@ -65,6 +78,19 @@ export class OrganizationRepository {
 
   createTask(payload: CreateTaskPayload): Observable<number> {
     return this.api.post<number>(API.Task.Create, payload);
+  }
+
+  /** The full task (incl. `description`, which the list DTO omits) — used to fill the edit form. */
+  getTask(taskId: number): Observable<TaskDetail> {
+    return this.api.get<TaskDetail>(API.Task.GetById(taskId));
+  }
+
+  updateTask(payload: UpdateTaskPayload): Observable<void> {
+    return this.api.put<void>(API.Task.Update, payload);
+  }
+
+  deleteTask(taskId: number): Observable<void> {
+    return this.api.delete<void>(API.Task.Delete(taskId));
   }
 
   startTask(taskId: number): Observable<void> {
@@ -106,6 +132,14 @@ export class OrganizationRepository {
 
   createRole(organizationId: number, name: string, description: string): Observable<number> {
     return this.api.post<number>(API.Role.Create, { organizationId, name, description });
+  }
+
+  updateRole(payload: UpdateRolePayload): Observable<void> {
+    return this.api.put<void>(API.Role.Update, payload);
+  }
+
+  deleteRole(roleId: number): Observable<void> {
+    return this.api.delete<void>(API.Role.Delete(roleId));
   }
 
   grantPermission(organizationRoleId: number, permissionName: string): Observable<void> {
@@ -165,6 +199,14 @@ export class OrganizationRepository {
 
   createTeam(organizationId: number, name: string, description: string): Observable<number> {
     return this.api.post<number>(API.Team.Create, { organizationId, name, description });
+  }
+
+  updateTeam(payload: UpdateTeamPayload): Observable<void> {
+    return this.api.put<void>(API.Team.Update, payload);
+  }
+
+  deleteTeam(teamId: number): Observable<void> {
+    return this.api.delete<void>(API.Team.Delete(teamId));
   }
 
   getTeam(teamId: number): Observable<TeamDetail> {
