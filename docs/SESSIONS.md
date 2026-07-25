@@ -2,6 +2,73 @@
 
 > Append-only. 3–5 lines per session. Focus on gotchas, dead ends, and decisions — things git
 > history doesn't capture.
+>
+> **▶ Next session: the org portal is feature- AND theme-complete. Pick a new roadmap bucket (Admin portal,
+> Polish & Hardening, reporting export, or auth leftovers) — see the "▶ NEXT SESSION — START HERE" block at
+> the top of [PHASES.md](PHASES.md).**
+
+## 2026-07-25 (Phase 10 — Dark-mode theming of the org portal)
+- Broad, mechanical SCSS sweep: converted every light-only hardcoded color in the org portal to the
+  semantic CSS-var tokens so **dark mode works**. Touched **10 files** — the org-layout shell, all 9 org
+  pages, and the shared `organisms/project-health-chart` (the dashboard donut card was the one panel still
+  white in dark until I tokenized the organism too — reminder: shared organisms used by the portal need
+  the same treatment, they're outside `features/organization/`).
+- **Mapping** (kept consistent so it's easy to extend): `#fff`→`--surface`, subtle bg→`--surface-2`,
+  inset→`--surface-inset`, page→`--bg`; borders→`--border`/`--border-strong`; `#111827`→`--text`,
+  muted→`--text-muted`, subtle→`--text-subtle`; accents→`--primary`, fills→`--gradient-brand`; badge pairs
+  →`--info`/`--info-soft` etc.; shadows→`--shadow-*`; focus→`--ring`. **Kept literal `#fff`** for text/glyphs
+  sitting on gradients/colored chips, and kept the stat-card icon chips as fixed saturated hues (white
+  glyphs read on both themes — the semantic status tokens go too light in dark for white text).
+- **Removed the `color-scheme: light` pins** on the date/datetime inputs (tasks + reports) that earlier
+  sessions added for the light-only era — now the native pickers follow the theme via the root
+  `color-scheme`. The org top-bar theme toggle already existed, so dark mode "just worked" once tokens landed.
+- **Verified both themes live**: dark dashboard (incl. the previously-white Task-status donut card now dark),
+  the time-tracking drawer (primary-soft tracked pill, themed datetime inputs, running/timer cards), reports
+  (echarts + tables + date inputs), then toggled back to light — unchanged. `ng build` passes, no budget regressions.
+
+## 2026-07-25 (Phase 9 — Work-log / time-tracking + Org switcher)
+- Built the **work-log** slice (read the backend `WorkLogController` + `TaskWorkLog` first): a time-tracking
+  drawer on each Tasks-page row (Time button) with Start/Stop timer, manual entry, total, and a history list.
+  `api/worklog` (all raw): `GET /task/{id}`, `POST /start {TaskId,Notes?}`, `PUT /stop {WorkLogId,Notes?}`,
+  `POST /manual {TaskId,StartedAt,EndedAt,Notes?}`, `DELETE /{id}`. Verified all live (start 200/stop 204/
+  manual 200/delete 204); dashboard then showed **2.5h tracked** — so `trackedHours` finally populates.
+- **Two backend behaviors to remember:** (1) **one running timer per user** across all tasks — starting a
+  second returns **409** `WORK_LOG_ALREADY_RUNNING` (surfaced by the error interceptor). (2) `POST /worklog/
+  manual` throws a domain `ArgumentException` for end-in-future / end≤start, and the API **maps that to a
+  generic 500** (not 400). Hit this live because the **server clock is UTC** and "11:30 today" local
+  (UTC+5:30) is future in UTC. Added a **client guard** (future/order errors + `max` on the datetime inputs)
+  so users never trigger the 500, and **flagged the backend mapping** as a separate task (spawn_task).
+- **Org switcher:** the org-layout sidebar still had a hardcoded "Acme Inc." card — replaced it with a real
+  one bound to `OrganizationFacade` (`organizations`/`currentOrg`/`selectOrganization`), a dropdown when
+  there's >1 org (check on the active one) and a static card for a single org. Layout now calls
+  `orgFacade.init()`. Only one test org exists, so multi-org switching is code-verified, single-org rendering
+  live-verified ("Northwind Labs / NL").
+- **datetime-local gotcha** (same family as the Phase 6 date-input one): pinned `color-scheme: light` on the
+  tasks-page `.form-control` so native pickers match the light theme. To send UTC, `new Date(localValue).
+  toISOString()` (datetime-local value is local wall-clock).
+- `ng build` passes (tasks-page chunk grew to 30.8 kB / 7.2 kB gz — under budget). Design tokens/dark mode
+  across the org portal is the last big polish item → Phase 10.
+
+## 2026-07-25 (Phase 8 — Team detail + Subtasks)
+- Built the last two org-portal gaps, mirroring the existing feature slice exactly. **Team detail**
+  (`team-detail-page`, 5 files, `/organization/teams/:id`): `GET /team/{id}` (TeamDetailDto w/ members),
+  add via `POST /team/{teamId}/members/{userId}`, remove via `DELETE` (both 204). Picker = active org
+  members minus those already on the team (`availableMembers` computed). **Subtasks**: a drawer opened from
+  a clickable chip on each Tasks-page row — `GET/POST/DELETE /subtask`, `PUT /subtask/{id}/complete|reopen`.
+  Added `API.SubTask.*` + repo/facade methods, `SubTask`/`TeamDetail`/`TeamMember` models.
+- **Backend auto-completes the parent task when all its subtasks complete** (and flips it back to
+  In progress on reopen) — observed live: completing the one subtask on taskId 3 moved the task Todo→
+  Completed; reopening moved it Completed→In progress. Good to know for the reports/dashboard counts.
+- **Facade pattern for badge freshness:** `afterSubTaskChange(taskId)` reloads the open drawer's subtasks
+  **and** the org task list (+ open project tasks) so the `completedSubTaskCount/subTaskCount` row badge
+  recomputes immediately (0/0→0/1→1/1→0/1→0/0 verified). `afterTeamMemberChange` reloads team detail +
+  teams list (member counts).
+- **Add-member endpoint takes userId in the URL, empty body** (`POST /team/{id}/members/{userId}`, not a
+  body command). `getTeam` uses the existing `API.Team.GetById`. All raw (unenveloped), like the rest.
+- Verified the full CRUD loop live against the API (see PHASES Current Status for the exact 204/200 trail),
+  incl. mobile 375px (header stacks, member rows → stacked cards, drawers full-width). `ng build` passes
+  (new lazy chunks: tasks-page 21.9 kB, team-detail-page 11.7 kB). Left Jane on the Engineering team as
+  seed data.
 
 ## 2026-07-25 (Phase 7 — Task assignment + Project detail)
 - Completed the org work-management loop: per-task **assignee dropdown** (Tasks page + Project detail)

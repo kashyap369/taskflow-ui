@@ -90,4 +90,22 @@ export const API = {
     AddMember: (teamId: number, userId: number) => `/team/${teamId}/members/${userId}`,
     RemoveMember: (teamId: number, userId: number) => `/team/${teamId}/members/${userId}`,
   },
+
+  SubTask: {
+    Create: '/subtask',
+    Update: '/subtask',
+    Delete: (id: number) => `/subtask/${id}`,
+    ByTask: (taskId: number) => `/subtask/task/${taskId}`,
+    Complete: (id: number) => `/subtask/${id}/complete`,
+    Reopen: (id: number) => `/subtask/${id}/reopen`,
+  },
+
+  WorkLog: {
+    Start: '/worklog/start',
+    Stop: '/worklog/stop',
+    Manual: '/worklog/manual',
+    Delete: (id: number) => `/worklog/${id}`,
+    ByTask: (taskId: number) => `/worklog/task/${taskId}`,
+    Mine: '/worklog/mine',
+  },
 } as const;

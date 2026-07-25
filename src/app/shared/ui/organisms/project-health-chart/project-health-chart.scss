@@ -1,64 +1,47 @@
 .health-card {
-  background: #fff;
-
+  background: var(--surface);
   border-radius: 24px;
-
   padding: 28px;
-
   height: 100%;
-
-  border: 1px solid #eef2f7;
-
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
 
 .health-card h5 {
   margin: 0;
-
   font-weight: 700;
+  color: var(--text);
 }
 
 .health-card p {
   margin: 0.25rem 0 0;
-
-  color: #6b7280;
-
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .donut-chart {
   height: 220px;
-
   width: 100%;
 }
 
 .legend-item {
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
-
   margin-bottom: 1rem;
 }
 
 .legend-left {
   display: flex;
-
   align-items: center;
-
   gap: 0.75rem;
-
-  color: #374151;
-
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .legend-color {
   width: 10px;
-
   height: 10px;
-
   border-radius: 50%;
 }
 

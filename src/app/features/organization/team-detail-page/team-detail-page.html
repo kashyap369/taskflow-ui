@@ -1,0 +1,101 @@
+<section class="page">
+  <div class="container-fluid">
+    <a routerLink="/organization/teams" class="back-link">
+      <lucide-angular name="ArrowLeft" size="16"></lucide-angular> Teams
+    </a>
+
+    @if (loading() && !team()) {
+      <div class="lottie-state">
+        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading team" />
+        <p>Loading team…</p>
+      </div>
+    } @else if (team(); as t) {
+      <!-- Header -->
+      <div class="detail-head">
+        <div class="head-main">
+          <div class="head-top">
+            <span class="team-icon"><lucide-angular name="Users" size="20"></lucide-angular></span>
+            <h1>{{ t.name }}</h1>
+          </div>
+          @if (t.description) {
+            <p class="head-desc">{{ t.description }}</p>
+          }
+          <span class="member-count">
+            {{ t.members.length }} {{ t.members.length === 1 ? 'member' : 'members' }}
+          </span>
+        </div>
+        <button class="btn-primary-cta" (click)="openAdd()">
+          <lucide-angular name="UserPlus" size="16"></lucide-angular> Add member
+        </button>
+      </div>
+
+      <!-- Members -->
+      @if (!hasMembers()) {
+        <div class="lottie-state">
+          <app-lottie-player src="/lottie/empty.json" [width]="140" [height]="120" ariaLabel="No members yet" />
+          <p>No one is on this team yet.</p>
+          <button class="btn-primary-cta" (click)="openAdd()">
+            <lucide-angular name="UserPlus" size="16"></lucide-angular> Add member
+          </button>
+        </div>
+      } @else {
+        <div class="member-list">
+          @for (m of t.members; track m.userId) {
+            <div class="member-row">
+              <span class="avatar">{{ initials(m.fullName) }}</span>
+              <div class="member-main">
+                <div class="member-name">{{ m.fullName }}</div>
+                <div class="member-email">
+                  <lucide-angular name="Mail" size="12"></lucide-angular> {{ m.email }}
+                </div>
+              </div>
+              <span class="joined">Joined {{ m.joinedAt | date: 'mediumDate' }}</span>
+              <button class="remove-btn" (click)="remove(m)" aria-label="Remove from team">
+                <lucide-angular name="Trash2" size="14"></lucide-angular> Remove
+              </button>
+            </div>
+          }
+        </div>
+      }
+    } @else {
+      <div class="lottie-state">
+        <app-lottie-player src="/lottie/empty.json" [width]="140" [height]="120" ariaLabel="Not found" />
+        <p>Team not found.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Add member drawer -->
+  @if (showAdd()) {
+    <div class="drawer-backdrop" (click)="closeAdd()"></div>
+    <aside class="drawer">
+      <div class="drawer-head">
+        <h2>Add member</h2>
+        <button class="icon-btn" (click)="closeAdd()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      @if (availableMembers().length === 0) {
+        <div class="picker-empty">
+          <p>Everyone in your organization is already on this team, or there are no active members to add.</p>
+          <a routerLink="/organization/members" class="btn-ghost">Manage members</a>
+        </div>
+      } @else {
+        <p class="picker-hint">Pick an active organization member to add to this team.</p>
+        <div class="picker-list">
+          @for (m of availableMembers(); track m.userId) {
+            <button class="picker-row" type="button" [disabled]="saving()" (click)="add(m)">
+              <span class="avatar">{{ initials(m.userFullName) }}</span>
+              <span class="picker-main">
+                <span class="member-name">{{ m.userFullName }}</span>
+                <span class="member-email">{{ m.email }}</span>
+              </span>
+              <lucide-angular name="UserPlus" size="16" class="picker-add"></lucide-angular>
+            </button>
+          }
+        </div>
+      }
+    </aside>
+  }
+</section>

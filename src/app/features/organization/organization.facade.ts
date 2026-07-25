@@ -18,9 +18,12 @@ import {
   OrganizationRoleDetail,
   Project,
   ProjectReport,
+  SubTask,
   TaskListItem,
   Team,
+  TeamDetail,
   TeamPerformanceReport,
+  WorkLog,
 } from './organization.models';
 
 const SELECTED_ORG_KEY = 'tf_org_id';
@@ -49,6 +52,11 @@ export class OrganizationFacade {
   private readonly _members = signal<OrganizationMember[]>([]);
   private readonly _invitations = signal<OrganizationInvitation[]>([]);
   private readonly _teams = signal<Team[]>([]);
+  private readonly _teamDetail = signal<TeamDetail | null>(null);
+  private readonly _subTasks = signal<SubTask[]>([]);
+  private readonly _subTasksTaskId = signal<number | null>(null);
+  private readonly _workLogs = signal<WorkLog[]>([]);
+  private readonly _workLogsTaskId = signal<number | null>(null);
   private readonly _permissionCatalog = signal<OrganizationPermission[]>([]);
   private readonly _selectedRole = signal<OrganizationRoleDetail | null>(null);
   private readonly _projectDetail = signal<Project | null>(null);
@@ -70,6 +78,11 @@ export class OrganizationFacade {
   readonly members = this._members.asReadonly();
   readonly invitations = this._invitations.asReadonly();
   readonly teams = this._teams.asReadonly();
+  readonly teamDetail = this._teamDetail.asReadonly();
+  readonly subTasks = this._subTasks.asReadonly();
+  readonly subTasksTaskId = this._subTasksTaskId.asReadonly();
+  readonly workLogs = this._workLogs.asReadonly();
+  readonly workLogsTaskId = this._workLogsTaskId.asReadonly();
   readonly permissionCatalog = this._permissionCatalog.asReadonly();
   readonly selectedRole = this._selectedRole.asReadonly();
   readonly projectDetail = this._projectDetail.asReadonly();
@@ -509,6 +522,206 @@ export class OrganizationFacade {
     this.repository.getTeams(organizationId).subscribe({
       next: (teams) => this._teams.set(teams),
     });
+  }
+
+  // ── Team detail + members ──
+
+  loadTeamDetail(teamId: number): void {
+    this._loading.set(true);
+    this.repository.getTeam(teamId).subscribe({
+      next: (team) => {
+        this._teamDetail.set(team);
+        this._loading.set(false);
+      },
+      error: () => this._loading.set(false),
+    });
+  }
+
+  clearTeamDetail(): void {
+    this._teamDetail.set(null);
+  }
+
+  addTeamMember(userId: number): void {
+    const team = this._teamDetail();
+    if (!team) {
+      return;
+    }
+    this._saving.set(true);
+    this.repository.addTeamMember(team.id, userId).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Member added to team.');
+        this.afterTeamMemberChange(team.id);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  removeTeamMember(userId: number): void {
+    const team = this._teamDetail();
+    if (!team) {
+      return;
+    }
+    this.repository.removeTeamMember(team.id, userId).subscribe({
+      next: () => {
+        this.notification.success('Member removed from team.');
+        this.afterTeamMemberChange(team.id);
+      },
+    });
+  }
+
+  /** Reload the open team and the teams list (member counts) after a membership change. */
+  private afterTeamMemberChange(teamId: number): void {
+    this.repository.getTeam(teamId).subscribe({
+      next: (team) => this._teamDetail.set(team),
+    });
+    const organizationId = this.currentOrgId();
+    if (organizationId != null) {
+      this.reloadTeams(organizationId);
+    }
+  }
+
+  // ── Subtasks ──
+
+  /** Load the subtasks for a task (opens the task's subtask drawer). */
+  loadSubTasks(taskId: number): void {
+    this._subTasksTaskId.set(taskId);
+    this.repository.getSubTasks(taskId).subscribe({
+      next: (subs) => this._subTasks.set(subs),
+    });
+  }
+
+  clearSubTasks(): void {
+    this._subTasks.set([]);
+    this._subTasksTaskId.set(null);
+  }
+
+  addSubTask(taskId: number, title: string): void {
+    this._saving.set(true);
+    this.repository.createSubTask(taskId, title).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Subtask added.');
+        this.afterSubTaskChange(taskId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  completeSubTask(taskId: number, subTaskId: number): void {
+    this.repository.completeSubTask(subTaskId).subscribe({
+      next: () => this.afterSubTaskChange(taskId),
+    });
+  }
+
+  reopenSubTask(taskId: number, subTaskId: number): void {
+    this.repository.reopenSubTask(subTaskId).subscribe({
+      next: () => this.afterSubTaskChange(taskId),
+    });
+  }
+
+  deleteSubTask(taskId: number, subTaskId: number): void {
+    this.repository.deleteSubTask(subTaskId).subscribe({
+      next: () => {
+        this.notification.success('Subtask deleted.');
+        this.afterSubTaskChange(taskId);
+      },
+    });
+  }
+
+  /** Refresh the open drawer's subtasks + the task-list badges after any subtask change. */
+  private afterSubTaskChange(taskId: number): void {
+    if (this._subTasksTaskId() === taskId) {
+      this.repository.getSubTasks(taskId).subscribe({
+        next: (subs) => this._subTasks.set(subs),
+      });
+    }
+    const organizationId = this.currentOrgId();
+    if (organizationId != null) {
+      this.reloadTasks(organizationId);
+    }
+    const project = this._projectDetail();
+    if (project) {
+      this.reloadProjectTasks(project.id);
+    }
+  }
+
+  // ── Work logs (time tracking) ──
+
+  /** Load the work logs for a task (opens the task's time-tracking drawer). */
+  loadWorkLogs(taskId: number): void {
+    this._workLogsTaskId.set(taskId);
+    this.repository.getWorkLogs(taskId).subscribe({
+      next: (logs) => this._workLogs.set(logs),
+    });
+  }
+
+  clearWorkLogs(): void {
+    this._workLogs.set([]);
+    this._workLogsTaskId.set(null);
+  }
+
+  startWorkLog(taskId: number, notes: string | null): void {
+    this._saving.set(true);
+    this.repository.startWorkLog(taskId, notes).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Timer started.');
+        this.afterWorkLogChange(taskId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  stopWorkLog(taskId: number, workLogId: number, notes: string | null): void {
+    this._saving.set(true);
+    this.repository.stopWorkLog(workLogId, notes).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Timer stopped.');
+        this.afterWorkLogChange(taskId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  logManualWork(
+    taskId: number,
+    startedAt: string,
+    endedAt: string,
+    notes: string | null,
+  ): void {
+    this._saving.set(true);
+    this.repository.logManualWork(taskId, startedAt, endedAt, notes).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Time logged.');
+        this.afterWorkLogChange(taskId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  deleteWorkLog(taskId: number, workLogId: number): void {
+    this.repository.deleteWorkLog(workLogId).subscribe({
+      next: () => {
+        this.notification.success('Work log deleted.');
+        this.afterWorkLogChange(taskId);
+      },
+    });
+  }
+
+  /** Refresh the open drawer's logs + the org summary (tracked hours) after any work-log change. */
+  private afterWorkLogChange(taskId: number): void {
+    if (this._workLogsTaskId() === taskId) {
+      this.repository.getWorkLogs(taskId).subscribe({
+        next: (logs) => this._workLogs.set(logs),
+      });
+    }
+    const organizationId = this.currentOrgId();
+    if (organizationId != null) {
+      this.refreshSummary(organizationId);
+    }
   }
 
   // ── Reporting ──

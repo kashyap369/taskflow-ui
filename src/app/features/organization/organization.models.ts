@@ -156,6 +156,52 @@ export interface Team {
   memberCount: number;
 }
 
+/** A member row inside a team (raw). */
+export interface TeamMember {
+  userId: number;
+  fullName: string;
+  email: string;
+  joinedAt: string;
+}
+
+/** `GET /team/{id}` → TeamDetailDto (raw). */
+export interface TeamDetail {
+  id: number;
+  organizationId: number;
+  name: string;
+  description: string | null;
+  members: TeamMember[];
+}
+
+/**
+ * `GET /subtask/task/{taskId}` → SubTaskDto[] (raw).
+ * `status` reuses the TaskStatus enum (a subtask is Todo=1 or Completed=3).
+ */
+export interface SubTask {
+  id: number;
+  taskId: number;
+  title: string;
+  status: TaskStatus;
+  createdDate: string;
+  completedDate: string | null;
+}
+
+/**
+ * `GET /worklog/task/{taskId}` → WorkLogDto[] (raw).
+ * A running log (`isRunning`, `endedAt` null) has `durationMinutes` counted up to "now" at fetch time.
+ * Only one work log can run per user at a time (starting a second returns 409).
+ */
+export interface WorkLog {
+  id: number;
+  taskId: number;
+  userId: number;
+  startedAt: string;
+  endedAt: string | null;
+  durationMinutes: number;
+  notes: string | null;
+  isRunning: boolean;
+}
+
 // ── Reporting ──
 
 /** `GET /report/member/{userId}?from&to` → MemberTaskReportDto */

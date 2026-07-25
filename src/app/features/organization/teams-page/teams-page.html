@@ -49,6 +49,9 @@
               <span class="member-count">
                 {{ team.memberCount }} {{ team.memberCount === 1 ? 'member' : 'members' }}
               </span>
+              <a class="team-open" [routerLink]="['/organization/teams', team.id]">
+                Open <lucide-angular name="ArrowRight" size="14"></lucide-angular>
+              </a>
             </div>
           </article>
         }

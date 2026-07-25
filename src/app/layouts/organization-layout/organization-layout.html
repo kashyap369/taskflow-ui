@@ -14,18 +14,49 @@
       </div>
     </div>
 
-    <!-- Workspace -->
+    <!-- Workspace / org switcher -->
 
-    <div class="workspace-card">
-      <div class="workspace-avatar">AC</div>
+    <div class="workspace-switcher">
+      <button
+        class="workspace-card"
+        type="button"
+        [class.static]="!hasMultipleOrgs()"
+        [attr.aria-expanded]="switcherOpen()"
+        (click)="toggleSwitcher()"
+      >
+        @if (currentOrg(); as org) {
+          <div class="workspace-avatar">{{ initials(org.name) }}</div>
+          <div class="workspace-content">
+            <h6>{{ org.name }}</h6>
+            <small>{{ hasMultipleOrgs() ? 'Switch workspace' : 'Workspace' }}</small>
+          </div>
+        } @else {
+          <div class="workspace-avatar">?</div>
+          <div class="workspace-content">
+            <h6>No organization</h6>
+            <small>Create one to start</small>
+          </div>
+        }
 
-      <div class="workspace-content">
-        <h6>Acme Inc.</h6>
+        @if (hasMultipleOrgs()) {
+          <lucide-angular name="ChevronDown" size="18" class="chevron"
+            [class.open]="switcherOpen()"></lucide-angular>
+        }
+      </button>
 
-        <small>Business · 28 members</small>
-      </div>
-
-      <lucide-angular name="ChevronDown" size="18"> </lucide-angular>
+      @if (switcherOpen()) {
+        <div class="switcher-menu">
+          @for (org of organizations(); track org.id) {
+            <button class="switcher-item" type="button" (click)="selectOrg(org)">
+              <span class="switcher-avatar">{{ initials(org.name) }}</span>
+              <span class="switcher-name">{{ org.name }}</span>
+              @if (org.id === currentOrg()?.id) {
+                <lucide-angular name="Check" size="16" class="switcher-check"></lucide-angular>
+              }
+            </button>
+          }
+        </div>
+      }
     </div>
 
     <!-- Workspace Title -->

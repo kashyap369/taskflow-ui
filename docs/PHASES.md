@@ -5,6 +5,122 @@
 > consumes it and is at the start of feature build-out. Phase order roughly follows the backend so
 > each frontend phase has a working API behind it.
 
+---
+
+## ▶ NEXT SESSION — START HERE (org portal is theme-complete — pick a new bucket)
+
+**No re-explaining needed.** Phases 8 (Team detail + Subtasks), 9 (Work-log + Org switcher), and 10
+(**dark-mode theming** across the org portal) are all DONE and live-verified. The **organization portal is
+now feature- and theme-complete** for the core work-management loop. Pick one of the remaining roadmap
+buckets below (in rough priority order); follow existing patterns; verify live; update these docs.
+
+### Candidate next buckets
+1. **Admin portal** (roadmap Phase 6) — currently a shell + placeholder. Build platform-admin pages: user
+   list (`GET /user`, AdminOnly), organizations overview, platform settings. Guarded by `roleGuard('Admin')`
+   at `/admin`. Test with the seeded `admin@taskflow.com` (Individual/Admin).
+2. **Polish & Hardening** (roadmap Phase 8) — the `shared/validations/` decorator engine (empty), loading
+   skeletons, real unit/component tests beyond "should create", list pagination/filtering, an a11y pass.
+3. **Reporting extras** (roadmap Phase 7) — CSV/PDF export, richer per-member trend charts.
+4. **Auth leftovers** (roadmap Phase 2) — forgot-password / email-verification screens, surface login
+   errors on the form, decide the Manager-role portal.
+
+**Before building:** run the API (`https://localhost:7086/api`), dev server on **4200**, accept the
+self-signed cert once at `https://localhost:7086`. Test org = **Northwind Labs (orgId 2)**, owner
+**nadia.owens+org1@taskflow.test / Passw0rd!** (org login variant `/auth/organization`). Active member
+seeded: **Jane Doe (userId 2, Manager)** — on the **Engineering** team (teamId 2); taskId 3 has a 2.5h
+work log. BCrypt is slow (~5s) — one login at a time. See [[taskflow-api-integration-gotchas]] memory for
+the recurring traps (raw-vs-enveloped responses, email-verify DB step, org-seeds-no-roles).
+
+### Still open / blocked
+- **Backend gap flagged (separate session/repo):** `POST /worklog/manual` returns a generic **500** when
+  domain validation fails (e.g. end time in the future) — domain `ArgumentException` isn't mapped to 400
+  in the API middleware. The frontend guards the future-time case client-side; the backend should still
+  map it. See `TaskFlow.Domain/.../TaskWorkLog.cs` (LogManual).
+- **Member (Individual) portal is backend-blocked**: no personal-task create endpoint (`CreateTask` needs
+  a non-null `OrganizationId`). Don't build it until the backend adds one — flag it, don't fake it.
+
+---
+
+## Current Status (2026-07-25, Phase 10 — Dark-mode theming of the org portal)
+- ✅ **Tokenized the entire organization portal for dark mode.** Converted all light-only hardcoded colors
+  to the semantic CSS-variable tokens (`src/styles/themes/_light.scss` `:root` / `_dark.scss`
+  `[data-theme]`) across **10 SCSS files**: the org-layout shell + all 9 org pages (dashboard, projects,
+  project-detail, tasks, teams, team-detail, members, roles, reports) — plus the shared
+  `organisms/project-health-chart` (the dashboard donut card, which was still white in dark).
+- ✅ **Mapping used** (consistent everywhere): surfaces `#fff`→`--surface`, subtle bg→`--surface-2`,
+  inset/hover→`--surface-inset`, page bg→`--bg`; borders→`--border`/`--border-strong`; text
+  `#111827`→`--text`, muted greys→`--text-muted`, subtle greys→`--text-subtle`; brand accents/links
+  →`--primary`, brand buttons/fills→`--gradient-brand` + `--shadow-brand`; badge tone pairs→`--info`/
+  `--info-soft` (and success/warning/danger/primary); card shadows→`--shadow-md`/`--lg`, drawers
+  →`--shadow-xl`; focus rings→`--ring`. White text on gradient/colored chips kept literal `#fff`. Stat-card
+  icon chips kept fixed saturated hues (white glyphs read on both themes).
+- ✅ **Removed the `color-scheme: light` pins** on date/datetime inputs (tasks + reports) so native pickers
+  now follow the active theme (the root sets `color-scheme` per theme). The theme toggle already lived in
+  the org top bar, so no new toggle was needed.
+- ✅ **Verified live in both themes**: toggled dark on the dashboard (hero, stat cards, recent-projects,
+  and the donut "Task status" card all dark), the Tasks page + the **time-tracking drawer** (dark surface,
+  primary-soft tracked-time pill, themed datetime inputs, running/timer cards), and the Reports page
+  (panels, echarts bar chart, tables, date inputs). Toggled back to light — unchanged from before. `ng build`
+  passes (no budget regressions).
+- ⏭️ **Next:** the org portal is feature- and theme-complete; pick a new roadmap bucket (Admin portal,
+  Polish & Hardening, reporting export, or auth leftovers). Member portal stays backend-blocked.
+
+## Current Status (2026-07-25, Phase 9 — Work-log / time-tracking + Org switcher)
+- ✅ **Work-log / time-tracking UI** — a **time-tracking drawer** opened from a new **Time** (clock) button
+  on each Tasks-page row. Wired to `WorkLogController` (`api/worklog`, all raw): `GET /worklog/task/{taskId}`
+  → **WorkLogDto[]** `{ id, taskId, userId, startedAt, endedAt?, durationMinutes, notes?, isRunning }`;
+  `POST /worklog/start {TaskId,Notes?}` → int (409 if a timer already runs — **one per user**);
+  `PUT /worklog/stop {WorkLogId,Notes?}`; `POST /worklog/manual {TaskId,StartedAt,EndedAt,Notes?}` → int;
+  `DELETE /worklog/{id}`. The drawer shows **Total tracked**, a **Start/Stop timer** (green running card with
+  a pulse dot when live), a **manual-entry form** (datetime-local Start/End + notes), and a **history list**
+  (duration, time range, notes, Running badge, delete). Added `API.WorkLog.*` + repo/facade methods and a
+  `WorkLog` model. `afterWorkLogChange` refreshes the open drawer's logs **and the dashboard summary**, so
+  `trackedHours` (previously always empty on reports/dashboard) now populates.
+- ✅ **Client guard for a backend gap:** `POST /worklog/manual` **500s** when the end time is in the future
+  (domain `ArgumentException` "End time cannot be in the future." isn't mapped to 400 — flagged as a separate
+  backend task). The manual form now blocks a future end time client-side (`future` error + `max` on the
+  inputs) so users never hit the 500. (Note the server clock is UTC — a "later today" local time can be
+  future in UTC; use past times when testing.)
+- ✅ **Org switcher** — replaced the hardcoded "Acme Inc." workspace card in the org-layout sidebar with a
+  real card bound to `OrganizationFacade` (`organizations`/`currentOrg`/`selectOrganization`). Shows the
+  current org (initials avatar + name); with **multiple** orgs it becomes a dropdown (chevron) listing all
+  orgs with a check on the active one and switching on select (persists `tf_org_id`, reloads all org data).
+  With a single org it renders as a static card (no chevron). The layout now calls `orgFacade.init()`.
+- ✅ **Verified live end-to-end** (taskId 3): opened Time → started timer (`POST /worklog/start → 200`,
+  green running card) → stopped (`PUT /worklog/stop → 204`) → manual log Jul 24 09:00–11:30
+  (`POST /worklog/manual → 200`, **Total tracked 2h 30m**) → deleted the stray log (`DELETE /worklog/1 →
+  204`) → **dashboard now shows "2.5h tracked"**. Org switcher renders "Northwind Labs". `ng build` passes
+  (tasks-page chunk 30.8 kB / 7.2 kB gz); datetime inputs pinned `color-scheme: light`.
+- ⏭️ **Next (Phase 10):** extend design **tokens** to the org portal so **dark mode** works (broad SCSS
+  sweep — org pages are still light-only hardcoded colors). Member portal stays backend-blocked.
+
+## Current Status (2026-07-25, Phase 8 — Team detail + Subtasks)
+- ✅ **Team detail page** (`team-detail-page`, 5 files) at `/organization/teams/:id` (mirrors
+  `project-detail-page`): header (team icon, name, description, member-count pill, Add-member CTA) + a
+  **member list** (avatar, name, email, joined date, Remove) fed by `GET /team/{id}` → **TeamDetailDto**
+  `{ id, organizationId, name, description, members: TeamMemberDto[] }` (raw). Team cards on the Teams page
+  got an **Open →** link.
+- ✅ **Add/remove team members** — an **Add-member drawer** whose picker is the org **members** list
+  (active only) minus those already on the team (`availableMembers` computed). `POST /team/{teamId}/members/
+  {userId}` (204) / `DELETE /team/{teamId}/members/{userId}` (204). Facade: `teamDetail` signal +
+  `loadTeamDetail`/`clearTeamDetail`/`addTeamMember`/`removeTeamMember` (reloads team detail + teams list).
+- ✅ **Subtasks UI** — a **subtask drawer** opened from a clickable subtask chip on each Tasks-page row.
+  `SubTaskController` (`api/subtask`, raw): `GET /subtask/task/{taskId}` → **SubTaskDto[]**
+  `{ id, taskId, title, status (TaskStatus enum), createdDate, completedDate? }`; `POST {Title,TaskId}` →
+  int; `DELETE /{id}`; `PUT /{id}/complete`; `PUT /{id}/reopen` (all 204). Add / toggle
+  complete⇄reopen (checkbox) / delete, with the row's `completedSubTaskCount/subTaskCount` badge recomputed
+  after each change (facade reloads org tasks + open project tasks). Added `API.SubTask.*` +
+  `getTeam`/team-member/subtask methods to repository, `SubTask`/`TeamDetail`/`TeamMember` to models.
+- ✅ **Verified live end-to-end**: opened Engineering (teamId 2) → added Jane (`POST /team/2/members/2 →
+  204`, header "1 member") → removed her (`DELETE → 204`, back to empty) → re-added. Subtasks on "Build the
+  responsive nav bar" (taskId 3): created (`POST → 200`, badge 0/0→0/1) → completed (`PUT /subtask/1/complete
+  → 204`, badge 1/1, **parent task auto-completed by the backend**) → reopened (`PUT /1/reopen → 204`,
+  badge 0/1, parent back to In progress) → deleted (`DELETE /1 → 204`, empty state). `ng build` passes;
+  responsive at 375px (team header stacks, member rows reflow to stacked cards, drawers full-width).
+- ⏭️ **Next (Phase 9):** work-log / time-tracking UI (`WorkLogController`), org switcher (facade already
+  supports it), then extend design tokens to the org portal (still light-only). Member portal stays
+  backend-blocked (no personal-task create endpoint).
+
 ## Current Status (2026-07-25, Phase 7 — Task assignment + Project detail)
 - ✅ **Task assignment.** Repository `assignTask(taskId,userId)`/`unassignTask(taskId)` →
   `PUT /task/{id}/assign/{userId}` | `/task/{id}/unassign`. Facade actions reload org tasks + summary
@@ -299,14 +415,16 @@
 - ✅ `PublicLayout` (header/navbar/footer partials) + landing page (~400 lines) with pricing/review/feature cards.
 - ⏭️ Possible: pricing page, about/contact, wire "Sign up"/"Log in" CTAs to auth routes.
 
-## Phase 4 — Organization Portal 🟡 (dashboard + projects + tasks wired to live API)
+## Phase 4 — Organization Portal ✅ (feature- and theme-complete)
 - ✅ Dashboard wired to the API dashboard summary via `organization.facade` + `organization.repository`;
   `ProjectHealthChart` is now `input()`-driven and fed real task-status counts. Create-org onboarding.
 - ✅ Projects (list + create) and Tasks (list + create + start/complete lifecycle) pages, registered in
   `ORGANIZATION_ROUTES`. Sidebar nav wired (routerLink/routerLinkActive).
 - ✅ Members + Invitations, Teams, and Roles + Permissions pages built and live-verified (Phase 5).
-- ⬜ Remaining pages: project **detail**, task **assign/unassign** UI, team member add/remove, reports.
-  Org **switcher** UI (facade supports it).
+- ✅ Project **detail** + task **assign/unassign** (Phase 7); **reports** (Phase 6/7); **team detail** +
+  member add/remove and **subtasks** UI (Phase 8); **work-log / time-tracking** + **org switcher** (Phase 9);
+  **dark-mode theming** via design tokens (Phase 10) — all built and live-verified.
+- ✅ Org portal is feature- and theme-complete. Next work moves to other portals/polish (see START HERE).
 - ⬜ Sidebar is inline in the layout (fine); a dedicated sidebar organism is optional.
 
 ## Phase 5 — Member (Individual) Portal ⬜
@@ -322,7 +440,8 @@
 - ✅ Reports page consuming dashboard summary + member/team/project report endpoints; echarts team
   bar chart, member stat tiles, project completion ring + workload table (fed by the org facade).
 - ✅ Date-window (From/To) controls with Week/Month/Year/All presets, reactive via effects.
-- ⬜ Work-log durations UI; richer per-member trend charts; export (CSV/PDF).
+- ✅ Work-log durations UI (Phase 9) — time-tracking drawer feeds `trackedHours` on dashboard/reports.
+- ⬜ Richer per-member trend charts; export (CSV/PDF).
 
 ## Phase 8 — Polish & Hardening ⬜
 - ⬜ Custom `shared/validations/` decorator engine (FluentValidation-style) — folders exist, empty.

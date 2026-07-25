@@ -19,9 +19,12 @@ import {
   OrganizationRoleDetail,
   Project,
   ProjectReport,
+  SubTask,
   TaskListItem,
   Team,
+  TeamDetail,
   TeamPerformanceReport,
+  WorkLog,
 } from './organization.models';
 
 /**
@@ -162,6 +165,69 @@ export class OrganizationRepository {
 
   createTeam(organizationId: number, name: string, description: string): Observable<number> {
     return this.api.post<number>(API.Team.Create, { organizationId, name, description });
+  }
+
+  getTeam(teamId: number): Observable<TeamDetail> {
+    return this.api.get<TeamDetail>(API.Team.GetById(teamId));
+  }
+
+  addTeamMember(teamId: number, userId: number): Observable<void> {
+    return this.api.post<void>(API.Team.AddMember(teamId, userId), {});
+  }
+
+  removeTeamMember(teamId: number, userId: number): Observable<void> {
+    return this.api.delete<void>(API.Team.RemoveMember(teamId, userId));
+  }
+
+  // ── Subtasks ──
+  getSubTasks(taskId: number): Observable<SubTask[]> {
+    return this.api.get<SubTask[]>(API.SubTask.ByTask(taskId));
+  }
+
+  createSubTask(taskId: number, title: string): Observable<number> {
+    return this.api.post<number>(API.SubTask.Create, { title, taskId });
+  }
+
+  updateSubTask(subTaskId: number, title: string): Observable<void> {
+    return this.api.put<void>(API.SubTask.Update, { subTaskId, title });
+  }
+
+  deleteSubTask(subTaskId: number): Observable<void> {
+    return this.api.delete<void>(API.SubTask.Delete(subTaskId));
+  }
+
+  completeSubTask(subTaskId: number): Observable<void> {
+    return this.api.put<void>(API.SubTask.Complete(subTaskId), {});
+  }
+
+  reopenSubTask(subTaskId: number): Observable<void> {
+    return this.api.put<void>(API.SubTask.Reopen(subTaskId), {});
+  }
+
+  // ── Work logs (time tracking) ──
+  getWorkLogs(taskId: number): Observable<WorkLog[]> {
+    return this.api.get<WorkLog[]>(API.WorkLog.ByTask(taskId));
+  }
+
+  startWorkLog(taskId: number, notes: string | null): Observable<number> {
+    return this.api.post<number>(API.WorkLog.Start, { taskId, notes });
+  }
+
+  stopWorkLog(workLogId: number, notes: string | null): Observable<void> {
+    return this.api.put<void>(API.WorkLog.Stop, { workLogId, notes });
+  }
+
+  logManualWork(
+    taskId: number,
+    startedAt: string,
+    endedAt: string,
+    notes: string | null,
+  ): Observable<number> {
+    return this.api.post<number>(API.WorkLog.Manual, { taskId, startedAt, endedAt, notes });
+  }
+
+  deleteWorkLog(workLogId: number): Observable<void> {
+    return this.api.delete<void>(API.WorkLog.Delete(workLogId));
   }
 
   // ── Reporting ──

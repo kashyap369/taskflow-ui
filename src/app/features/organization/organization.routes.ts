@@ -34,6 +34,11 @@ export const ORGANIZATION_ROUTES: Routes = [
     loadComponent: () => import('./teams-page/teams-page').then((m) => m.TeamsPage),
   },
   {
+    path: 'teams/:id',
+    loadComponent: () =>
+      import('./team-detail-page/team-detail-page').then((m) => m.TeamDetailPage),
+  },
+  {
     path: 'roles',
     loadComponent: () => import('./roles-page/roles-page').then((m) => m.RolesPage),
   },
