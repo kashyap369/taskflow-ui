@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, Type } from '@angular/core';
 import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-button',
@@ -9,24 +9,26 @@ import { CommonModule } from '@angular/common';
 })
 export class Button {
 
-  @Input() text: string = 'Button';
+  @Input() text = 'Button';
 
   @Input() variant: 'primary' | 'secondary' | 'danger' | 'ghost' = 'primary';
 
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
 
-  @Input() disabled: boolean = false;
+  @Input() disabled = false;
 
-  @Input() loading: boolean = false;
+  @Input() loading = false;
 
-  @Input() iconLeft?: any;
+  /** A standalone icon component rendered through `ngComponentOutlet`. */
+  @Input() iconLeft?: Type<unknown>;
 
-  @Input() iconRight?: any;
+  @Input() iconRight?: Type<unknown>;
 
-  @Output() click = new EventEmitter<void>();
+  /** Named `buttonClick`, not `click`: an output that shadows a native DOM event fires twice. */
+  @Output() buttonClick = new EventEmitter<void>();
 
   handleClick() {
     if (this.disabled || this.loading) return;
-    this.click.emit();
+    this.buttonClick.emit();
   }
 }

@@ -211,14 +211,17 @@
         <div class="field">
           <label for="title" class="form-label">Title</label>
           <input id="title" type="text" class="form-control" placeholder="Design the landing hero" formControlName="title" />
-          @if (createForm.controls.title.touched && createForm.controls.title.invalid) {
-            <small class="field-msg">A title is required.</small>
+          @if (fieldError('title'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
 
         <div class="field">
           <label for="description" class="form-label">Description <span>(optional)</span></label>
           <textarea id="description" rows="3" class="form-control" placeholder="Add details…" formControlName="description"></textarea>
+          @if (fieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
 
         <div class="field-row">

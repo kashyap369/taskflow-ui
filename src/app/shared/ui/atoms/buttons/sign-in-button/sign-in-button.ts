@@ -9,9 +9,10 @@ import { CommonModule } from '@angular/common';
 })
 export class SignInButton {
 
-  @Output() click = new EventEmitter<void>();
+  /** Named `buttonClick`, not `click`: an output that shadows a native DOM event fires twice. */
+  @Output() buttonClick = new EventEmitter<void>();
 
   onClick() {
-    this.click.emit();
+    this.buttonClick.emit();
   }
 }

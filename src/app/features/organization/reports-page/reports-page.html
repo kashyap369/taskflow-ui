@@ -44,7 +44,14 @@
           }
         </div>
 
-        @if (!hasTeamData()) {
+        @if (reportLoading() && !hasTeamData()) {
+          <div class="report-skeleton" aria-busy="true" aria-label="Loading team performance">
+            <app-skeleton width="100%" height="260px" radius="16px" />
+            @for (row of loadingRows; track row) {
+              <app-skeleton width="100%" height="1.6rem" />
+            }
+          </div>
+        } @else if (!hasTeamData()) {
           <div class="lottie-state">
             <app-lottie-player src="/lottie/empty.json" [width]="140" [height]="120" ariaLabel="No data" />
             <p>No team activity in this window yet.</p>
@@ -93,6 +100,12 @@
           @if (members().length === 0) {
             <p class="hint">No active members yet — invite people from the
               <a routerLink="/organization/members">Members</a> page.</p>
+          } @else if (reportLoading() && selectedMemberId() !== null && !memberReport()) {
+            <div class="tiles" aria-busy="true" aria-label="Loading member report">
+              @for (row of [0, 1, 2, 3, 4, 5]; track row) {
+                <app-skeleton width="100%" height="72px" radius="16px" />
+              }
+            </div>
           } @else if (memberReport(); as r) {
             <div class="tiles">
               <div class="tile"><span class="tv">{{ r.tasksCreated }}</span><span class="tl">Created</span></div>
@@ -120,6 +133,11 @@
           @if (projects().length === 0) {
             <p class="hint">No projects yet — create one from the
               <a routerLink="/organization/projects">Projects</a> page.</p>
+          } @else if (reportLoading() && selectedProjectId() !== null && !projectReport()) {
+            <div class="report-skeleton" aria-busy="true" aria-label="Loading project report">
+              <app-skeleton [circle]="true" width="120px" height="120px" />
+              <app-skeleton width="100%" height="1.6rem" [count]="3" />
+            </div>
           } @else if (projectReport(); as r) {
             <div class="proj-summary">
               <div class="proj-ring" [style.--pct.%]="r.completionPercentage">

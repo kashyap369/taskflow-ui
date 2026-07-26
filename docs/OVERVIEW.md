@@ -53,15 +53,15 @@ A strong dashboard backed by the API's Dapper read side:
 - Time & tracking — durations from start → completion (the API's live timer + manual work logs).
 
 ## Where the Frontend Stands vs This Vision
-**Foundation is complete; feature build-out has just begun.** In short:
-- ✅ **Architecture & tooling** — folder buckets, path aliases, ESLint boundaries, Storybook, SCSS design system, environments, HTTP interceptor pipeline, guards, signal-based auth session.
+**Version 1 is complete (2026-07-26, Phase 22).** Every endpoint the backend exposes is reachable from the UI, and every screen that consumes one is built, themed, accessible and tested. In short:
+- ✅ **Architecture & tooling** — folder buckets, path aliases, ESLint boundaries (zero violations), Storybook, SCSS design system with light/dark tokens, environments, HTTP interceptor pipeline, guards, signal-based auth session.
 - ✅ **Public marketing site** — a substantial landing page renders through the public layout.
-- 🟡 **Design system (component library)** — a growing set of atoms/molecules/organisms exist with Storybook stories; many categories are still empty placeholders.
-- 🟡 **Auth** — **login is wired end-to-end with role-based redirect**: the login form calls the API, stores the session (token + refresh token), fetches the profile for account type, and routes the user to their portal (Admin role → admin, Organization → org, Individual → member). Three login entry screens (solo / organization / admin) share one component. Register, refresh-token rotation, real logout call, and forgot-password are **not** built yet.
-- 🟡 **Organization portal** — a dashboard page renders with charts, but on **static/hardcoded data**; no API wiring.
-- 🟡 **Member & Admin portals** — themed layout shells + placeholder dashboards exist as redirect destinations; real features not built yet.
-- ⬜ **Projects, tasks, teams, members, roles, invitations, work logs, reports** — not yet built as pages/features.
-- ⬜ **Custom validations engine** — `shared/validations/` folders exist but are empty (planned FluentValidation-style decorator engine).
-- ⬜ **Automated tests** beyond the generated "should create" specs.
+- ✅ **Design system** — atoms/molecules/organisms with Storybook stories and the a11y addon set to fail on an axe violation.
+- ✅ **Auth** — register + login wired end-to-end with role-based redirect (Admin → admin, Organization → org, Individual → member); three login entry screens share one component; session rehydration and logout work. **Forgot-password / email-verification screens are backend-blocked** (no endpoints).
+- ✅ **Organization portal** — dashboard, projects, project detail, tasks, subtasks, work-log/time-tracking, teams, team detail, members + invitations, roles + permissions, reports and settings, all on live API data with full create/edit/delete.
+- ✅ **Admin portal** — real dashboard + a Users page with a detail drawer. Organizations overview and platform settings are **backend-blocked**.
+- 🟡 **Member (Individual) portal** — the invitations page is live in both portals; **personal tasks are backend-blocked** (no endpoint creates a task without an organization).
+- ✅ **Custom validations engine** — the FluentValidation-style decorator engine in `shared/validations/` is built and backs **every** reactive form in the app.
+- ✅ **Automated tests** — 164 unit specs (TestBed), covering facades, page filtering/paging, the validation engine and the shared components. No E2E suite yet.
 
-The backend is fully implemented end-to-end; the frontend is the newer of the two projects. See [PHASES.md](PHASES.md) for the phased roadmap and current status, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.
+The backend is fully implemented end-to-end. See **[V1-GAPS.md](V1-GAPS.md)** for exactly what v1 excludes and why, [PHASES.md](PHASES.md) for the phased history and current status, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.

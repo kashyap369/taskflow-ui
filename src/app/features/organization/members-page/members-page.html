@@ -150,7 +150,7 @@
           <p class="muted-empty">No pending invitations.</p>
         } @else {
           <div class="invite-list">
-            @for (inv of pendingInvitations(); track inv.id) {
+            @for (inv of invitePager.items(); track inv.id) {
               <div class="invite-row">
                 <span class="invite-icon"><lucide-angular name="Mail" size="16"></lucide-angular></span>
                 <div class="invite-main">
@@ -164,6 +164,17 @@
               </div>
             }
           </div>
+
+          @if (invitePager.total() > invitePager.pageSize()) {
+            <app-pagination
+              [page]="invitePager.page()"
+              [pageSize]="invitePager.pageSize()"
+              [total]="invitePager.total()"
+              itemLabel="invitations"
+              ariaLabel="Invitations pagination"
+              (pageChange)="invitePager.setPage($event)"
+            />
+          }
         }
       </div>
     }
@@ -183,8 +194,8 @@
         <div class="field">
           <label for="email" class="form-label">Email</label>
           <input id="email" type="email" class="form-control" placeholder="teammate@company.com" formControlName="email" />
-          @if (inviteForm.controls.email.touched && inviteForm.controls.email.invalid) {
-            <small class="field-msg">Enter a valid email address.</small>
+          @if (fieldError('email'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
         <div class="field">
@@ -194,6 +205,9 @@
               <option [value]="role.id">{{ role.name }}</option>
             }
           </select>
+          @if (fieldError('organizationRoleId'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
         <div class="drawer-actions">
           <button type="button" class="btn-ghost" (click)="closeInvite()">Cancel</button>

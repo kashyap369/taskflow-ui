@@ -61,6 +61,8 @@
   background: var(--gradient-brand);
 }
 .member-main { min-width: 0; }
+.sk-lines { display: flex; flex-direction: column; gap: .45rem; }
+.pager-bar { margin-top: 1.5rem; }
 .member-name { font-weight: 600; color: var(--text); }
 .member-email {
   display: inline-flex; align-items: center; gap: .3rem;

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import {
@@ -19,8 +19,10 @@ import {
 } from 'lucide-angular';
 
 import { RevealDirective } from '@shared/directives/reveal.directive';
+import { controlValidators, messageFor } from '@shared/validations';
 import { AuthFacade } from '../auth.facade';
 import { LoginRequest } from '../auth.models';
+import { LoginFormModel } from './login-page.model';
 
 type LoginVariant = 'solo' | 'organization' | 'admin';
 
@@ -107,11 +109,19 @@ export class LoginPage {
   px = signal(0);
   py = signal(0);
 
+  /** Per-control validators derived from `LoginFormModel`'s decorators. */
+  private readonly rules = controlValidators(LoginFormModel);
+
   loginForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
+    email: ['', this.rules['email']],
+    password: ['', this.rules['password']],
     rememberMe: [true],
   });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.loginForm, property);
+  }
 
   // Cross-links to the other login variants
   readonly altLinks = computed(() =>

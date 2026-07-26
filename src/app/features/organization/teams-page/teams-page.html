@@ -23,9 +23,21 @@
         </a>
       </div>
     } @else if (loading() && !hasTeams()) {
-      <div class="lottie-state">
-        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading teams" />
-        <p>Loading teams…</p>
+      <div class="team-grid" aria-busy="true" aria-label="Loading teams">
+        @for (card of loadingCards; track card) {
+          <article class="team-card sk-card">
+            <div class="team-card-top">
+              <app-skeleton [circle]="true" width="40px" height="40px" />
+              <app-skeleton width="60px" height="1.4rem" radius="10px" />
+            </div>
+            <app-skeleton width="65%" height="1.15rem" />
+            <app-skeleton width="100%" height="0.8rem" [count]="2" />
+            <div class="team-foot">
+              <app-skeleton width="90px" height="1.2rem" radius="999px" />
+              <app-skeleton width="60px" height="0.85rem" />
+            </div>
+          </article>
+        }
       </div>
     } @else if (!hasTeams()) {
       <div class="lottie-state">
@@ -37,8 +49,29 @@
         </button>
       </div>
     } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search teams…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search teams"
+          />
+        </div>
+      </div>
+
+      @if (pager.total() === 0) {
+        <div class="list-no-match">
+          <p>No teams match your search.</p>
+          <button type="button" (click)="clearFilters()">Clear filters</button>
+        </div>
+      }
+
       <div class="team-grid">
-        @for (team of teams(); track team.id) {
+        @for (team of pager.items(); track team.id) {
           <article class="team-card">
             <div class="team-card-top">
               <span class="team-icon"><lucide-angular name="Users" size="18"></lucide-angular></span>
@@ -78,6 +111,19 @@
           </article>
         }
       </div>
+
+      <div class="pager-bar">
+        <app-pagination
+          [page]="pager.page()"
+          [pageSize]="pager.pageSize()"
+          [total]="pager.total()"
+          [pageSizes]="pager.pageSizes"
+          itemLabel="teams"
+          ariaLabel="Teams pagination"
+          (pageChange)="pager.setPage($event)"
+          (pageSizeChange)="pager.setPageSize($event)"
+        />
+      </div>
     }
   </div>
 
@@ -95,13 +141,16 @@
         <div class="field">
           <label for="name" class="form-label">Team name</label>
           <input id="name" type="text" class="form-control" placeholder="Design Team" formControlName="name" />
-          @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
-            <small class="field-msg">A team name is required.</small>
+          @if (fieldError('name'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
         <div class="field">
           <label for="description" class="form-label">Description <span>(optional)</span></label>
           <textarea id="description" rows="3" class="form-control" placeholder="What does this team do?" formControlName="description"></textarea>
+          @if (fieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
         <div class="drawer-actions">
           <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>

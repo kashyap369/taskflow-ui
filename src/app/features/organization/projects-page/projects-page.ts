@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -22,6 +22,8 @@ import { DialogDirective } from '@shared/directives/dialog.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
+import { controlValidators, messageFor } from '@shared/validations';
+import { ProjectFormModel } from '../organization.form-models';
 import { Project, ProjectStatus, projectStatusMeta } from '../organization.models';
 import { OrganizationFacade } from '../organization.facade';
 
@@ -108,12 +110,20 @@ export class ProjectsPage {
 
   readonly pager = createPagination(this.filteredProjects, { pageSize: 9, pageSizes: [9, 18, 36] });
 
+  /** Per-control validators derived from `ProjectFormModel`'s decorators. */
+  private readonly rules = controlValidators(ProjectFormModel);
+
   readonly createForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
-    description: ['', [Validators.maxLength(1000)]],
-    startDate: [this.today(), [Validators.required]],
+    title: ['', this.rules['title']],
+    description: ['', this.rules['description']],
+    startDate: [this.today(), this.rules['startDate']],
     expectedCompletionDate: [''],
   });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.createForm, property);
+  }
 
   constructor() {
     this.facade.init();

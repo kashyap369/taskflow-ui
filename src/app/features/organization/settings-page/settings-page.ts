@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -16,7 +16,9 @@ import {
 } from 'lucide-angular';
 
 import { DialogService } from '@core/services/dialog.service';
-import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { controlValidators, messageFor } from '@shared/validations';
+import { OrganizationSettingsFormModel } from '../organization.form-models';
 import { OrganizationFacade } from '../organization.facade';
 import { organizationStatusMeta } from '../organization.models';
 
@@ -27,7 +29,13 @@ import { organizationStatusMeta } from '../organization.models';
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, LottiePlayer],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    Skeleton,
+  ],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',
   providers: [
@@ -64,10 +72,18 @@ export class SettingsPage {
   /** The detail hasn't arrived yet — show the loading state rather than an empty form. */
   readonly loadingDetail = computed(() => !this.needsOrganization() && this.orgDetail() === null);
 
+  /** Per-control validators derived from `OrganizationSettingsFormModel`'s decorators. */
+  private readonly rules = controlValidators(OrganizationSettingsFormModel);
+
   readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(200)]],
-    description: ['', [Validators.maxLength(1000)]],
+    name: ['', this.rules['name']],
+    description: ['', this.rules['description']],
   });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.form, property);
+  }
 
   constructor() {
     this.facade.init();

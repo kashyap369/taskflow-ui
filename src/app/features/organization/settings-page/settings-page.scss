@@ -65,6 +65,8 @@
   align-items: start;
 }
 
+.sk-panel { display: flex; flex-direction: column; gap: .7rem; }
+
 .panel {
   background: var(--surface); border: 1px solid var(--border); border-radius: 22px;
   box-shadow: var(--shadow-md); padding: 1.5rem;

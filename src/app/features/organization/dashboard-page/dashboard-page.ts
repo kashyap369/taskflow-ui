@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -18,17 +18,27 @@ import {
   Users,
 } from 'lucide-angular';
 
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { controlValidators, messageFor } from '@shared/validations';
 import {
   HealthSegment,
   ProjectHealthChart,
 } from '@shared/ui/organisms/project-health-chart/project-health-chart';
+import { OrganizationFormModel } from '../organization.form-models';
 import { projectStatusMeta } from '../organization.models';
 import { OrganizationFacade } from '../organization.facade';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, ProjectHealthChart],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    ProjectHealthChart,
+    Skeleton,
+  ],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.scss',
   providers: [
@@ -70,6 +80,9 @@ export class DashboardPage {
   /** Up to 5 most recent projects for the overview list. */
   readonly recentProjects = computed(() => this.projects().slice(0, 5));
 
+  /** Placeholder tiles/rows rendered before the dashboard summary arrives. */
+  readonly loadingTiles = [0, 1, 2, 3];
+
   /** Real task-status donut fed from the dashboard summary. */
   readonly taskSegments = computed<HealthSegment[]>(() => {
     const s = this.summary();
@@ -83,10 +96,18 @@ export class DashboardPage {
     ];
   });
 
+  /** Per-control validators derived from `OrganizationFormModel`'s decorators. */
+  private readonly rules = controlValidators(OrganizationFormModel);
+
   readonly createOrgForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(150)]],
-    description: ['', [Validators.maxLength(500)]],
+    name: ['', this.rules['name']],
+    description: ['', this.rules['description']],
   });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.createOrgForm, property);
+  }
 
   constructor() {
     this.facade.init();

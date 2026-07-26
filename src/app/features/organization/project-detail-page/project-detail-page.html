@@ -5,9 +5,32 @@
     </a>
 
     @if (loading() && !project()) {
-      <div class="lottie-state">
-        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading project" />
-        <p>Loading project…</p>
+      <div aria-busy="true" aria-label="Loading project">
+        <div class="detail-head sk-head">
+          <div class="head-main sk-lines">
+            <app-skeleton width="45%" height="1.9rem" />
+            <app-skeleton width="80%" height="0.85rem" [count]="2" />
+            <app-skeleton width="200px" height="0.8rem" />
+          </div>
+          <div class="head-progress sk-lines">
+            <app-skeleton width="100%" height="0.85rem" />
+            <app-skeleton width="100%" height="0.6rem" radius="999px" />
+          </div>
+        </div>
+        <div class="task-table">
+          @for (row of loadingRows; track row) {
+            <div class="task-row sk-row">
+              <div class="col-title sk-lines">
+                <app-skeleton width="70%" height="0.95rem" />
+                <app-skeleton width="45%" height="0.75rem" />
+              </div>
+              <span><app-skeleton width="80px" height="1.35rem" radius="999px" /></span>
+              <span><app-skeleton width="70px" height="1.35rem" radius="999px" /></span>
+              <span><app-skeleton width="34px" height="0.85rem" /></span>
+              <span><app-skeleton width="120px" height="1.8rem" radius="10px" /></span>
+            </div>
+          }
+        </div>
       </div>
     } @else if (project(); as p) {
       <!-- Header -->
@@ -77,11 +100,43 @@
           </button>
         </div>
       } @else {
+        <!-- Filters -->
+        <div class="list-toolbar">
+          <div class="list-search">
+            <lucide-angular name="Search" size="16"></lucide-angular>
+            <input
+              type="search"
+              placeholder="Search tasks…"
+              [value]="search()"
+              (input)="onSearch($any($event.target).value)"
+              aria-label="Search tasks"
+            />
+          </div>
+          <select
+            class="list-filter"
+            [value]="statusFilter()"
+            (change)="onStatusFilter($any($event.target).value)"
+            aria-label="Filter by status"
+          >
+            <option value="">All statuses</option>
+            @for (opt of statusOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
+        @if (pager.total() === 0) {
+          <div class="list-no-match">
+            <p>No tasks match your filters.</p>
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        }
+
         <div class="task-table">
           <div class="task-row task-row--head">
             <span>Task</span><span>Status</span><span>Priority</span><span>Subtasks</span><span>Actions</span>
           </div>
-          @for (task of tasks(); track task.id) {
+          @for (task of pager.items(); track task.id) {
             <div class="task-row">
               <div class="col-title">
                 <div class="task-title">{{ task.title }}</div>
@@ -131,6 +186,19 @@
             </div>
           }
         </div>
+
+        <div class="pager-bar">
+          <app-pagination
+            [page]="pager.page()"
+            [pageSize]="pager.pageSize()"
+            [total]="pager.total()"
+            [pageSizes]="pager.pageSizes"
+            itemLabel="tasks"
+            ariaLabel="Project tasks pagination"
+            (pageChange)="pager.setPage($event)"
+            (pageSizeChange)="pager.setPageSize($event)"
+          />
+        </div>
       }
     } @else {
       <div class="lottie-state">
@@ -152,13 +220,16 @@
         <div class="field">
           <label for="title" class="form-label">Title</label>
           <input id="title" type="text" class="form-control" placeholder="Design the landing hero" formControlName="title" />
-          @if (createForm.controls.title.touched && createForm.controls.title.invalid) {
-            <small class="field-msg">A title is required.</small>
+          @if (taskFieldError('title'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
         <div class="field">
           <label for="description" class="form-label">Description <span>(optional)</span></label>
           <textarea id="description" rows="3" class="form-control" placeholder="Add details…" formControlName="description"></textarea>
+          @if (taskFieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
         <div class="field-row">
           <div class="field">
@@ -211,13 +282,16 @@
         <div class="field">
           <label for="p-title" class="form-label">Title</label>
           <input id="p-title" type="text" class="form-control" formControlName="title" />
-          @if (projectForm.controls.title.touched && projectForm.controls.title.invalid) {
-            <small class="field-msg">A title is required.</small>
+          @if (projectFieldError('title'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
         <div class="field">
           <label for="p-description" class="form-label">Description <span>(optional)</span></label>
           <textarea id="p-description" rows="3" class="form-control" formControlName="description"></textarea>
+          @if (projectFieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
         <div class="field">
           <label for="p-target" class="form-label">Target date <span>(optional)</span></label>

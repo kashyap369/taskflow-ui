@@ -48,6 +48,12 @@
   p { color: var(--text-muted); font-size: .9rem; margin: 0 0 1rem;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 }
+.sk-card {
+  display: flex; flex-direction: column; gap: .8rem;
+  .team-foot { padding-top: .9rem; }
+}
+.pager-bar { margin-top: 1.5rem; }
+
 .team-card-top {
   display: flex; align-items: center; justify-content: space-between; gap: .5rem;
 }

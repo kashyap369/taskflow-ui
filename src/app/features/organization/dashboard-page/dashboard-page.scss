@@ -143,6 +143,15 @@
   box-shadow: var(--shadow-lg);
 }
 
+.sk-tile {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+
+  &:hover { transform: none; }
+}
+.sk-lines { display: flex; flex-direction: column; gap: .4rem; }
+
 .icon {
   width: 48px;
   height: 48px;

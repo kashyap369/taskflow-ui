@@ -24,6 +24,14 @@ module.exports = defineConfig([
         { type: "core", pattern: "src/app/core/**/*" },
         { type: "shared", pattern: "src/app/shared/**/*" },
         { type: "layouts", pattern: "src/app/layouts/**/*" },
+        // A feature's *public* surface: its facade and its DTOs. Declared before "features" so it
+        // wins the first-match, which lets a portal shell consume feature state (the org switcher,
+        // the invitation badge, sign-out) without being able to reach a page or a repository.
+        {
+          type: "feature-api",
+          mode: "file",
+          pattern: "src/app/features/*/*.{facade,models,form-models}.ts",
+        },
         { type: "features", pattern: "src/app/features/**/*" },
         { type: "app-root", mode: "file", pattern: "src/app/*" },
       ],
@@ -50,19 +58,27 @@ module.exports = defineConfig([
         },
       ],
       // ── Architectural fitness rule: dependencies point inward only ──
-      // core -> nothing | shared -> core | layouts -> shared,core
+      // core -> nothing | shared -> core | layouts -> shared,core (+ a feature's facade/models)
       // features -> layouts,shared,core | (domain purity handled by convention)
       "boundaries/element-types": [
         "error",
         {
           default: "disallow",
           rules: [
-            { from: ["app-root"], allow: ["app-root", "core", "shared", "layouts", "features"] },
+            {
+              from: ["app-root"],
+              allow: ["app-root", "core", "shared", "layouts", "features", "feature-api"],
+            },
             { from: ["core"], allow: ["core"] },
             { from: ["shared"], allow: ["shared", "core"] },
-            { from: ["layouts"], allow: ["layouts", "shared", "core"] },
+            // A portal shell renders feature state (org switcher, invitation badge, sign-out), so
+            // it may inject a feature's facade — but not its pages, routes or repositories.
+            { from: ["layouts"], allow: ["layouts", "shared", "core", "feature-api"] },
             // features -> features allowed for now; tighten to same-feature-only later.
-            { from: ["features"], allow: ["features", "layouts", "shared", "core"] },
+            {
+              from: ["features", "feature-api"],
+              allow: ["features", "feature-api", "layouts", "shared", "core"],
+            },
           ],
         },
       ],

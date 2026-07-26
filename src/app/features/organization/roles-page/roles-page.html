@@ -23,9 +23,18 @@
         </a>
       </div>
     } @else if (loading() && !hasRoles()) {
-      <div class="lottie-state">
-        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading roles" />
-        <p>Loading roles…</p>
+      <div class="role-grid" aria-busy="true" aria-label="Loading roles">
+        @for (card of loadingCards; track card) {
+          <article class="role-card sk-card">
+            <div class="role-card-top">
+              <app-skeleton [circle]="true" width="40px" height="40px" />
+              <app-skeleton width="60px" height="1.4rem" radius="10px" />
+            </div>
+            <app-skeleton width="55%" height="1.15rem" />
+            <app-skeleton width="100%" height="0.8rem" [count]="2" />
+            <app-skeleton width="150px" height="2.1rem" radius="12px" />
+          </article>
+        }
       </div>
     } @else if (!hasRoles()) {
       <div class="lottie-state">
@@ -37,8 +46,29 @@
         </button>
       </div>
     } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search roles…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search roles"
+          />
+        </div>
+      </div>
+
+      @if (pager.total() === 0) {
+        <div class="list-no-match">
+          <p>No roles match your search.</p>
+          <button type="button" (click)="clearFilters()">Clear filters</button>
+        </div>
+      }
+
       <div class="role-grid">
-        @for (role of roles(); track role.id) {
+        @for (role of pager.items(); track role.id) {
           <article class="role-card">
             <div class="role-card-top">
               <span class="role-icon"><lucide-angular name="ShieldCheck" size="18"></lucide-angular></span>
@@ -74,6 +104,19 @@
           </article>
         }
       </div>
+
+      <div class="pager-bar">
+        <app-pagination
+          [page]="pager.page()"
+          [pageSize]="pager.pageSize()"
+          [total]="pager.total()"
+          [pageSizes]="pager.pageSizes"
+          itemLabel="roles"
+          ariaLabel="Roles pagination"
+          (pageChange)="pager.setPage($event)"
+          (pageSizeChange)="pager.setPageSize($event)"
+        />
+      </div>
     }
   </div>
 
@@ -91,13 +134,16 @@
         <div class="field">
           <label for="name" class="form-label">Role name</label>
           <input id="name" type="text" class="form-control" placeholder="Manager" formControlName="name" />
-          @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
-            <small class="field-msg">A role name is required.</small>
+          @if (fieldError('name'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
         <div class="field">
           <label for="description" class="form-label">Description <span>(optional)</span></label>
           <textarea id="description" rows="3" class="form-control" placeholder="What can this role do?" formControlName="description"></textarea>
+          @if (fieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
         <div class="drawer-actions">
           <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>

@@ -5,9 +5,28 @@
     </a>
 
     @if (loading() && !team()) {
-      <div class="lottie-state">
-        <app-lottie-player src="/lottie/loading-dots.json" [width]="100" [height]="40" ariaLabel="Loading team" />
-        <p>Loading team…</p>
+      <div aria-busy="true" aria-label="Loading team">
+        <div class="detail-head">
+          <div class="head-main sk-lines">
+            <app-skeleton width="240px" height="1.7rem" />
+            <app-skeleton width="70%" height="0.85rem" />
+            <app-skeleton width="90px" height="1.35rem" radius="999px" />
+          </div>
+          <app-skeleton width="140px" height="2.6rem" radius="14px" />
+        </div>
+        <div class="member-list">
+          @for (row of loadingRows; track row) {
+            <div class="member-row">
+              <app-skeleton [circle]="true" width="42px" height="42px" />
+              <div class="member-main sk-lines">
+                <app-skeleton width="45%" height="0.95rem" />
+                <app-skeleton width="60%" height="0.8rem" />
+              </div>
+              <app-skeleton width="130px" height="0.8rem" />
+              <app-skeleton width="96px" height="2rem" radius="10px" />
+            </div>
+          }
+        </div>
       </div>
     } @else if (team(); as t) {
       <!-- Header -->
@@ -57,8 +76,29 @@
           </button>
         </div>
       } @else {
+        <!-- Filters -->
+        <div class="list-toolbar">
+          <div class="list-search">
+            <lucide-angular name="Search" size="16"></lucide-angular>
+            <input
+              type="search"
+              placeholder="Search members…"
+              [value]="search()"
+              (input)="onSearch($any($event.target).value)"
+              aria-label="Search team members"
+            />
+          </div>
+        </div>
+
+        @if (pager.total() === 0) {
+          <div class="list-no-match">
+            <p>No members match your search.</p>
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        }
+
         <div class="member-list">
-          @for (m of t.members; track m.userId) {
+          @for (m of pager.items(); track m.userId) {
             <div class="member-row">
               <span class="avatar">{{ initials(m.fullName) }}</span>
               <div class="member-main">
@@ -73,6 +113,19 @@
               </button>
             </div>
           }
+        </div>
+
+        <div class="pager-bar">
+          <app-pagination
+            [page]="pager.page()"
+            [pageSize]="pager.pageSize()"
+            [total]="pager.total()"
+            [pageSizes]="pager.pageSizes"
+            itemLabel="members"
+            ariaLabel="Team members pagination"
+            (pageChange)="pager.setPage($event)"
+            (pageSizeChange)="pager.setPageSize($event)"
+          />
         </div>
       }
     } @else {
@@ -131,13 +184,16 @@
         <div class="field">
           <label for="team-name" class="form-label">Team name</label>
           <input id="team-name" type="text" class="form-control" formControlName="name" />
-          @if (editForm.controls.name.touched && editForm.controls.name.invalid) {
-            <small class="field-msg">A team name is required.</small>
+          @if (fieldError('name'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
           }
         </div>
         <div class="field">
           <label for="team-description" class="form-label">Description <span>(optional)</span></label>
           <textarea id="team-description" rows="3" class="form-control" formControlName="description"></textarea>
+          @if (fieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
         </div>
         <div class="drawer-actions">
           <button type="button" class="btn-ghost" (click)="closeEdit()">Cancel</button>

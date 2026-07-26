@@ -7,48 +7,37 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (every reachable endpoint is wired; a11y is the biggest bucket left)
+## ▶ NEXT SESSION — START HERE (**v1 is complete** — Phase 22 closed the last polish gaps)
 
-**API coverage: 68 of 71 endpoints are now reachable from the UI.** The remaining 3 are all
-**backend-blocked**, so there is no wiring work left to pick up:
+**Version 1 is done.** Every endpoint the backend exposes is reachable from the UI, every screen that
+consumes one is built, themed, accessible and tested, and the polish backlog is empty:
 
-| Not wired | Why |
+| v1 acceptance | Status |
 |---|---|
-| `GET /task/mine`, `/task/mine/personal`, `GET /worklog/mine` | Personal tasks in the member portal — no endpoint creates a task without an `OrganizationId`, so the portal can't be built. |
+| API coverage | **68 of 71** endpoints wired. The other 3 are the personal-task/work-log "mine" reads — **backend-blocked** (nothing can create the data they'd show). |
+| Lint | **`npx ng lint` passes with zero errors** (was 71 problems at the start of Phase 21). |
+| Build | `ng build` passes. |
+| Unit tests | **164/164 green.** |
+| a11y | Every live template lint-clean; all 42 token contrast pairings meet AA in both themes (`npm run a11y:contrast`). |
+| Loading states | Content-shaped `Skeleton` on every page that loads data. |
+| List pages | `.list-toolbar` + `createPagination` + `<app-pagination>` on every list. |
+| Forms | Every reactive form validates through the `@shared/validations` decorator engine. |
 
-**Pick a roadmap bucket below** (in rough priority order). The a11y pass is **done** (Phase 21) — every
-live template is lint-clean and all 42 token contrast pairings meet AA in both themes.
-
-**Everything below still applies** — the running-the-app notes, the test logins, and the roadmap buckets.
+**→ Read [V1-GAPS.md](V1-GAPS.md) before picking anything up.** It is the single honest list of what v1
+deliberately excludes, split by *why*: backend-blocked (§1), backend defects to fix in the API repo (§2),
+deferred v1.x work (§3), and non-goals (§4). Post-v1 work should start from §3 — CSV/PDF report export is
+the highest-value item, then the calendar page and richer member trend charts.
 
 **No re-explaining needed.** Org portal is feature/theme-complete (Phases 8–10); Admin has a live Users
-page + dashboard (Phase 11); the **`shared/validations/` engine** is built + wired into register (Phase 12);
-**confirm dialogs** gate destructive actions (Phase 13); **loading skeletons** replace the generic loading
-states on the main list pages (Phase 14); an **accessible-drawer directive** (`appDialog`) gives every
-slide-in drawer focus-trap + Escape + `role=dialog` (Phase 15); and **client-side pagination + list
-filtering** ship on the four main list pages via a reusable `Pagination` molecule + `createPagination()`
-helper (Phase 16); **edit + delete** exist for projects, tasks, teams and roles (Phase 17); the
-**invitation flow works from both sides** (Phase 18); an **org settings page** closes the last entity
-CRUD gap (Phase 19); the **admin user-detail drawer + subtask rename** close the last two reachable
-endpoints (Phase 20); and the **a11y pass** is done — lint-clean live templates, AA contrast enforced by
-`npm run a11y:contrast` (Phase 21). Pick one of the remaining roadmap buckets below (in rough priority
-order); follow existing patterns; verify live; update these docs.
-
-### Candidate next buckets
-1. **Polish & Hardening cont.** (roadmap Phase 8) — validation engine ✅, confirm dialogs ✅, skeletons ✅,
-   drawer a11y ✅, pagination/filtering ✅, broader a11y ✅ are done. Remaining: **delete the 8 dead
-   `*-molecule` components** (see Phase 21); adopt the validation engine in the remaining forms (login +
-   the org create-drawers); extend the `Skeleton` atom to the pages still on a text/Lottie loading state
-   (teams, roles, reports, project-detail, team-detail, dashboard); and apply the **list pattern**
-   (`.list-toolbar` + `createPagination` + `<app-pagination>`, see CONVENTIONS) to the remaining lists
-   (teams, roles, project-detail tasks, team-detail members, invitations).
-2. **Reporting extras** (roadmap Phase 7) — CSV/PDF export, richer per-member trend charts.
-3. **Auth leftovers** (roadmap Phase 2) — forgot-password / email-verification screens, surface login
-   errors on the form, decide the Manager-role portal.
-4. **Admin portal extras** — organizations overview + platform settings are **backend-blocked**: only
-   `GET /organization/mine` exists (no list-all-orgs endpoint) and there is no settings endpoint. Needs new
-   backend endpoints before building. The user-**detail** drawer is built (Phase 20) but the API refuses it
-   for an admin — see the `EnsureUserAsync` finding under "Still open / blocked".
+page + dashboard (Phase 11); the **`shared/validations/` engine** is built (Phase 12) and now backs
+**every** form (Phase 22); **confirm dialogs** gate destructive actions (Phase 13); **loading skeletons**
+(Phases 14, 22) cover every data-loading page; an **accessible-drawer directive** (`appDialog`) gives
+every slide-in drawer focus-trap + Escape + `role=dialog` (Phase 15); **client-side pagination + list
+filtering** ship on every list (Phases 16, 22); **edit + delete** exist for projects, tasks, teams and
+roles (Phase 17); the **invitation flow works from both sides** (Phase 18); an **org settings page**
+closes the last entity CRUD gap (Phase 19); the **admin user-detail drawer + subtask rename** close the
+last two reachable endpoints (Phase 20); the **a11y pass** is done (Phase 21); and the **v1 completion
+pass** removed the dead code and made lint clean (Phase 22).
 
 **Before building:** run the API (`https://localhost:7086/api`), dev server on **4200**, accept the
 self-signed cert once at `https://localhost:7086`. Test org = **Northwind Labs (orgId 2)**, owner
@@ -60,6 +49,7 @@ Admin@123** (seeded Individual/Admin → `/admin`, variant `/auth/admin`). See
 email-verify DB step, org-seeds-no-roles).
 
 ### Still open / blocked
+> Now maintained in full in **[V1-GAPS.md](V1-GAPS.md)**. Kept here for continuity:
 - **Backend gap flagged (separate session/repo): `GET /user/{id}` has no Admin bypass.** The query is
   marked `IUserScopedRequest`, so `AccessGuardBehavior` runs `EnsureUserAsync`, which permits only
   **yourself** or someone who **shares an organization** with you. The seeded platform admin belongs to no
@@ -81,6 +71,58 @@ email-verify DB step, org-seeds-no-roles).
   a non-null `OrganizationId`). Don't build it until the backend adds one — flag it, don't fake it.
 
 ---
+
+## Current Status (2026-07-26, Phase 22 — **v1 completion pass**: dead code, skeletons, lists, validation)
+- ✅ **v1 is complete.** This phase closed every item left in the "Polish & Hardening" bucket, so the
+  frontend now matches the API surface end to end. `npx ng lint` **passes with zero errors** (71 → 46 →
+  **0**), `ng build` passes, suite **152 → 164 green** (+12 new, −46 belonging to deleted components).
+- ✅ **Deleted the 9 dead `*-molecule` components** — `task-detail-modal`, `view-project-modal`,
+  `create-project-modal`, `notification-pop-up`, `project-overview`, `deadline`, `recent-activity`,
+  `donut-chart` and `bar-chart` (Phase 21 flagged 8; `bar-chart-molecule` proved equally dead — the
+  reports page uses `ngx-echarts` directly). Each selector *and* class name was grepped first; nothing
+  rendered them. They held **all 27 remaining a11y lint errors**, which is why lint is now clean.
+- ✅ **Skeletons everywhere a page loads data.** Added content-shaped `Skeleton` states to **teams**
+  (6 card skeletons), **roles** (6 cards), **project-detail** (header + 5 table rows), **team-detail**
+  (header + 4 member rows), **settings** (two-panel form shape), the **org dashboard** (4 stat tiles + 4
+  recent-project rows) and **reports** (chart + table block, member tiles, project ring). No page is left
+  on a text or Lottie loading state. Two of these fixed a real lie: the dashboard's recent-projects panel
+  and the reports team panel both showed their **empty state** while still loading, i.e. "No projects
+  yet" on a workspace that has projects.
+- ✅ **The list pattern now covers every list.** Search + `createPagination` + `<app-pagination>` on
+  **teams** (name/description, 9/page), **roles** (name/description, 9/page), **project-detail tasks**
+  (title search + status filter, 10/page), **team-detail members** (name/email, 10/page), and a pager on
+  the **pending-invitations** panel (5/page, shown only when it overflows — the panel is short by nature,
+  so a search box there would be noise).
+- ✅ **Every form now validates through `@shared/validations`.** New
+  `features/organization/organization.form-models.ts` holds one decorated model per *concept* —
+  `OrganizationFormModel`, `OrganizationSettingsFormModel`, `ProjectFormModel`, `TaskFormModel`,
+  `SubTaskFormModel`, `ManualWorkLogFormModel`, `TimerNotesFormModel`, `TeamFormModel`, `RoleFormModel`,
+  `InviteFormModel` — plus `features/auth/login-page/login-page.model.ts`. They live at the **feature**
+  level, not per page, because the task drawer exists on both `tasks-page` and `project-detail-page` and
+  the team drawer on both `teams-page` and `team-detail-page`; one model per concept stops the copies
+  drifting. All inline `Validators.*` are gone from the org portal and login (10 files), and templates
+  render `fieldError('x')` instead of hand-written strings — so a message now lives next to the rule.
+- ⚠️ **A `@MaxLength` message that never showed is a rule that isn't really enforced.** Most drawers
+  validated `maxLength` but only rendered a "required" message, so overrunning the limit silently
+  disabled submit with no explanation. Every field with a rule now has a message slot.
+- ✅ **Lint is clean for the first time** — beyond the deleted molecules: `Button`/`SignInButton` had an
+  `@Output() click`, which **shadows the native DOM event and fires the handler twice**; renamed to
+  `buttonClick` (neither is rendered anywhere, so nothing broke). `Button`'s `any` icon inputs became
+  `Type<unknown>`, and `pagination`'s `let end` became `const`.
+- ✅ **Resolved the 7 `layouts → features` boundary errors properly rather than by suppressing them.**
+  Portal shells legitimately render feature state (the org switcher, the invitation badge, sign-out). A
+  new **`feature-api`** element type in `eslint.config.js` matches only `features/*/*.{facade,models,
+  form-models}.ts` and is declared *before* `features` so it wins first-match — layouts may import a
+  feature's facade and DTOs, but still **cannot** reach a page, a route file or a repository. The fitness
+  function survives; it just states the real rule.
+- ✅ **New `docs/V1-GAPS.md`** — the single honest list of what v1 excludes, grouped by *why*:
+  backend-blocked (§1), backend defects for the API repo (§2), deferred v1.x work (§3), non-goals (§4).
+- ✅ **Verified**: `ng lint` 0 errors, `ng build` passes, **164/164** unit tests (new specs cover teams /
+  roles / project-detail / team-detail filtering, the login model's messages, and that project-detail
+  still fetches the description before an edit). Live on the dev server: the sign-in form renders
+  `"Enter a valid email address."` **from the `@Email` decorator** on a malformed address.
+- ⏭️ **Next:** post-v1 — start from [V1-GAPS.md](V1-GAPS.md) §3. CSV/PDF report export is the
+  highest-value item, then the calendar page and richer member trend charts. §1 and §2 need backend work.
 
 ## Current Status (2026-07-26, Phase 21 — Accessibility pass: contrast, keyboard, semantics)
 - ✅ **Every live template is now a11y-lint clean.** `npx ng lint` went **71 → 46** problems; all 52

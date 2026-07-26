@@ -22,8 +22,8 @@
               placeholder="Acme Inc."
               formControlName="name"
             />
-            @if (createOrgForm.controls.name.touched && createOrgForm.controls.name.invalid) {
-              <small class="field-msg">An organization name is required.</small>
+            @if (fieldError('name'); as msg) {
+              <small class="field-msg">{{ msg }}</small>
             }
           </div>
 
@@ -36,6 +36,9 @@
               placeholder="What does your team do?"
               formControlName="description"
             ></textarea>
+            @if (fieldError('description'); as msg) {
+              <small class="field-msg">{{ msg }}</small>
+            }
           </div>
 
           <button type="submit" class="btn-primary-cta" [disabled]="saving()">
@@ -138,6 +141,21 @@
             </div>
           </div>
         </div>
+      } @else {
+        <div class="row g-4 mt-2" aria-busy="true" aria-label="Loading workspace summary">
+          @for (tile of loadingTiles; track tile) {
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="stats-card sk-tile">
+                <div class="d-flex justify-content-between align-items-start">
+                  <app-skeleton width="44px" height="44px" radius="14px" />
+                  <app-skeleton width="70px" height="0.8rem" />
+                </div>
+                <app-skeleton width="60px" height="1.9rem" />
+                <app-skeleton width="90px" height="0.85rem" />
+              </div>
+            </div>
+          }
+        </div>
       }
 
       <div class="row mt-2 g-4">
@@ -173,6 +191,24 @@
                       <span class="badge" [attr.data-tone]="projectStatusMeta(project.status).tone">
                         {{ projectStatusMeta(project.status).label }}
                       </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else if (loading() && !summary()) {
+              <div class="project-list" aria-busy="true" aria-label="Loading recent projects">
+                @for (row of loadingTiles; track row) {
+                  <div class="project-row">
+                    <div class="project-main">
+                      <app-skeleton width="34px" height="34px" radius="12px" />
+                      <div class="sk-lines">
+                        <app-skeleton width="160px" height="0.95rem" />
+                        <app-skeleton width="90px" height="0.75rem" />
+                      </div>
+                    </div>
+                    <div class="project-end">
+                      <app-skeleton width="120px" height="0.5rem" radius="999px" />
+                      <app-skeleton width="72px" height="1.35rem" radius="999px" />
                     </div>
                   </div>
                 }

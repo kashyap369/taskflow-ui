@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -12,6 +12,7 @@ import {
   LucideIconProvider,
   Pencil,
   Plus,
+  Search,
   ShieldCheck,
   Trash2,
   X,
@@ -20,13 +21,27 @@ import {
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { Pagination } from '@shared/ui/molecules/pagination/pagination';
+import { createPagination } from '@shared/utils/pagination';
+import { controlValidators, messageFor } from '@shared/validations';
+import { RoleFormModel } from '../organization.form-models';
 import { OrganizationRole } from '../organization.models';
 import { OrganizationFacade } from '../organization.facade';
 
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, LottiePlayer, DialogDirective],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    LottiePlayer,
+    DialogDirective,
+    Skeleton,
+    Pagination,
+  ],
   templateUrl: './roles-page.html',
   styleUrl: './roles-page.scss',
   providers: [
@@ -43,6 +58,7 @@ import { OrganizationFacade } from '../organization.facade';
         Building2,
         Pencil,
         Trash2,
+        Search,
       }),
     },
   ],
@@ -67,13 +83,48 @@ export class RolesPage {
 
   readonly hasRoles = computed(() => this.roles().length > 0);
 
-  readonly createForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(100)]],
-    description: ['', [Validators.maxLength(500)]],
+  /** Placeholder cards rendered while roles load. */
+  readonly loadingCards = [0, 1, 2, 3, 4, 5];
+
+  // ── Filters + paging (client-side: the API returns the whole org list) ──
+  readonly search = signal('');
+
+  readonly filteredRoles = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    if (!term) return this.roles();
+    return this.roles().filter(
+      (r) =>
+        r.name.toLowerCase().includes(term) || (r.description ?? '').toLowerCase().includes(term),
+    );
   });
+
+  readonly pager = createPagination(this.filteredRoles, { pageSize: 9, pageSizes: [9, 18, 36] });
+
+  /** Per-control validators derived from `RoleFormModel`'s decorators. */
+  private readonly rules = controlValidators(RoleFormModel);
+
+  readonly createForm = this.fb.nonNullable.group({
+    name: ['', this.rules['name']],
+    description: ['', this.rules['description']],
+  });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.createForm, property);
+  }
 
   constructor() {
     this.facade.init();
+  }
+
+  // ── Filters ──
+
+  onSearch(value: string): void {
+    this.search.set(value);
+  }
+
+  clearFilters(): void {
+    this.search.set('');
   }
 
   openCreate(): void {

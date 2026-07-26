@@ -20,6 +20,7 @@ import {
 } from 'lucide-angular';
 
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { OrganizationFacade } from '../organization.facade';
 
 type Preset = 'week' | 'month' | 'year' | 'all';
@@ -34,6 +35,7 @@ type Preset = 'week' | 'month' | 'year' | 'all';
     LucideAngularModule,
     NgxEchartsDirective,
     LottiePlayer,
+    Skeleton,
   ],
   templateUrl: './reports-page.html',
   styleUrl: './reports-page.scss',
@@ -74,6 +76,9 @@ export class ReportsPage {
   readonly selectedProjectId = signal<number | null>(null);
 
   readonly hasTeamData = computed(() => this.teamReport().length > 0);
+
+  /** Placeholder table rows rendered while a report loads. */
+  readonly loadingRows = [0, 1, 2, 3];
 
   /** Grouped bar: assigned vs completed tasks per team. */
   readonly teamChartOption = computed<EChartsOption>(() => {

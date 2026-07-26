@@ -358,23 +358,28 @@ needs it does it move to `shared/ui`.
 ## 11. Enforced boundaries
 
 `eslint.config.js` uses `eslint-plugin-boundaries`. Each folder is tagged as an element type
-(`core`, `shared`, `layouts`, `features`, `app-root`) and the allowed dependency graph is declared;
-illegal imports **fail `ng lint`**:
+(`core`, `shared`, `layouts`, `feature-api`, `features`, `app-root`) and the allowed dependency graph
+is declared; illegal imports **fail `ng lint`**:
 
 ```
-core       → core
-shared     → shared, core
-layouts    → layouts, shared, core
-features   → features, layouts, shared, core
+core         → core
+shared       → shared, core
+layouts      → layouts, shared, core, feature-api
+feature-api  → features, feature-api, layouts, shared, core
+features     → features, feature-api, layouts, shared, core
 ```
+
+**`feature-api` is a feature's public surface**: `features/*/*.{facade,models,form-models}.ts`. It is
+declared *before* `features` in `boundaries/elements` so it wins the first-match. That is what lets a
+portal shell render feature state — the org switcher, the pending-invitation badge, sign-out — by
+injecting a facade, while still being unable to import a page, a route file or a repository. Widening
+`layouts → features` instead would have deleted the check entirely.
 
 `eslint-import-resolver-typescript` lets the plugin resolve the `@`-aliases.
 
-> The rule currently uses the `boundaries/element-types` name + string selectors (works, emits a v6
-> deprecation notice). It may still reference the **old** layer paths (`presentation/application/
-> data/domain`) from the pre-restructure config — check if lint complains and update the element
-> patterns to the flat layout. Migrating to the v6 `boundaries/dependencies` object schema is a
-> future cleanup.
+> The rule uses the `boundaries/element-types` name + string selectors — it works and lint is clean,
+> but it emits a v6 deprecation notice. Migrating to the v6 `boundaries/dependencies` object schema is
+> a future cleanup (logged in [V1-GAPS.md](V1-GAPS.md) §3).
 
 ---
 

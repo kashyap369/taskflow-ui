@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -38,6 +38,13 @@ import { DialogDirective } from '@shared/directives/dialog.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
+import { controlValidators, messageFor } from '@shared/validations';
+import {
+  ManualWorkLogFormModel,
+  SubTaskFormModel,
+  TaskFormModel,
+  TimerNotesFormModel,
+} from '../organization.form-models';
 import { OrganizationFacade } from '../organization.facade';
 
 interface Option {
@@ -148,14 +155,20 @@ export class TasksPage {
 
   readonly pager = createPagination(this.filteredTasks, { pageSize: 10 });
 
+  /** Per-control validators derived from the decorated form models. */
+  private readonly subTaskRules = controlValidators(SubTaskFormModel);
+  private readonly taskRules = controlValidators(TaskFormModel);
+  private readonly manualRules = controlValidators(ManualWorkLogFormModel);
+  private readonly timerRules = controlValidators(TimerNotesFormModel);
+
   readonly subTaskForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
+    title: ['', this.subTaskRules['title']],
   });
 
   /** The subtask being renamed inline (null = none); its own form so the Add box is unaffected. */
   readonly editingSubTaskId = signal<number | null>(null);
   readonly subTaskEditForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
+    title: ['', this.subTaskRules['title']],
   });
 
   /** The work log currently running on the open task (if any). */
@@ -169,13 +182,13 @@ export class TasksPage {
   );
 
   readonly timerForm = this.fb.nonNullable.group({
-    notes: ['', [Validators.maxLength(1000)]],
+    notes: ['', this.timerRules['notes']],
   });
 
   readonly manualForm = this.fb.nonNullable.group({
-    startedAt: ['', [Validators.required]],
-    endedAt: ['', [Validators.required]],
-    notes: ['', [Validators.maxLength(1000)]],
+    startedAt: ['', this.manualRules['startedAt']],
+    endedAt: ['', this.manualRules['endedAt']],
+    notes: ['', this.manualRules['notes']],
   });
 
   readonly priorityOptions: Option[] = [
@@ -190,13 +203,18 @@ export class TasksPage {
   );
 
   readonly createForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
-    description: ['', [Validators.maxLength(1000)]],
-    priority: [TaskPriority.Medium, [Validators.required]],
-    startDate: [this.today(), [Validators.required]],
+    title: ['', this.taskRules['title']],
+    description: ['', this.taskRules['description']],
+    priority: [TaskPriority.Medium, this.taskRules['priority']],
+    startDate: [this.today(), this.taskRules['startDate']],
     expectedCompletionDate: [''],
     projectId: [''],
   });
+
+  /** Touched-gated message for a field on the create/edit task drawer. */
+  fieldError(property: string): string | null {
+    return messageFor(this.createForm, property);
+  }
 
   constructor() {
     this.facade.init();

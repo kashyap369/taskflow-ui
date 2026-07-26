@@ -37,11 +37,8 @@
                   formControlName="email"
                 />
               </div>
-              @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
-                <small class="field-msg">
-                  @if (loginForm.controls.email.hasError('required')) { Email is required. }
-                  @else if (loginForm.controls.email.hasError('email')) { Enter a valid email address. }
-                </small>
+              @if (fieldError('email'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
               }
             </div>
 
@@ -64,8 +61,8 @@
                   <lucide-angular [name]="showPassword() ? 'EyeOff' : 'Eye'" [size]="16"></lucide-angular>
                 </button>
               </div>
-              @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
-                <small class="field-msg">Password is required.</small>
+              @if (fieldError('password'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
               }
             </div>
 

@@ -60,6 +60,10 @@
   align-items: center; gap: 1rem; padding: 1rem 1.4rem;
   & + .task-row { border-top: 1px solid var(--border); }
 }
+.sk-lines { display: flex; flex-direction: column; gap: .45rem; }
+.sk-head { align-items: flex-start; }
+.pager-bar { margin-top: 1.5rem; }
+
 .task-row--head {
   background: var(--surface-2); font-size: .72rem; font-weight: 700; letter-spacing: .04em;
   text-transform: uppercase; color: var(--text-subtle);

@@ -103,6 +103,26 @@ describe('RolesPage', () => {
     expect(createRole).toHaveBeenCalledWith(2, 'Viewer', '');
   });
 
+  it('filters roles by name or description and clears back to the full list', () => {
+    expect(component.pager.total()).toBe(2);
+
+    component.onSearch('contrib');
+    expect(component.filteredRoles().map((r) => r.id)).toEqual([2]);
+
+    component.onSearch('runs the team');
+    expect(component.filteredRoles().map((r) => r.id)).toEqual([1]);
+
+    component.clearFilters();
+    expect(component.pager.total()).toBe(2);
+  });
+
+  it('reports a validation message from the decorated model', () => {
+    component.openCreate();
+    component.createForm.controls.name.markAsTouched();
+
+    expect(component.fieldError('name')).toBe('A role name is required.');
+  });
+
   it('deletes only after the confirm dialog resolves true', async () => {
     const dialog = TestBed.inject(DialogService);
     const confirmSpy = spyOn(dialog, 'confirmDelete').and.resolveTo(false);

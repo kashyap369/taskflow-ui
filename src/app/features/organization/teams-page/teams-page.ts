@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -10,6 +10,7 @@ import {
   LucideIconProvider,
   Pencil,
   Plus,
+  Search,
   Trash2,
   Users,
   X,
@@ -18,20 +19,43 @@ import {
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { Pagination } from '@shared/ui/molecules/pagination/pagination';
+import { createPagination } from '@shared/utils/pagination';
+import { controlValidators, messageFor } from '@shared/validations';
+import { TeamFormModel } from '../organization.form-models';
 import { Team } from '../organization.models';
 import { OrganizationFacade } from '../organization.facade';
 
 @Component({
   selector: 'app-teams-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, LottiePlayer, DialogDirective],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    LottiePlayer,
+    DialogDirective,
+    Skeleton,
+    Pagination,
+  ],
   templateUrl: './teams-page.html',
   styleUrl: './teams-page.scss',
   providers: [
     {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider({ Plus, X, Users, ArrowRight, Building2, Pencil, Trash2 }),
+      useValue: new LucideIconProvider({
+        Plus,
+        X,
+        Users,
+        ArrowRight,
+        Building2,
+        Pencil,
+        Trash2,
+        Search,
+      }),
     },
   ],
 })
@@ -53,13 +77,48 @@ export class TeamsPage {
 
   readonly hasTeams = computed(() => this.teams().length > 0);
 
-  readonly createForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(100)]],
-    description: ['', [Validators.maxLength(500)]],
+  /** Placeholder cards rendered while teams load. */
+  readonly loadingCards = [0, 1, 2, 3, 4, 5];
+
+  // ── Filters + paging (client-side: the API returns the whole org list) ──
+  readonly search = signal('');
+
+  readonly filteredTeams = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    if (!term) return this.teams();
+    return this.teams().filter(
+      (t) =>
+        t.name.toLowerCase().includes(term) || (t.description ?? '').toLowerCase().includes(term),
+    );
   });
+
+  readonly pager = createPagination(this.filteredTeams, { pageSize: 9, pageSizes: [9, 18, 36] });
+
+  /** Per-control validators derived from `TeamFormModel`'s decorators. */
+  private readonly rules = controlValidators(TeamFormModel);
+
+  readonly createForm = this.fb.nonNullable.group({
+    name: ['', this.rules['name']],
+    description: ['', this.rules['description']],
+  });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.createForm, property);
+  }
 
   constructor() {
     this.facade.init();
+  }
+
+  // ── Filters ──
+
+  onSearch(value: string): void {
+    this.search.set(value);
+  }
+
+  clearFilters(): void {
+    this.search.set('');
   }
 
   openCreate(): void {

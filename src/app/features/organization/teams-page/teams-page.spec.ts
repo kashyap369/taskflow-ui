@@ -106,6 +106,30 @@ describe('TeamsPage', () => {
     expect(component.isEditing()).toBeFalse();
   });
 
+  it('filters teams by name or description, and pages the result', () => {
+    expect(component.pager.total()).toBe(2);
+
+    component.onSearch('design');
+    expect(component.filteredTeams().map((t) => t.id)).toEqual([3]);
+
+    // The description is searched too.
+    component.onSearch('builds the product');
+    expect(component.filteredTeams().map((t) => t.id)).toEqual([2]);
+
+    component.clearFilters();
+    expect(component.pager.total()).toBe(2);
+  });
+
+  it('reports a validation message from the decorated model, not an inline Validator', () => {
+    component.openCreate();
+    component.createForm.controls.name.markAsTouched();
+
+    expect(component.fieldError('name')).toBe('A team name is required.');
+
+    component.createForm.controls.name.setValue('Platform');
+    expect(component.fieldError('name')).toBeNull();
+  });
+
   it('deletes only after the confirm dialog resolves true', async () => {
     const dialog = TestBed.inject(DialogService);
     const confirmSpy = spyOn(dialog, 'confirmDelete').and.resolveTo(false);

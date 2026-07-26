@@ -3,19 +3,50 @@
 > Append-only. 3–5 lines per session. Focus on gotchas, dead ends, and decisions — things git
 > history doesn't capture.
 >
-> **▶ Next session: API wiring is DONE (68 of 71 endpoints; the remaining 3 are backend-blocked personal
-> tasks) and the a11y pass is DONE (Phase 21) — every live template is lint-clean and all 42 token
-> contrast pairings meet AA in both themes. Run `npm run a11y:contrast` after touching any colour token.**
+> **▶ Next session: v1 IS COMPLETE (Phase 22).** 68 of 71 endpoints wired (the other 3 are
+> backend-blocked personal tasks), `ng lint` **passes with zero errors**, `ng build` passes, **164/164**
+> unit tests green, AA contrast enforced by `npm run a11y:contrast` (run it after touching any colour
+> token).
 >
-> The org portal is feature/theme-complete with full CRUD on every entity including the organization
-> itself; the invitation flow works from both sides; Admin has Users + a detail drawer; validation engine,
-> confirm dialogs, skeletons, accessible drawers and list pagination/filtering are all in.
+> Org portal is feature/theme-complete with full CRUD on every entity including the organization itself;
+> the invitation flow works from both sides; Admin has Users + a detail drawer; validation engine,
+> confirm dialogs, skeletons, accessible drawers and list pagination/filtering are in **and now cover
+> every page**.
 >
-> **What's left** is polish: delete the 8 dead `*-molecule` components, extend `Skeleton` + the list
-> pattern to the remaining pages, adopt the validation engine in the login/create-drawer forms, then
-> reporting export and the auth leftovers. See the roadmap buckets in the "▶ NEXT SESSION — START HERE"
-> block at the top of [PHASES.md](PHASES.md). **Two backend authorization findings** are logged there
-> under "Still open / blocked" and need a decision in the API repo.
+> **Read [V1-GAPS.md](V1-GAPS.md) first** — it's the one honest list of what v1 excludes and why
+> (backend-blocked / backend defects / deferred v1.x / non-goals). Post-v1 work starts at its §3; CSV+PDF
+> report export is the highest-value item. **Three backend findings** (org update/delete unauthorized,
+> the worklog 500, remove-vs-deactivate) are in §2 and need a decision in the API repo.
+
+## 2026-07-26 (Phase 22 — v1 completion pass: dead code, skeletons, lists, validation)
+- **Deleting nine dead components was the single highest-leverage change.** They held **all 27 remaining
+  a11y lint errors**, so removing code nobody rendered took lint from 46 problems to **zero** — the first
+  clean lint the project has had. Worth doing before any polish: I nearly spent the a11y budget fixing
+  markup that never reaches a browser. Grep the **selector *and* the class name** before deleting, and
+  check the barrel/stories too; `bar-chart-molecule` turned out dead as well (the reports page uses
+  `ngx-echarts` directly), which the previous session's list of 8 had missed.
+- **Two pages were showing an *empty state while still loading*.** The org dashboard's recent-projects
+  panel and the reports team panel both branch on "no data", and "not fetched yet" is also no data — so a
+  workspace full of projects greeted you with "No projects yet." The fix is ordering: the loading branch
+  must come **before** the empty branch, gated on `loading() && !hasData()`. Worth grepping for any
+  `@if (x().length)` / `@else` pair that has no loading arm.
+- **A `@MaxLength` whose message never renders isn't enforced, it's decorative.** Nearly every drawer
+  validated max length but only printed a *required* message, so overrunning a limit silently disabled
+  the submit button with no explanation on screen. Every rule now has a message slot.
+- **Put the form models at the feature level, not per page.** The task drawer lives on both `tasks-page`
+  and `project-detail-page`, the team drawer on both `teams-page` and `team-detail-page` — per-page
+  `*.model.ts` files would have been two copies free to drift apart. One
+  `organization.form-models.ts` keyed by *concept* (not by page) solves that.
+  `login-page.model.ts` stayed page-local because nothing else signs in.
+- **The `layouts → features` boundary errors were the rule being wrong, not the code.** A portal shell
+  genuinely needs feature state (org switcher, invitation badge, sign-out). Rather than widening
+  `allow: ["features"]` — which would delete the fitness function for layouts — declared a **`feature-api`**
+  element type matching only `features/*/*.{facade,models,form-models}.ts`, listed **before** `features`
+  so it wins first-match. Layouts can now import a facade but still not a page, a route file or a
+  repository. Element order matters in `boundaries/elements`: first match wins.
+- **`@Output() click` shadows the native DOM event and fires the handler twice.** Two library atoms
+  (`Button`, `SignInButton`) had it; neither is rendered anywhere, so it was a latent trap rather than a
+  live bug. Renamed to `buttonClick`.
 
 ## 2026-07-26 (Phase 21 — Accessibility pass: contrast, keyboard, semantics)
 - **The contrast audit was the whole point, and it earned its keep: 9 real failures, all in light mode.**

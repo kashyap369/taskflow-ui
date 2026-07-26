@@ -83,7 +83,7 @@ export class Pagination {
     const window = max - 4;
     const half = Math.floor(window / 2);
     let start = Math.max(2, current - half);
-    let end = Math.min(last - 1, start + window - 1);
+    const end = Math.min(last - 1, start + window - 1);
     start = Math.max(2, end - window + 1);
 
     const result: number[] = [1];

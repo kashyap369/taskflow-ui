@@ -153,11 +153,17 @@ Rules:
 
 - Use **reactive forms** with `FormBuilder.nonNullable.group({...})`.
 - On submit, guard with `if (form.invalid) { form.markAllAsTouched(); return; }` then `form.getRawValue()`.
-- **Validation:** two options —
-  - Angular `Validators` (`Validators.required`, `Validators.email`) for simple, one-off forms.
-  - The **`shared/validations/` decorator engine** (FluentValidation-style) for forms with reusable/
-    cross-field rules — this is the preferred home. Declare a decorated model class, then build the
-    reactive form's validators from it. First consumer: `features/auth/register-page`.
+- **Validation goes through the `shared/validations/` decorator engine — always.** As of Phase 22 there
+  are **no inline `Validators.*` left in the app**; don't reintroduce them. Declare a decorated model
+  class, build the form's validators from it, and render messages with `fieldError(prop)`.
+- **Where the model lives:** page-local `<page>.model.ts` if only that page opens the form
+  (`features/auth/login-page/login-page.model.ts`, `register-page.model.ts`); **feature-level** if more
+  than one page opens it — `features/organization/organization.form-models.ts` holds one model per
+  *concept* (`TaskFormModel`, `TeamFormModel`, …) because the task drawer is on both `tasks-page` and
+  `project-detail-page`, and the team drawer on both `teams-page` and `team-detail-page`. Two copies
+  drift; one doesn't.
+- **Every rule needs a message slot in the template.** A `@MaxLength` whose message is never rendered
+  just disables the submit button with no explanation — which reads as a broken form.
 
 ### `shared/validations` engine (built)
 
@@ -220,6 +226,22 @@ per-page SCSS): `.list-toolbar` wrapper, `.list-search` (icon + `input[type=sear
 (a `<select>`, bound `[value]` so `clearFilters()` resets the control too), and `.list-no-match`
 (the "nothing matched" state + a Clear-filters button). Keep the page's own **empty state** (no rows
 at all) separate from `.list-no-match` (rows exist, filters excluded them).
+
+## Loading states
+
+Every page that fetches data shows a **content-shaped `Skeleton`** (`@shared/ui/atoms/skeletons/
+skeleton/skeleton`) — not a spinner, not a text line. Reuse the real row/card class next to a `.sk-row`
+/ `.sk-card` / `.sk-lines` flex helper so the placeholder occupies the same box as the content, and put
+`aria-busy="true"` + an `aria-label` on the container.
+
+**Order the branches loading → empty → data.** "Not fetched yet" is also "no rows", so an
+`@if (rows().length) {…} @else { empty state }` pair tells a loaded workspace it has nothing:
+
+```html
+@if (loading() && !hasRows()) { <!-- skeletons --> }
+@else if (!hasRows())         { <!-- real empty state --> }
+@else                         { <!-- the list --> }
+```
 
 ## Create / edit drawers, and delete (built)
 

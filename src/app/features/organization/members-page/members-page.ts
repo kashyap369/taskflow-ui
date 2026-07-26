@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -23,6 +23,8 @@ import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-p
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
+import { controlValidators, messageFor } from '@shared/validations';
+import { InviteFormModel } from '../organization.form-models';
 import {
   InvitationStatus,
   OrganizationInvitation,
@@ -111,10 +113,21 @@ export class MembersPage {
 
   readonly pager = createPagination(this.filteredMembers, { pageSize: 10 });
 
+  /** The invitations panel gets its own pager (no filters — it's a short, single-purpose list). */
+  readonly invitePager = createPagination(this.pendingInvitations, { pageSize: 5 });
+
+  /** Per-control validators derived from `InviteFormModel`'s decorators. */
+  private readonly rules = controlValidators(InviteFormModel);
+
   readonly inviteForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    organizationRoleId: [0, [Validators.required, Validators.min(1)]],
+    email: ['', this.rules['email']],
+    organizationRoleId: [0, this.rules['organizationRoleId']],
   });
+
+  /** Touched-gated message for a field, straight from the decorator that failed. */
+  fieldError(property: string): string | null {
+    return messageFor(this.inviteForm, property);
+  }
 
   constructor() {
     this.facade.init();

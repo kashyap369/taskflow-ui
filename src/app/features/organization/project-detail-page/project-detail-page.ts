@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ArrowLeft,
@@ -12,6 +12,7 @@ import {
   Pencil,
   Play,
   Plus,
+  Search,
   Trash2,
   User,
   X,
@@ -20,6 +21,11 @@ import {
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
+import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
+import { Pagination } from '@shared/ui/molecules/pagination/pagination';
+import { createPagination } from '@shared/utils/pagination';
+import { controlValidators, messageFor } from '@shared/validations';
+import { ProjectFormModel, TaskFormModel } from '../organization.form-models';
 import {
   Project,
   TaskListItem,
@@ -34,7 +40,16 @@ import { OrganizationFacade } from '../organization.facade';
 @Component({
   selector: 'app-project-detail-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, LottiePlayer, DialogDirective],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+    LucideAngularModule,
+    LottiePlayer,
+    DialogDirective,
+    Skeleton,
+    Pagination,
+  ],
   templateUrl: './project-detail-page.html',
   styleUrl: './project-detail-page.scss',
   providers: [
@@ -51,6 +66,7 @@ import { OrganizationFacade } from '../organization.facade';
         User,
         Pencil,
         Trash2,
+        Search,
       }),
     },
   ],
@@ -86,6 +102,9 @@ export class ProjectDetailPage {
 
   readonly hasTasks = computed(() => this.tasks().length > 0);
 
+  /** Placeholder rows rendered while the project loads. */
+  readonly loadingRows = [0, 1, 2, 3, 4];
+
   readonly priorityOptions = [
     { value: TaskPriority.Low, label: 'Low' },
     { value: TaskPriority.Medium, label: 'Medium' },
@@ -93,24 +112,77 @@ export class ProjectDetailPage {
     { value: TaskPriority.Critical, label: 'Critical' },
   ];
 
+  // ── Filters + paging over the project's tasks (client-side) ──
+  readonly search = signal('');
+  /** '' = all, otherwise a TaskStatus int. */
+  readonly statusFilter = signal<'' | TaskStatus>('');
+
+  readonly statusOptions: { value: TaskStatus; label: string }[] = [
+    { value: TaskStatus.Todo, label: 'To do' },
+    { value: TaskStatus.InProgress, label: 'In progress' },
+    { value: TaskStatus.Completed, label: 'Completed' },
+    { value: TaskStatus.Blocked, label: 'Blocked' },
+    { value: TaskStatus.Cancelled, label: 'Cancelled' },
+  ];
+
+  readonly filteredTasks = computed(() => {
+    const term = this.search().trim().toLowerCase();
+    const status = this.statusFilter();
+    return this.tasks().filter((t) => {
+      const matchesTerm = !term || t.title.toLowerCase().includes(term);
+      return matchesTerm && (status === '' || t.status === status);
+    });
+  });
+
+  readonly pager = createPagination(this.filteredTasks, { pageSize: 10 });
+
+  /** Per-control validators derived from the decorated form models. */
+  private readonly taskRules = controlValidators(TaskFormModel);
+  private readonly projectRules = controlValidators(ProjectFormModel);
+
   readonly createForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
-    description: ['', [Validators.maxLength(1000)]],
-    priority: [TaskPriority.Medium, [Validators.required]],
-    startDate: [this.today(), [Validators.required]],
+    title: ['', this.taskRules['title']],
+    description: ['', this.taskRules['description']],
+    priority: [TaskPriority.Medium, this.taskRules['priority']],
+    startDate: [this.today(), this.taskRules['startDate']],
     expectedCompletionDate: [''],
   });
 
   readonly projectForm = this.fb.nonNullable.group({
-    title: ['', [Validators.required, Validators.maxLength(200)]],
-    description: ['', [Validators.maxLength(2000)]],
+    title: ['', this.projectRules['title']],
+    description: ['', this.projectRules['description']],
     expectedCompletionDate: [''],
   });
+
+  /** Touched-gated message for a field on the task drawer. */
+  taskFieldError(property: string): string | null {
+    return messageFor(this.createForm, property);
+  }
+
+  /** Touched-gated message for a field on the edit-project drawer. */
+  projectFieldError(property: string): string | null {
+    return messageFor(this.projectForm, property);
+  }
 
   constructor() {
     this.facade.init();
     this.facade.loadProjectDetail(this.projectId);
     this.destroyRef.onDestroy(() => this.facade.clearProjectDetail());
+  }
+
+  // ── Filters ──
+
+  onSearch(value: string): void {
+    this.search.set(value);
+  }
+
+  onStatusFilter(value: string): void {
+    this.statusFilter.set(value === '' ? '' : (Number(value) as TaskStatus));
+  }
+
+  clearFilters(): void {
+    this.search.set('');
+    this.statusFilter.set('');
   }
 
   openCreate(): void {
