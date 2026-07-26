@@ -83,7 +83,7 @@
 
   <!-- Create / edit team drawer -->
   @if (showDrawer()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close team form"></button>
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditing() ? 'Edit team' : 'New team' }}</h2>

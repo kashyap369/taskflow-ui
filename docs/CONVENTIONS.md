@@ -259,8 +259,35 @@ facade's delete takes an optional `onDeleted` callback for exactly that:
 this.facade.deleteProject(p.id, () => this.router.navigate(['/organization/projects']));
 ```
 
+For the rare action that destroys a whole container of other records (deleting an **organization**), use
+`DialogService.confirmTyped(title, text, expectedText, confirmLabel)` instead — the user must type the
+record's name before the confirm button will resolve.
+
 Row/card affordances use the global `.icon-action` (and `.icon-action.danger` for delete) from
 `styles/components/_actions.scss`.
+
+## Accessibility (enforced by lint + a script)
+
+`npx ng lint` runs the `@angular-eslint/template` a11y rules, so these are build-time errors, not advice:
+
+- **If it's clickable, it's a `<button>`.** A `<div (click)>` is invisible to the keyboard —
+  `click-events-have-key-events` + `interactive-supports-focus` will fail. Making it a real button gets
+  Enter/Space, focus order and a focus ring for free instead of bolting on `tabindex` + `keydown`.
+  This applies to whole-row click targets *and* to **drawer backdrops** (`<button class="drawer-backdrop"
+  aria-label="Close …">`); `styles/components/_modal.scss` has the global chrome reset, so a backdrop
+  needs no per-page style beyond its existing appearance rules.
+- **A `<label>` must point at one control.** To name a *group* (a radiogroup, a fieldset-like cluster),
+  use a `<span class="form-label" id="…">` + `aria-labelledby` — `label-has-associated-control` fails
+  otherwise, and a `<label for>` genuinely can't target a group.
+- **Don't claim a role you don't implement.** `role="radiogroup"` obliges you to give the children
+  `role="radio"` + `aria-checked` (not `aria-pressed`, which describes independent toggles), a roving
+  `tabindex` so the group is one Tab stop, and arrow keys that move selection *and* focus. See
+  `register-page` for the worked example. Bind the `keydown` on the radios, not the group — the group
+  isn't focusable, so a handler there would fail `interactive-supports-focus`.
+- **Drawers get `appDialog`** (`shared/directives/dialog.directive.ts`) — focus-trap, Escape, `role=dialog`,
+  focus restore. Never hand-roll it.
+- **Colour**: pull from tokens and run `npm run a11y:contrast` after touching any of them; use
+  `--border-input` (not `--border`) on anything the user types into. See DESIGN.md §3.
 
 ## Routing
 

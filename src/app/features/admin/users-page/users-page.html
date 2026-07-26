@@ -112,7 +112,13 @@
         } @else {
           <div class="user-list">
             @for (u of pager.items(); track trackById($index, u)) {
-              <div class="user-row">
+              <!-- A <button> (not a div) so the row is keyboard-reachable and Enter/Space work. -->
+              <button
+                type="button"
+                class="user-row"
+                (click)="openUser(u)"
+                [attr.aria-label]="'View details for ' + u.fullName"
+              >
                 <div class="user-id">
                   <span class="avatar">{{ initials(u.fullName) }}</span>
                   <div class="who">
@@ -134,7 +140,7 @@
                 </span>
 
                 <span class="user-ref">#{{ u.id }}</span>
-              </div>
+              </button>
             }
           </div>
 
@@ -152,4 +158,113 @@
       </div>
     }
   </div>
+
+  <!-- User detail drawer (`GET /user/{id}` — fields the list DTO doesn't carry) -->
+  @if (selectedUserId() !== null) {
+    <button type="button" class="drawer-backdrop" (click)="closeUser()" aria-label="Close details"></button>
+    <aside class="drawer" appDialog (dismiss)="closeUser()">
+      <div class="drawer-head">
+        <h2>Account details</h2>
+        <button class="icon-btn" (click)="closeUser()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      @if (detailLoading()) {
+        <div class="drawer-body" aria-busy="true" aria-label="Loading account details">
+          <div class="sk-lines">
+            <app-skeleton width="55%" height="1.2rem" />
+            <app-skeleton width="80%" height="0.85rem" />
+            <app-skeleton width="100%" height="3rem" radius="14px" />
+            <app-skeleton width="100%" height="3rem" radius="14px" />
+            <app-skeleton width="100%" height="3rem" radius="14px" />
+          </div>
+        </div>
+      } @else if (selectedUserDenied()) {
+        <div class="drawer-body">
+          <div class="denied">
+            <span class="denied-icon"><lucide-angular name="ShieldOff" size="22"></lucide-angular></span>
+            <h3>The API won't return this account</h3>
+            <p>
+              <code>GET /user/&#123;id&#125;</code> is guarded by <code>EnsureUserAsync</code>, which
+              allows only <strong>yourself</strong> or someone who <strong>shares an organization</strong>
+              with you — there is no Admin bypass. This admin account belongs to no organization, so it
+              can list every account but open none.
+            </p>
+            <p class="denied-note">
+              Needs a backend fix (an Admin short-circuit in the guard) before this drawer is usable
+              from the platform portal.
+            </p>
+          </div>
+        </div>
+      } @else if (selectedUser(); as u) {
+        <div class="drawer-body">
+          <div class="detail-hero">
+            <span class="avatar lg">{{ initials(u.fullName) }}</span>
+            <div class="hero-who">
+              <h3>{{ u.fullName }}</h3>
+              <div class="hero-badges">
+                <span class="badge type" [attr.data-tone]="accountTypeMeta(u.accountType).tone">
+                  <lucide-angular
+                    [name]="u.accountType === 2 ? 'Building2' : 'User'"
+                    size="13"
+                  ></lucide-angular>
+                  {{ accountTypeMeta(u.accountType).label }}
+                </span>
+                <span class="badge" [attr.data-tone]="userStatusMeta(u.status).tone">
+                  {{ userStatusMeta(u.status).label }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <dl class="detail-list">
+            <div class="detail-row">
+              <dt><lucide-angular name="Mail" size="15"></lucide-angular> Email</dt>
+              <dd>{{ u.email }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt><lucide-angular name="Phone" size="15"></lucide-angular> Phone</dt>
+              <dd>{{ u.phoneNumber || '—' }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>
+                <lucide-angular
+                  [name]="u.isEmailVerified ? 'BadgeCheck' : 'ShieldOff'"
+                  size="15"
+                ></lucide-angular>
+                Email verified
+              </dt>
+              <dd [class.muted]="!u.isEmailVerified">
+                {{ u.isEmailVerified ? 'Yes' : 'No' }}
+              </dd>
+            </div>
+            <div class="detail-row">
+              <dt><lucide-angular name="Clock" size="15"></lucide-angular> Last login</dt>
+              <dd [class.muted]="!u.lastLoginAt">
+                {{ u.lastLoginAt ? (u.lastLoginAt | date: 'medium') : 'Never' }}
+              </dd>
+            </div>
+            <div class="detail-row">
+              <dt><lucide-angular name="CalendarDays" size="15"></lucide-angular> Registered</dt>
+              <dd>{{ u.createdAt | date: 'mediumDate' }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>First / last name</dt>
+              <dd>{{ u.firstName }} {{ u.lastName }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>User ID</dt>
+              <dd class="mono">#{{ u.id }}</dd>
+            </div>
+          </dl>
+
+          <p class="drawer-note">
+            Read-only — <code>UserController</code> has no PUT or DELETE, so accounts can't be edited
+            or removed from here.
+          </p>
+        </div>
+      }
+    </aside>
+  }
 </section>

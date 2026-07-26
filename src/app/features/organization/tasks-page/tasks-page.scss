@@ -283,7 +283,7 @@
 .form-control {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-input);
   background: var(--surface);
   color: var(--text);
   padding: .65rem .85rem;
@@ -399,8 +399,25 @@
   cursor: pointer;
   transition: background .15s ease, color .15s ease;
 
+  &:hover { background: var(--border-strong); }
   &.reopen:hover { background: var(--info-soft); color: var(--info); }
   &.danger:hover { background: var(--danger-soft); color: var(--danger); }
+  &.save {
+    background: var(--success-soft);
+    color: var(--success);
+    &:disabled { opacity: .6; cursor: default; }
+  }
+}
+
+/* Inline subtask rename (PUT /subtask) */
+.subtask-item.editing { border-color: var(--primary); padding: .45rem .5rem; }
+.subtask-rename {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  width: 100%;
+
+  .form-control { flex: 1; min-width: 0; padding: .4rem .6rem; font-size: .92rem; }
 }
 
 /* Time-tracking drawer */

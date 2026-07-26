@@ -2,10 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideToastr } from 'ngx-toastr';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideLottieOptions } from 'ngx-lottie';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import { AdminRepository } from '../admin.repository';
-import { AccountType, AdminUser, UserStatus } from '../admin.models';
+import { AccountType, AdminUser, AdminUserDetail, UserStatus } from '../admin.models';
 import { AdminUsersPage } from './users-page';
 
 const USERS: AdminUser[] = [
@@ -20,18 +20,37 @@ const USERS: AdminUser[] = [
   })),
 ];
 
+/** `GET /user/{id}` carries phone / verified / last-login / created-at, which the list DTO lacks. */
+const GRACE_DETAIL: AdminUserDetail = {
+  id: 2,
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  fullName: 'Grace Hopper',
+  email: 'grace@taskflow.com',
+  phoneNumber: '+1 555 0100',
+  status: UserStatus.PendingVerification,
+  accountType: AccountType.Individual,
+  isEmailVerified: false,
+  lastLoginAt: null,
+  createdAt: '2026-07-01T09:00:00Z',
+};
+
+const getUser = jasmine.createSpy('getUser').and.returnValue(of(GRACE_DETAIL));
+
 describe('AdminUsersPage', () => {
   let component: AdminUsersPage;
   let fixture: ComponentFixture<AdminUsersPage>;
 
   beforeEach(async () => {
+    getUser.calls.reset();
+
     await TestBed.configureTestingModule({
       imports: [AdminUsersPage],
       providers: [
         provideToastr(),
         provideAnimations(),
         provideLottieOptions({ player: () => import('lottie-web') }),
-        { provide: AdminRepository, useValue: { getUsers: () => of(USERS) } },
+        { provide: AdminRepository, useValue: { getUsers: () => of(USERS), getUser } },
       ],
     }).compileComponents();
 
@@ -88,5 +107,40 @@ describe('AdminUsersPage', () => {
     component.clearFilters();
 
     expect(component.filteredUsers().length).toBe(14);
+  });
+
+  it('opens the detail drawer by fetching GET /user/{id}, not reusing the row', () => {
+    component.openUser(USERS[1]);
+
+    expect(getUser).toHaveBeenCalledWith(2);
+    expect(component.selectedUserId()).toBe(2);
+    // The phone number exists only on the detail DTO — proof the drawer isn't rendering the row.
+    expect(component.selectedUser()?.phoneNumber).toBe('+1 555 0100');
+    expect(component.detailLoading()).toBeFalse();
+  });
+
+  it('closing the drawer clears both the id and the detail', () => {
+    component.openUser(USERS[1]);
+    component.closeUser();
+
+    expect(component.selectedUserId()).toBeNull();
+    expect(component.selectedUser()).toBeNull();
+  });
+
+  // `EnsureUserAsync` has no Admin bypass, so a refusal is an expected outcome here: the drawer must
+  // stay open and explain itself rather than closing on a bare toast.
+  it('keeps the drawer open and flags a refused detail', () => {
+    getUser.and.returnValue(throwError(() => new Error('Forbidden')));
+
+    component.openUser(USERS[1]);
+
+    expect(component.selectedUserDenied()).toBeTrue();
+    expect(component.selectedUserId()).toBe(2);
+    expect(component.detailLoading()).toBeFalse();
+
+    component.closeUser();
+    expect(component.selectedUserDenied()).toBeFalse();
+
+    getUser.and.returnValue(of(GRACE_DETAIL));
   });
 });

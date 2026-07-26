@@ -10,6 +10,7 @@ import {
   CreateTaskPayload,
   DashboardSummary,
   MemberTaskReport,
+  OrganizationDetail,
   OrganizationInvitation,
   OrganizationListItem,
   OrganizationMember,
@@ -24,6 +25,7 @@ import {
   Team,
   TeamDetail,
   TeamPerformanceReport,
+  UpdateOrganizationPayload,
   UpdateProjectPayload,
   UpdateRolePayload,
   UpdateTaskPayload,
@@ -50,6 +52,7 @@ export class OrganizationFacade {
   // ── State ──
   private readonly _organizations = signal<OrganizationListItem[]>([]);
   private readonly _currentOrg = signal<OrganizationListItem | null>(null);
+  private readonly _orgDetail = signal<OrganizationDetail | null>(null);
   private readonly _summary = signal<DashboardSummary | null>(null);
   private readonly _projects = signal<Project[]>([]);
   private readonly _tasks = signal<TaskListItem[]>([]);
@@ -76,6 +79,7 @@ export class OrganizationFacade {
 
   readonly organizations = this._organizations.asReadonly();
   readonly currentOrg = this._currentOrg.asReadonly();
+  readonly orgDetail = this._orgDetail.asReadonly();
   readonly summary = this._summary.asReadonly();
   readonly projects = this._projects.asReadonly();
   readonly tasks = this._tasks.asReadonly();
@@ -106,6 +110,17 @@ export class OrganizationFacade {
   readonly needsOrganization = computed(() => this._loaded() && this._organizations().length === 0);
 
   readonly currentOrgId = computed(() => this._currentOrg()?.id ?? null);
+
+  /**
+   * True when the signed-in user owns the current organization. Renaming/deleting an organization is
+   * an owner-only affordance in this UI — the API does **not** enforce that (see SESSIONS), so this
+   * is a usability gate, not a security boundary.
+   */
+  readonly isCurrentOrgOwner = computed(() => {
+    const org = this._currentOrg();
+    const user = this.user();
+    return org != null && user != null && org.ownerUserId === user.id;
+  });
 
   /** Resolve the current organization (once) and load its dashboard data. */
   init(): void {
@@ -205,6 +220,84 @@ export class OrganizationFacade {
       },
       error: () => this._saving.set(false),
     });
+  }
+
+  /**
+   * Load an organization's full detail — the settings form's source of truth. `OrganizationListItem`
+   * (what the switcher holds) carries no `description`, so a form filled from it would blank the
+   * description on save; always come through here before editing.
+   */
+  loadOrgDetail(organizationId: number): void {
+    this.repository.getOrganization(organizationId).subscribe({
+      next: (org) => this._orgDetail.set(org),
+    });
+  }
+
+  clearOrgDetail(): void {
+    this._orgDetail.set(null);
+  }
+
+  /** `PUT /organization`. Partial: name + description only — status isn't editable through the API. */
+  updateOrganization(payload: UpdateOrganizationPayload): void {
+    this._saving.set(true);
+    this.repository.updateOrganization(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Organization updated.');
+        this.loadOrgDetail(payload.organizationId);
+        // The name is rendered by the sidebar switcher, which reads the *list* DTO — refresh it too.
+        this.refreshOrganizations();
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  /**
+   * `DELETE /organization/{id}` — removes the organization and everything under it. Resets the
+   * portal's org-scoped state and re-resolves the user's organizations, so the caller lands on
+   * either a remaining workspace or the create-organization onboarding. `onDeleted` fires only on
+   * success, so a failed delete doesn't navigate.
+   */
+  deleteOrganization(organizationId: number, onDeleted?: () => void): void {
+    this.repository.deleteOrganization(organizationId).subscribe({
+      next: () => {
+        this.notification.success('Organization deleted.');
+        localStorage.removeItem(SELECTED_ORG_KEY);
+        this.resetOrgScopedState();
+        this._loaded.set(false);
+        this.loadOrganizations();
+        onDeleted?.();
+      },
+    });
+  }
+
+  /** Re-read `/mine` in place (name changes) without reloading every org-scoped list. */
+  private refreshOrganizations(): void {
+    const currentId = this.currentOrgId();
+    this.repository.getMyOrganizations().subscribe({
+      next: (orgs) => {
+        this._organizations.set(orgs);
+        const current = orgs.find((o) => o.id === currentId);
+        if (current) {
+          this._currentOrg.set(current);
+        }
+      },
+    });
+  }
+
+  /** Drop everything scoped to an organization, so nothing stale survives a delete. */
+  private resetOrgScopedState(): void {
+    this._currentOrg.set(null);
+    this._orgDetail.set(null);
+    this._summary.set(null);
+    this._projects.set([]);
+    this._tasks.set([]);
+    this._roles.set([]);
+    this._members.set([]);
+    this._invitations.set([]);
+    this._teams.set([]);
+    this.clearProjectDetail();
+    this.clearTeamDetail();
   }
 
   createProject(payload: Omit<CreateProjectPayload, 'organizationId'>): void {
@@ -779,6 +872,19 @@ export class OrganizationFacade {
       next: () => {
         this._saving.set(false);
         this.notification.success('Subtask added.');
+        this.afterSubTaskChange(taskId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  /** `PUT /subtask` — title only; the command carries no status (that moves via complete/reopen). */
+  renameSubTask(taskId: number, subTaskId: number, title: string): void {
+    this._saving.set(true);
+    this.repository.updateSubTask(subTaskId, title).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Subtask renamed.');
         this.afterSubTaskChange(taskId);
       },
       error: () => this._saving.set(false),

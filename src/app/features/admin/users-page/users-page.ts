@@ -2,16 +2,24 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
+  BadgeCheck,
+  Building2,
+  CalendarDays,
+  Clock,
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
-  Building2,
+  Mail,
+  Phone,
   RefreshCw,
   Search,
+  ShieldOff,
   User,
   Users,
+  X,
 } from 'lucide-angular';
 
+import { DialogDirective } from '@shared/directives/dialog.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
@@ -29,14 +37,35 @@ import {
 @Component({
   selector: 'app-admin-users-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule, LottiePlayer, Skeleton, Pagination],
+  imports: [
+    CommonModule,
+    FormsModule,
+    LucideAngularModule,
+    LottiePlayer,
+    Skeleton,
+    Pagination,
+    DialogDirective,
+  ],
   templateUrl: './users-page.html',
   styleUrl: './users-page.scss',
   providers: [
     {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider({ Users, User, Building2, Search, RefreshCw }),
+      useValue: new LucideIconProvider({
+        Users,
+        User,
+        Building2,
+        Search,
+        RefreshCw,
+        X,
+        Mail,
+        Phone,
+        BadgeCheck,
+        ShieldOff,
+        Clock,
+        CalendarDays,
+      }),
     },
   ],
 })
@@ -50,6 +79,10 @@ export class AdminUsersPage {
   readonly activeUsers = this.facade.activeUsers;
   readonly pendingUsers = this.facade.pendingUsers;
   readonly organizationAccounts = this.facade.organizationAccounts;
+  readonly selectedUser = this.facade.selectedUser;
+  readonly selectedUserId = this.facade.selectedUserId;
+  readonly detailLoading = this.facade.detailLoading;
+  readonly selectedUserDenied = this.facade.selectedUserDenied;
 
   readonly userStatusMeta = userStatusMeta;
   readonly accountTypeMeta = accountTypeMeta;
@@ -120,6 +153,15 @@ export class AdminUsersPage {
 
   refresh(): void {
     this.facade.refresh();
+  }
+
+  /** Open the detail drawer for a row. The row DTO is short — the drawer needs `GET /user/{id}`. */
+  openUser(user: AdminUser): void {
+    this.facade.selectUser(user.id);
+  }
+
+  closeUser(): void {
+    this.facade.clearSelectedUser();
   }
 
   initials(fullName: string): string {

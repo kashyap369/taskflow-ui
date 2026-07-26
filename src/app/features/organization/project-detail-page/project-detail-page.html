@@ -142,7 +142,7 @@
 
   <!-- Create / edit task drawer -->
   @if (showDrawer()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close task form"></button>
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditingTask() ? 'Edit task' : 'New task' }}</h2>
@@ -199,7 +199,7 @@
 
   <!-- Edit project drawer -->
   @if (showProjectDrawer()) {
-    <div class="drawer-backdrop" (click)="closeProjectDrawer()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeProjectDrawer()" aria-label="Close project form"></button>
     <aside class="drawer" appDialog (dismiss)="closeProjectDrawer()">
       <div class="drawer-head">
         <h2>Edit project</h2>

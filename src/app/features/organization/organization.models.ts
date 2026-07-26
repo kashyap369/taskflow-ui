@@ -56,6 +56,21 @@ export interface OrganizationListItem {
   status: OrganizationStatus;
 }
 
+/**
+ * `GET /organization/{id}` → OrganizationDetailDto. The only shape carrying `description`,
+ * `memberCount` and `createdAt` — `OrganizationListItem` (what the switcher renders) has none of
+ * them, so the settings form must load this before saving or it would blank the description.
+ */
+export interface OrganizationDetail {
+  id: number;
+  name: string;
+  description: string | null;
+  ownerUserId: number;
+  status: OrganizationStatus;
+  memberCount: number;
+  createdAt: string;
+}
+
 /** `GET /report/dashboard/{organizationId}` → DashboardSummaryDto */
 export interface DashboardSummary {
   organizationId: number;
@@ -311,6 +326,13 @@ export interface UpdateTaskPayload {
   expectedCompletionDate: string | null;
 }
 
+/** `PUT /organization` → UpdateOrganizationCommand (name + description only; status isn't editable). */
+export interface UpdateOrganizationPayload {
+  organizationId: number;
+  name: string;
+  description: string;
+}
+
 /** `PUT /team` → UpdateTeamCommand. */
 export interface UpdateTeamPayload {
   teamId: number;
@@ -353,6 +375,16 @@ export const PROJECT_STATUS_META: Record<ProjectStatus, { label: string; tone: T
   [ProjectStatus.Archived]: { label: 'Archived', tone: 'neutral' },
   [ProjectStatus.Cancelled]: { label: 'Cancelled', tone: 'danger' },
 };
+
+export const ORGANIZATION_STATUS_META: Record<OrganizationStatus, { label: string; tone: Tone }> = {
+  [OrganizationStatus.Active]: { label: 'Active', tone: 'success' },
+  [OrganizationStatus.Inactive]: { label: 'Inactive', tone: 'neutral' },
+  [OrganizationStatus.Suspended]: { label: 'Suspended', tone: 'danger' },
+};
+
+export function organizationStatusMeta(status: OrganizationStatus): { label: string; tone: Tone } {
+  return ORGANIZATION_STATUS_META[status] ?? { label: 'Unknown', tone: 'neutral' };
+}
 
 export function taskStatusMeta(status: TaskStatus): { label: string; tone: Tone } {
   return TASK_STATUS_META[status] ?? { label: 'Unknown', tone: 'neutral' };

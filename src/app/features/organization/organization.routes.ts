@@ -55,5 +55,8 @@ export const ORGANIZATION_ROUTES: Routes = [
         (m) => m.MemberInvitationsPage,
       ),
   },
-  // Additional organization pages (settings) are added here.
+  {
+    path: 'settings',
+    loadComponent: () => import('./settings-page/settings-page').then((m) => m.SettingsPage),
+  },
 ];

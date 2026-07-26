@@ -152,6 +152,12 @@ export class TasksPage {
     title: ['', [Validators.required, Validators.maxLength(200)]],
   });
 
+  /** The subtask being renamed inline (null = none); its own form so the Add box is unaffected. */
+  readonly editingSubTaskId = signal<number | null>(null);
+  readonly subTaskEditForm = this.fb.nonNullable.group({
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+  });
+
   /** The work log currently running on the open task (if any). */
   readonly runningLog = computed<WorkLog | null>(
     () => this.workLogs().find((l) => l.isRunning) ?? null,
@@ -324,6 +330,7 @@ export class TasksPage {
 
   closeSubtasks(): void {
     this.activeTask.set(null);
+    this.cancelRenameSubtask();
     this.facade.clearSubTasks();
   }
 
@@ -335,6 +342,27 @@ export class TasksPage {
     }
     this.facade.addSubTask(task.id, this.subTaskForm.getRawValue().title);
     this.subTaskForm.reset({ title: '' });
+  }
+
+  /** Swap a subtask row into inline-edit mode, pre-filled with its current title. */
+  startRenameSubtask(sub: SubTask): void {
+    this.editingSubTaskId.set(sub.id);
+    this.subTaskEditForm.reset({ title: sub.title });
+  }
+
+  cancelRenameSubtask(): void {
+    this.editingSubTaskId.set(null);
+  }
+
+  saveRenameSubtask(): void {
+    const task = this.activeTask();
+    const subTaskId = this.editingSubTaskId();
+    if (!task || subTaskId === null || this.subTaskEditForm.invalid) {
+      this.subTaskEditForm.markAllAsTouched();
+      return;
+    }
+    this.facade.renameSubTask(task.id, subTaskId, this.subTaskEditForm.getRawValue().title);
+    this.cancelRenameSubtask();
   }
 
   toggleSubtask(sub: SubTask): void {

@@ -85,7 +85,7 @@
 
   <!-- Add member drawer -->
   @if (showAdd()) {
-    <div class="drawer-backdrop" (click)="closeAdd()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeAdd()" aria-label="Close add member"></button>
     <aside class="drawer" appDialog (dismiss)="closeAdd()">
       <div class="drawer-head">
         <h2>Add member</h2>
@@ -119,7 +119,7 @@
 
   <!-- Edit team drawer -->
   @if (showEdit()) {
-    <div class="drawer-backdrop" (click)="closeEdit()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeEdit()" aria-label="Close team form"></button>
     <aside class="drawer" appDialog (dismiss)="closeEdit()">
       <div class="drawer-head">
         <h2>Edit team</h2>

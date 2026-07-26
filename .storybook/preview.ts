@@ -11,6 +11,13 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    // `@storybook/addon-a11y` runs axe-core against every story. 'error' makes a violation fail the
+    // story rather than just annotate it, so a new component can't land inaccessible. Colour-contrast
+    // is checked here per-component; the token pairings themselves are covered by
+    // `npm run a11y:contrast`, which axe can't see because it only tests what a story renders.
+    a11y: {
+      test: 'error',
+    },
   },
 };
 

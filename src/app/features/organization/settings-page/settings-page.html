@@ -1,0 +1,177 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head">
+      <h1>Settings</h1>
+      <p>Manage {{ currentOrg()?.name ?? 'your organization' }} — its name, details and lifecycle.</p>
+    </div>
+
+    @if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h3>No organization yet</h3>
+        <p>Create your organization from the dashboard, then come back to manage it here.</p>
+        <a routerLink="/organization/dashboard" class="btn-primary-cta">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else if (loadingDetail()) {
+      <div class="lottie-state" aria-busy="true">
+        <app-lottie-player
+          src="/lottie/loading-dots.json"
+          [width]="100"
+          [height]="40"
+          ariaLabel="Loading organization settings"
+        />
+        <p>Loading settings…</p>
+      </div>
+    } @else if (orgDetail(); as org) {
+      @if (!isOwner()) {
+        <p class="owner-note">
+          <lucide-angular name="Info" size="16"></lucide-angular>
+          Only the organization's owner can rename or delete this workspace.
+        </p>
+      }
+
+      <div class="settings-grid">
+        <!-- General -->
+        <section class="panel">
+          <div class="panel-head">
+            <h2>General</h2>
+            <p>The name and description shown across the workspace.</p>
+          </div>
+
+          <form class="panel-form" [formGroup]="form" (ngSubmit)="save()">
+            <div class="field">
+              <label for="org-name" class="form-label">Organization name</label>
+              <input
+                id="org-name"
+                type="text"
+                class="form-control"
+                placeholder="Northwind Labs"
+                formControlName="name"
+              />
+              @if (form.controls.name.touched && form.controls.name.invalid) {
+                <small class="field-msg">
+                  {{
+                    form.controls.name.hasError('required')
+                      ? 'An organization name is required.'
+                      : 'Name cannot exceed 200 characters.'
+                  }}
+                </small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="org-description" class="form-label">
+                Description <span>(optional)</span>
+              </label>
+              <textarea
+                id="org-description"
+                rows="4"
+                class="form-control"
+                placeholder="What does this organization do?"
+                formControlName="description"
+              ></textarea>
+              @if (form.controls.description.touched && form.controls.description.invalid) {
+                <small class="field-msg">Description cannot exceed 1000 characters.</small>
+              }
+            </div>
+
+            <p class="drawer-note">
+              Status is managed by the platform, not here — the API's update command takes only the
+              name and description.
+            </p>
+
+            @if (isOwner()) {
+              <div class="panel-actions">
+                <button
+                  type="button"
+                  class="btn-ghost"
+                  (click)="reset()"
+                  [disabled]="form.pristine || saving()"
+                >
+                  Discard changes
+                </button>
+                <button
+                  type="submit"
+                  class="btn-primary-cta"
+                  [disabled]="saving() || form.pristine || form.invalid"
+                >
+                  {{ saving() ? 'Saving…' : 'Save changes' }}
+                </button>
+              </div>
+            }
+          </form>
+        </section>
+
+        <!-- Details -->
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Details</h2>
+            <p>Read-only facts about this workspace.</p>
+          </div>
+
+          <dl class="detail-list">
+            <div class="detail-row">
+              <dt>Status</dt>
+              <dd>
+                <span class="badge" [attr.data-tone]="organizationStatusMeta(org.status).tone">
+                  {{ organizationStatusMeta(org.status).label }}
+                </span>
+              </dd>
+            </div>
+            <div class="detail-row">
+              <dt>Members</dt>
+              <dd>
+                <lucide-angular name="Users" size="15"></lucide-angular>
+                {{ org.memberCount }} active
+              </dd>
+            </div>
+            <div class="detail-row">
+              <dt>Created</dt>
+              <dd>
+                <lucide-angular name="CalendarDays" size="15"></lucide-angular>
+                {{ org.createdAt | date: 'mediumDate' }}
+              </dd>
+            </div>
+            <div class="detail-row">
+              <dt>Owner</dt>
+              <dd>{{ isOwner() ? 'You' : 'User #' + org.ownerUserId }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Organization ID</dt>
+              <dd class="mono">#{{ org.id }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <!-- Danger zone (owner only) -->
+      @if (isOwner()) {
+        <section class="panel danger-zone">
+          <div class="panel-head">
+            <h2>
+              <lucide-angular name="ShieldAlert" size="18"></lucide-angular>
+              Danger zone
+            </h2>
+            <p>Irreversible actions. Take care.</p>
+          </div>
+
+          <div class="danger-row">
+            <div class="danger-copy">
+              <h3>Delete this organization</h3>
+              <p>
+                {{ org.name }} and everything inside it — projects, tasks, teams, roles and
+                memberships — are removed permanently.
+              </p>
+            </div>
+            <button type="button" class="btn-danger" (click)="remove()">
+              <lucide-angular name="Trash2" size="16"></lucide-angular>
+              Delete organization
+            </button>
+          </div>
+        </section>
+      }
+    }
+  </div>
+</section>

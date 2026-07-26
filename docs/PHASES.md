@@ -7,16 +7,17 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (invitation flow done; org settings is the last CRUD gap)
+## ▶ NEXT SESSION — START HERE (every reachable endpoint is wired; a11y is the biggest bucket left)
 
-**API coverage: 63 of 71 endpoints are now reachable from the UI.** The remaining 8, and what they'd need:
+**API coverage: 68 of 71 endpoints are now reachable from the UI.** The remaining 3 are all
+**backend-blocked**, so there is no wiring work left to pick up:
 
-| Not wired | What it would take |
+| Not wired | Why |
 |---|---|
-| `PUT /organization`, `DELETE /{id}`, `GET /{id}` | An **org settings** screen (rename / delete the organization) — the last entity without edit/delete. Biggest remaining item. |
-| `GET /user/{id}` | Admin user-detail drawer (repo method `getUser` already exists, unused). |
-| `PUT /subtask` | Rename a subtask (repo method `updateSubTask` exists, unused). |
-| `GET /task/mine`, `/task/mine/personal`, `GET /worklog/mine` | Personal tasks in the member portal — still **backend-blocked** (no endpoint creates a task without an `OrganizationId`). |
+| `GET /task/mine`, `/task/mine/personal`, `GET /worklog/mine` | Personal tasks in the member portal — no endpoint creates a task without an `OrganizationId`, so the portal can't be built. |
+
+**Pick a roadmap bucket below** (in rough priority order). The a11y pass is **done** (Phase 21) — every
+live template is lint-clean and all 42 token contrast pairings meet AA in both themes.
 
 **Everything below still applies** — the running-the-app notes, the test logins, and the roadmap buckets.
 
@@ -26,25 +27,28 @@ page + dashboard (Phase 11); the **`shared/validations/` engine** is built + wir
 states on the main list pages (Phase 14); an **accessible-drawer directive** (`appDialog`) gives every
 slide-in drawer focus-trap + Escape + `role=dialog` (Phase 15); and **client-side pagination + list
 filtering** ship on the four main list pages via a reusable `Pagination` molecule + `createPagination()`
-helper (Phase 16); and **edit + delete** now exist for projects, tasks, teams and roles (Phase 17). Pick one
-of the remaining roadmap buckets below (in rough priority order); follow existing patterns; verify live;
-update these docs.
+helper (Phase 16); **edit + delete** exist for projects, tasks, teams and roles (Phase 17); the
+**invitation flow works from both sides** (Phase 18); an **org settings page** closes the last entity
+CRUD gap (Phase 19); the **admin user-detail drawer + subtask rename** close the last two reachable
+endpoints (Phase 20); and the **a11y pass** is done — lint-clean live templates, AA contrast enforced by
+`npm run a11y:contrast` (Phase 21). Pick one of the remaining roadmap buckets below (in rough priority
+order); follow existing patterns; verify live; update these docs.
 
 ### Candidate next buckets
-0. **Org settings (update/delete organization)** — see the coverage table above.
 1. **Polish & Hardening cont.** (roadmap Phase 8) — validation engine ✅, confirm dialogs ✅, skeletons ✅,
-   drawer a11y ✅, pagination/filtering ✅ are done; the remaining item is a **broader a11y** pass (contrast
-   audit, form-label associations, the Storybook a11y addon). Also: adopt the validation engine in the
-   remaining forms (login + the org create-drawers), extend the `Skeleton` atom to the pages still on a
-   text/Lottie loading state (teams, roles, reports, project-detail, team-detail, dashboard), and apply the
-   **list pattern** (`.list-toolbar` + `createPagination` + `<app-pagination>`, see CONVENTIONS) to the
-   remaining lists (teams, roles, project-detail tasks, team-detail members, invitations).
+   drawer a11y ✅, pagination/filtering ✅, broader a11y ✅ are done. Remaining: **delete the 8 dead
+   `*-molecule` components** (see Phase 21); adopt the validation engine in the remaining forms (login +
+   the org create-drawers); extend the `Skeleton` atom to the pages still on a text/Lottie loading state
+   (teams, roles, reports, project-detail, team-detail, dashboard); and apply the **list pattern**
+   (`.list-toolbar` + `createPagination` + `<app-pagination>`, see CONVENTIONS) to the remaining lists
+   (teams, roles, project-detail tasks, team-detail members, invitations).
 2. **Reporting extras** (roadmap Phase 7) — CSV/PDF export, richer per-member trend charts.
 3. **Auth leftovers** (roadmap Phase 2) — forgot-password / email-verification screens, surface login
    errors on the form, decide the Manager-role portal.
 4. **Admin portal extras** — organizations overview + platform settings are **backend-blocked**: only
    `GET /organization/mine` exists (no list-all-orgs endpoint) and there is no settings endpoint. Needs new
-   backend endpoints before building. User **detail** (`GET /user/{id}`) could be surfaced as a drawer now.
+   backend endpoints before building. The user-**detail** drawer is built (Phase 20) but the API refuses it
+   for an admin — see the `EnsureUserAsync` finding under "Still open / blocked".
 
 **Before building:** run the API (`https://localhost:7086/api`), dev server on **4200**, accept the
 self-signed cert once at `https://localhost:7086`. Test org = **Northwind Labs (orgId 2)**, owner
@@ -56,6 +60,19 @@ Admin@123** (seeded Individual/Admin → `/admin`, variant `/auth/admin`). See
 email-verify DB step, org-seeds-no-roles).
 
 ### Still open / blocked
+- **Backend gap flagged (separate session/repo): `GET /user/{id}` has no Admin bypass.** The query is
+  marked `IUserScopedRequest`, so `AccessGuardBehavior` runs `EnsureUserAsync`, which permits only
+  **yourself** or someone who **shares an organization** with you. The seeded platform admin belongs to no
+  organization, so it can list every account (`GET /user` is AdminOnly) but **open none** — the two
+  authorization models disagree. The admin user-detail drawer is built and works for a permitted caller
+  (verified on the admin's own row); it needs an Admin short-circuit in the guard to be usable across the
+  platform portal.
+- **Backend gap flagged (separate session/repo): no authorization on org update/delete.**
+  `AccessGuardBehavior` only gates requests marked with the read-side scoped interfaces;
+  `UpdateOrganizationCommand`/`DeleteOrganizationCommand` are unmarked and their handlers check only
+  existence — so **any authenticated user can rename or delete any organization by id**. The frontend
+  gates on ownership (usability only, not a security boundary). Needs an ownership check in the handlers
+  or `IOrganizationScopedRequest` on the write side.
 - **Backend gap flagged (separate session/repo):** `POST /worklog/manual` returns a generic **500** when
   domain validation fails (e.g. end time in the future) — domain `ArgumentException` isn't mapped to 400
   in the API middleware. The frontend guards the future-time case client-side; the backend should still
@@ -64,6 +81,137 @@ email-verify DB step, org-seeds-no-roles).
   a non-null `OrganizationId`). Don't build it until the backend adds one — flag it, don't fake it.
 
 ---
+
+## Current Status (2026-07-26, Phase 21 — Accessibility pass: contrast, keyboard, semantics)
+- ✅ **Every live template is now a11y-lint clean.** `npx ng lint` went **71 → 46** problems; all 52
+  a11y errors in shipped code are gone. The 27 that remain are entirely inside **8 dead
+  `*-molecule` components** that nothing renders (see below) — no live page or layout has one.
+- ✅ **Drawer backdrops became labelled `<button>`s** (12 of them, across projects / teams / members /
+  roles ×2 / tasks ×3 / team-detail ×2 / project-detail ×2, plus admin users). A `<div (click)>` backdrop
+  is invisible to the keyboard; each now carries a purpose-specific label ("Close permissions editor",
+  "Close time tracking"). One global reset in `styles/components/_modal.scss` strips the UA button chrome,
+  so no page needed its own rule.
+- ✅ **The register account-type toggle got real radio semantics.** It claimed `role="radiogroup"` but its
+  children were `aria-pressed` buttons — a screen reader announced a radio group containing two
+  independent toggles. Now `role="radio"` + `aria-checked`, a **roving tabindex** (the group is one Tab
+  stop) and **arrow keys that move selection *and* focus** per WAI-ARIA APG. The heading above it stopped
+  being a `<label>` (it names a group, which `<label for>` can't target) and became a span +
+  `aria-labelledby`. Verified live: ArrowRight flipped `aria-checked`, moved focus, and carried the
+  tabindex with it.
+- ✅ **Contrast audit — and it found real failures.** `npm run a11y:contrast`
+  (`scripts/a11y-contrast.mjs`) **parses the actual token values out of `_light.scss` / `_dark.scss`** —
+  it holds no copy of its own — and checks 21 pairings per theme, exiting non-zero on a failure. First
+  run: **9 failures, all in light mode.** Dark was already compliant.
+- ✅ **What failed and what changed** (light theme only; dark was fine and is untouched apart from
+  `--text-subtle`):
+
+  | Token | Was | Now | On `--surface` |
+  |---|---|---|---|
+  | `--warning` | `#f59e0b` | `#96530b` | 2.15 → **5.93** |
+  | `--success` | `#10b981` | `#047857` | 2.54 → **5.48** |
+  | `--info` | `#3b82f6` | `#1d4ed8` | 3.68 → **6.70** |
+  | `--danger` | `#ef4444` | `#c81e1e` | 3.76 → **5.74** |
+  | `--text-subtle` | `#878da0` | `#6b7180` | 3.31 → **4.88** |
+
+  The 500-weight hues simply cannot pass AA as text on white, so **every status badge in the app was
+  failing** (the warning badge sat at 1.93:1). They're used as text in 75 places and as a fill in only 7,
+  all paired with white text — which the darker values *improve*. Dark-mode `--text-subtle` also moved
+  `#6f7488 → #7d8296` (3.94 → 4.79).
+- ✅ **New `--border-input` token** (`#848da0` light / `rgba(255,255,255,.34)` dark, both ≥3:1). WCAG
+  1.4.11 wants 3:1 for a control's boundary, but `--border` is 1.18:1 — correct for a *decorative*
+  divider, wrong for the only thing outlining an input. Splitting it fixed all 11 `.form-control`
+  definitions + the shared `.list-search` / `.list-filter` without darkening every card edge. The stale
+  global `_input.scss` (still on pre-token `$border-light` / `$primary-500` SCSS variables) was rewritten
+  onto tokens at the same time. **All 42 pairings now pass.**
+- ✅ **Storybook a11y** — the addon was already installed and registered; it now runs at
+  `a11y: { test: 'error' }` in `.storybook/preview.ts`, so an axe violation **fails** a story instead of
+  merely annotating it.
+- ⚠️ **8 dead `*-molecule` components found** — `task-detail-modal`, `view-project-modal`,
+  `create-project-modal`, `notification-pop-up`, `project-overview`, `deadline`, `recent-activity`,
+  `donut-chart` (all with the `-molecule` suffix). Grepping each selector *and* class name matches only
+  its own 5 files: nothing renders them. They're pre-restructure scaffold, they violate the naming
+  convention, and they hold **all 27 remaining a11y errors**. Flagged for deletion rather than spending
+  the pass polishing code nobody runs.
+- ✅ **Verified live in both themes**: badges/inputs on the admin users page (computed
+  `--success #047857`, search border `#848da0`), the register radiogroup keyboard behaviour, and a
+  converted drawer backdrop (`BUTTON`, `aria-label="Close team form"`, border `none`) still closing on
+  click with `appDialog`'s `role=dialog` / Escape intact. `ng build` passes; suite **198/198 green**.
+- ⏭️ **Next:** delete the dead molecules (chip raised); extend the `Skeleton` atom + the list pattern to
+  the pages still on text/Lottie loading states (teams, roles, reports, project-detail, team-detail,
+  invitations); adopt `@shared/validations` in the login + org create-drawer forms. Then reporting export
+  (CSV/PDF) and the auth leftovers (forgot-password, surfacing login errors).
+
+## Current Status (2026-07-26, Phase 20 — Admin user-detail drawer + subtask rename)
+- ✅ **Every endpoint the backend actually exposes to the UI is now wired.** Coverage **66/71 → 68/71**;
+  the remaining 3 are the personal-task/work-log "mine" reads, which stay **backend-blocked**.
+- ✅ **Subtask rename (`PUT /subtask`)** — the subtask drawer's rows gained a pencil that swaps the row
+  into **inline edit** (its own `subTaskEditForm`, so the Add box is untouched), with a green save, a
+  cancel, and Escape-to-cancel. New `OrganizationFacade.renameSubTask()` reuses `afterSubTaskChange`, so
+  the list and the row's `n/m` badge refresh together. Closing the drawer cancels a pending rename.
+- ✅ **Admin user-detail drawer (`GET /user/{id}`)** — clicking a row on `/admin/users` opens a drawer
+  (`appDialog`, so focus-trap + Escape come free) with the fields the list DTO doesn't carry: phone,
+  email-verified, last login, registered date, first/last name. `AdminFacade` gained
+  `selectedUser`/`selectedUserId`/`detailLoading` + `selectUser`/`clearSelectedUser`; the loading branch
+  uses the `Skeleton` atom. A `.drawer-note` states it is read-only (`UserController` has no PUT/DELETE).
+- ✅ **Rows became `<button>`s, not `<div>`s** — the whole row is now keyboard-reachable with Enter/Space
+  and a visible `:focus-visible` ring, which is also what the a11y lint rules want. The skeleton
+  placeholder rows keep their original padding via `.user-row.sk-row`.
+- ⚠️ **Backend finding: `GET /user/{id}` refuses the admin.** Clicking another user as
+  **admin@taskflow.com** returned *"You do not have access to this resource."* The query is marked
+  `IUserScopedRequest`, and `EnsureUserAsync` allows only **yourself or someone who shares an
+  organization** with you — there is **no Admin bypass**, so the AdminOnly list and the scoped detail
+  disagree. Rather than paper over it, the drawer now has a **denied state** that names the exact guard
+  and what needs to change; `selectUser`'s error path sets `selectedUserDenied` instead of silently
+  closing. Confirmed the endpoint and the drawer are otherwise correct by opening the **admin's own row**
+  (`GET /user/1 → 200`), which renders every field.
+- ✅ **Verified live**: as the org owner, added a subtask to taskId 3, renamed it inline
+  (`PUT /api/subtask 204`, "Subtask renamed." toast, list reloaded with the new title — the delete
+  confirm then quoted the *renamed* title, proving it persisted), then deleted it to restore seed state.
+  As admin: own row → full drawer; Jane's row → the denied state. Checked in **dark mode**. `ng build`
+  passes; suite **198/198 green** (+7).
+- ⏭️ **Next:** no wiring work remains — move to the **broader a11y pass** (contrast audit, form-label
+  associations, Storybook a11y addon), extend the `Skeleton` atom + the list pattern to the remaining
+  pages (teams, roles, reports, project-detail, team-detail, invitations), and adopt the validation engine
+  in the login + org create-drawer forms. Then reporting export (CSV/PDF) and the auth leftovers.
+
+## Current Status (2026-07-26, Phase 19 — Organization settings: rename + delete)
+- ✅ **The last entity CRUD gap is closed.** New `settings-page` (4 files) at `/organization/settings`,
+  plus `getOrganization`/`updateOrganization`/`deleteOrganization` through repository → facade → UI, and
+  an `OrganizationDetail` DTO + `UpdateOrganizationPayload` + `organizationStatusMeta` in the models.
+  Endpoint coverage **63/71 → 66/71** (`GET /organization/{id}`, `PUT /organization`, `DELETE /{id}`).
+- ✅ **The page has three panels**: **General** (a reactive form for name ≤200 / description ≤1000,
+  mirroring `UpdateOrganizationCommandValidator`, with Save + Discard that stay disabled while pristine),
+  **Details** (read-only status badge, active member count, created date, owner, org id), and a
+  **Danger zone** (owner-only) for delete. A `.drawer-note` explains that status isn't editable — the
+  API's update command takes only name + description.
+- ⚠️ **Same data-loss trap as Phase 17, one level up:** `OrganizationListItem` (`/mine`, what the sidebar
+  switcher holds) carries **no `description`**, but `UpdateOrganizationCommand` requires one — a form
+  filled from the switcher would have blanked every org's description on the first rename. The page loads
+  `GET /organization/{id}` and fills from that instead. Covered by a unit test.
+- ✅ **Reactive to the org switcher.** An `effect()` on `currentOrgId()` reloads the detail, so switching
+  workspaces re-points the whole page. After a save the facade re-fetches the detail **and** `/mine` (the
+  sidebar renders the name from the list DTO, so refreshing only the detail would leave it stale) —
+  `refreshOrganizations()` updates `_currentOrg` in place rather than re-forkJoining all seven org lists.
+- ✅ **New `DialogService.confirmTyped()`** — type-to-confirm (SweetAlert `input` + `preConfirm`) for the
+  one action where a single click was too cheap. The user must type the organization's name; the message
+  names the real consequence from the dashboard summary ("3 project(s), 12 task(s)… will be deleted").
+  Delete resets every org-scoped signal, clears `tf_org_id`, re-resolves `/mine`, and navigates to the
+  dashboard on success only.
+- ✅ **Verified live end-to-end** as the org owner: settings loaded with the **description** populated
+  (proving the detail fetch); renamed to "Northwind Labs Ltd" → `PUT /api/organization 204` → sidebar
+  switcher, page subtitle and danger-zone copy all updated and the **description survived**; renamed back.
+  Then created a throwaway org via the API, **switched to it in the switcher** (page reloaded reactively,
+  showing org #3), hit Delete → typed a wrong name and got "Doesn't match." → typed the right one →
+  `DELETE /api/organization/3 204` → "Organization deleted." toast, navigated to the dashboard, and the
+  portal **fell back to Northwind Labs with its own data reloaded**. Checked in light + dark, and at 375px
+  (single column, no horizontal overflow). No console errors. `ng build` passes; suite **191/191 green**
+  (+7). The non-owner path (disabled form, no danger zone) is unit-tested but not exercised live — it
+  needs a second Organization account that is a member of an org it doesn't own.
+- ⚠️ **Backend finding: org update/delete are unauthorized** — see "Still open / blocked" above. Any
+  authenticated user can rename or delete any organization by id.
+- ⏭️ **Next:** admin user-detail drawer (`GET /user/{id}`), subtask rename (`PUT /subtask`); then the
+  broader a11y pass and extending skeletons / the list pattern to the remaining pages. Personal tasks
+  stay backend-blocked.
 
 ## Current Status (2026-07-26, Phase 18 — Invitation accept/reject (the invitee's side))
 - ✅ **The invitee's half of the invitation flow is built.** New `features/member/` slice —
@@ -676,8 +824,9 @@ email-verify DB step, org-seeds-no-roles).
   member add/remove and **subtasks** UI (Phase 8); **work-log / time-tracking** + **org switcher** (Phase 9);
   **dark-mode theming** via design tokens (Phase 10) — all built and live-verified.
 - ✅ **Edit + delete** for projects, tasks, teams and roles (Phase 17) — create/edit share one drawer per
-  page; detail pages carry header Edit/Delete; every delete is confirm-gated. Org update/delete is the
-  only entity CRUD still missing (needs an org-settings screen).
+  page; detail pages carry header Edit/Delete; every delete is confirm-gated.
+- ✅ **Org settings** (Phase 19) — rename + type-to-confirm delete, closing the last entity CRUD gap.
+  Every entity in the portal now has full create/read/update/delete.
 - ✅ Org portal is feature- and theme-complete. Next work moves to other portals/polish (see START HERE).
 - ⬜ Sidebar is inline in the layout (fine); a dedicated sidebar organism is optional.
 
@@ -694,8 +843,11 @@ email-verify DB step, org-seeds-no-roles).
 - ✅ `AdminLayout` shell (now with Dashboard/Users nav); `/admin` branch guarded with `roleGuard('Admin')`.
 - ✅ **User list** page (`GET /user`, AdminOnly) with search + status/account-type filters + stat tiles;
   real dashboard fed from the derived user counts. Feature slice: `admin.models/repository/facade`.
+- ✅ **User detail drawer** (`GET /user/{id}`, Phase 20) — built and rendering, but the API refuses it for
+  an admin (`EnsureUserAsync` has no Admin bypass), so it shows a state naming the guard. Backend fix
+  needed; **no frontend work left** on it.
 - ⬜ Organizations overview + platform settings — **backend-blocked** (no list-all-orgs or settings
-  endpoint; only `GET /organization/mine`). User detail (`GET /user/{id}`) drawer is buildable now.
+  endpoint; only `GET /organization/mine`).
 
 ## Phase 7 — Reporting & Dashboard (headline feature) 🟡 (reports page done)
 - ✅ Reports page consuming dashboard summary + member/team/project report endpoints; echarts team
@@ -720,7 +872,11 @@ email-verify DB step, org-seeds-no-roles).
 - ⬜ Adopt the validation engine in the remaining forms (login + org create-drawers).
 - ✅ **Drawer a11y** — `DialogDirective` (`appDialog`) gives all 10 slide-in drawers focus-trap, Escape,
   focus-restore, and `role=dialog`/`aria-modal`/`aria-labelledby`. See Phase 15.
-- ⬜ Broader a11y pass (contrast audit, form-label associations, Storybook a11y addon).
+- ✅ **Broader a11y pass** (Phase 21) — every live template is a11y-lint clean (drawer backdrops and row
+  click-targets are real `<button>`s; the register account-type toggle has proper radiogroup semantics);
+  `npm run a11y:contrast` parses the theme partials and holds all 42 token pairings to AA in both themes;
+  the Storybook a11y addon now fails a story on an axe violation. See Phase 21 status.
+- ⬜ Delete the 8 dead `*-molecule` components — unused scaffold holding the last 27 a11y lint errors.
 - ✅ **Pagination/filtering for list views** — `createPagination()` (`@shared/utils/pagination`) + the
   `Pagination` molecule + the global `.list-toolbar` styles, on the admin-users / tasks / projects /
   members pages. Client-side until the API pages. See Phase 16 status and CONVENTIONS "List pages".

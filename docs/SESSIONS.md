@@ -3,11 +3,105 @@
 > Append-only. 3–5 lines per session. Focus on gotchas, dead ends, and decisions — things git
 > history doesn't capture.
 >
-> **▶ Next session: the org portal is feature/theme-complete with full edit + delete; the invitation flow
-> now works from both sides; Admin has Users + dashboard; validation engine, confirm dialogs, skeletons,
-> accessible drawers and list pagination/filtering are all in. **63 of the API's 71 endpoints are wired.**
-> The last entity without edit/delete is the **organization itself** (needs a settings screen). See the
-> coverage table in the "▶ NEXT SESSION — START HERE" block at the top of [PHASES.md](PHASES.md).**
+> **▶ Next session: API wiring is DONE (68 of 71 endpoints; the remaining 3 are backend-blocked personal
+> tasks) and the a11y pass is DONE (Phase 21) — every live template is lint-clean and all 42 token
+> contrast pairings meet AA in both themes. Run `npm run a11y:contrast` after touching any colour token.**
+>
+> The org portal is feature/theme-complete with full CRUD on every entity including the organization
+> itself; the invitation flow works from both sides; Admin has Users + a detail drawer; validation engine,
+> confirm dialogs, skeletons, accessible drawers and list pagination/filtering are all in.
+>
+> **What's left** is polish: delete the 8 dead `*-molecule` components, extend `Skeleton` + the list
+> pattern to the remaining pages, adopt the validation engine in the login/create-drawer forms, then
+> reporting export and the auth leftovers. See the roadmap buckets in the "▶ NEXT SESSION — START HERE"
+> block at the top of [PHASES.md](PHASES.md). **Two backend authorization findings** are logged there
+> under "Still open / blocked" and need a decision in the API repo.
+
+## 2026-07-26 (Phase 21 — Accessibility pass: contrast, keyboard, semantics)
+- **The contrast audit was the whole point, and it earned its keep: 9 real failures, all in light mode.**
+  The status tokens were on the 500-weight palette (`#10b981` / `#f59e0b` / `#ef4444` / `#3b82f6`), which
+  tops out at 2.1–3.8:1 as text on white — so **every status badge in the app failed AA**, the warning
+  badge worst at **1.93:1**. Nobody would have caught that by eye; the badges *look* fine. Darkened all
+  four plus `--text-subtle`. Dark mode was already compliant (bright hues on near-black) and is untouched
+  bar `--text-subtle`.
+- Checked before changing: the status tokens are used as **text in 75 places and as a fill in only 7**,
+  and all 7 fills pair with `#fff` text — which darker values *improve*. That's what made a single-token
+  darkening safe instead of needing to split into `--x` (fill) + `--x-text` (label) pairs. A split would
+  also have been fragile: any usage I missed would silently stay inaccessible, whereas one accessible
+  token can't be got wrong.
+- **The audit script parses `_light.scss` / `_dark.scss` rather than carrying its own copy of the
+  values.** A script with hardcoded tokens is a lie waiting to happen — it passes forever while the real
+  theme drifts. `npm run a11y:contrast` exits non-zero, so it can go in CI.
+- **`--border` was doing two incompatible jobs.** It outlined both decorative dividers *and* form
+  controls at 1.18:1. WCAG 1.4.11's 3:1 applies to a control's boundary (it's the only thing identifying
+  the control) but not to a separator, so darkening one token would have made every card edge heavy.
+  Split out `--border-input` instead — 11 `.form-control` blocks + the shared toolbar controls now use it,
+  card edges are unchanged.
+- **`role="radiogroup"` with `aria-pressed` children is a lie.** The register account-type toggle
+  announced a radio group containing two independent toggle buttons. Fixed to `role="radio"` +
+  `aria-checked` + roving tabindex + arrow keys (APG). Lesson: don't claim a role you haven't implemented
+  the keyboard contract for — the un-roled version was *more* honest than the half-roled one. Note the
+  `keydown` binds on the radios, not the group: the group isn't focusable, so a handler there fails
+  `interactive-supports-focus`.
+- Converted 12 drawer backdrops from `<div (click)>` to labelled `<button>`s, with one global chrome
+  reset in `_modal.scss` so no page needed its own rule. Same trick as the Phase 20 user rows — reaching
+  for a real button beats bolting `tabindex` + `keydown` onto a div every time.
+- ⚠️ **Found 8 dead `*-molecule` components** (pre-restructure scaffold, wrong naming convention,
+  referenced only by their own 5 files). They hold **all 27 remaining a11y lint errors**. Flagged for
+  deletion rather than spending the a11y pass fixing code nobody renders — polishing dead code would have
+  made the lint number look good while changing nothing a user experiences. **198/198 green.**
+
+## 2026-07-26 (Phase 20 — Admin user-detail drawer + subtask rename)
+- Closed the last two *reachable* endpoints. Coverage **66/71 → 68/71**; the remaining 3 are the
+  personal-task "mine" reads, which have no create-side endpoint, so **there is no wiring work left**.
+- ⚠️ **The finding of the session: `GET /user/{id}` refuses a platform admin.** Clicking a row as
+  `admin@taskflow.com` returned *"You do not have access to this resource."* The query is marked
+  `IUserScopedRequest`, so `AccessGuardBehavior` runs `EnsureUserAsync` — which allows only **yourself or
+  someone who shares an organization with you**, with **no Admin bypass**. So `GET /user` (AdminOnly)
+  hands the admin a list of accounts it is then forbidden to open: the two authorization models disagree.
+- **How that was handled matters more than the bug.** The first cut let the error interceptor's toast
+  fire and closed the drawer, which reads as "the feature is broken". Instead the facade now
+  distinguishes *refused* from *loading*, and the drawer holds open with a state naming the exact guard
+  and the fix it needs. Confirmed the drawer itself is correct by opening the **admin's own row**
+  (`EnsureUserAsync` returns early for self) → `GET /user/1 → 200` and every field rendered. Worth
+  remembering: when an endpoint is wired correctly but the API's authorization makes it unusable, say so
+  in the UI rather than hiding it — a silent toast would have looked like a frontend defect forever.
+- Turned the user rows from `<div>` into `<button>`. A clickable div is invisible to the keyboard, and
+  the a11y lint rules (`click-events-have-key-events`, `interactive-supports-focus`) exist for exactly
+  this; making it a real button gets Enter/Space and a focus ring for free instead of bolting on
+  `tabindex` + `keydown` handlers.
+- Subtask rename is **inline** with its own form group rather than reusing the Add box — sharing one
+  control would have meant the Add field mysteriously filling with an existing title. Closing the drawer
+  cancels a pending rename, otherwise reopening it would land mid-edit on a stale subtask id.
+
+## 2026-07-26 (Phase 19 — Organization settings: rename + delete)
+- Closed the last entity CRUD gap. Coverage **63/71 → 66/71** (`PUT /organization`,
+  `DELETE /organization/{id}`, `GET /organization/{id}`).
+- **The same list-DTO-vs-update-command trap as Phase 17, one level up.** `OrganizationListItem`
+  (`/mine`, what the sidebar switcher holds) carries **no `description`**, but `UpdateOrganizationCommand`
+  requires one — a form filled from the switcher would have silently blanked every org's description on
+  the first rename. Only `GET /organization/{id}` → `OrganizationDetailDto` has it, so the page loads the
+  detail and fills from that. Worth treating as a rule now: **always diff the list DTO against the update
+  command before writing an edit form.**
+- After a rename the page re-fetches the detail *and* `/mine` — the name is rendered by the sidebar
+  switcher, which reads the list DTO, so refreshing only the detail would have left a stale name on screen.
+  `refreshOrganizations()` re-points `_currentOrg` in place rather than calling `loadOrganizations()`, which
+  would have re-forkJoined all seven org-scoped lists for a name change.
+- **New `DialogService.confirmTyped()`** (SweetAlert `input` + `preConfirm`) — deleting an organization
+  takes its projects, tasks, teams, roles and memberships with it, and a one-click `confirmDelete` felt
+  far too cheap for that. The user must type the org's name; the message names the real counts pulled
+  from the dashboard summary.
+- Delete resets every org-scoped signal before re-resolving `/mine`, so the portal lands on either a
+  remaining workspace or the create-organization onboarding with no stale data. Verified exactly that:
+  created a throwaway org via the API, switched to it in the switcher (the settings page reloaded
+  reactively — the `currentOrgId` effect), deleted it, and the portal fell back to Northwind Labs with
+  its own data reloaded.
+- ⚠️ **Backend finding — no authorization on org update/delete.** `AccessGuardBehavior` only gates
+  requests marked with the read-side scoped interfaces; `UpdateOrganizationCommand` and
+  `DeleteOrganizationCommand` are unmarked and their handlers check only that the org exists. So **any
+  authenticated user can rename or delete any organization by id**. The frontend gates the form and the
+  danger zone on ownership, but that is a usability gate, not a security boundary — the backend needs an
+  ownership check (or `IOrganizationScopedRequest` extended to the write side). **191/191 green.**
 
 ## 2026-07-26 (Phase 18 — Invitation accept/reject: the invitee's side)
 - **The design call that mattered:** the roadmap said "a my-invitations screen on the member portal", but

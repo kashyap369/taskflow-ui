@@ -79,7 +79,7 @@
 
   <!-- Create / edit role drawer -->
   @if (showDrawer()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close role form"></button>
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditing() ? 'Edit role' : 'New role' }}</h2>
@@ -115,7 +115,7 @@
 
   <!-- Manage permissions drawer -->
   @if (selectedRole(); as role) {
-    <div class="drawer-backdrop" (click)="closeManage()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeManage()" aria-label="Close permissions editor"></button>
     <aside class="drawer" appDialog (dismiss)="closeManage()">
       <div class="drawer-head">
         <div>

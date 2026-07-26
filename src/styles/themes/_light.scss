@@ -27,20 +27,28 @@
   --elevated: #ffffff;
   --border: #e9ecf2;
   --border-strong: #d7dbe4;
+  // Form-control boundary. `--border` is decorative (dividers, card edges) and sits at 1.18:1, but an
+  // input's outline is the only thing identifying the control, so WCAG 1.4.11 wants 3:1 — this token
+  // carries that. 3.33:1 on --surface, 3.14:1 on --bg.
+  --border-input: #848da0;
 
   // ---- Text ----
   --text: #0f1222;
   --text-muted: #5b6172;
-  --text-subtle: #878da0;
+  --text-subtle: #6b7180; // was #878da0 (3.31:1) — now 4.88:1 on --surface, 4.60:1 on --bg
 
   // ---- Status + soft tints ----
-  --success: #10b981;
+  // The 500-weight hues these started on (#10b981 / #f59e0b / #ef4444 / #3b82f6) top out around
+  // 2–3.8:1 as text on white, so every badge and status label failed AA. Darkened to clear 4.5:1 on
+  // --surface, --bg *and* their own soft tint; the 7 places they act as a fill pair with white text,
+  // which these values only improve. Dark theme already passed and is unchanged.
+  --success: #047857; // 5.48:1 on --surface (was 2.54:1)
   --success-soft: rgba(16, 185, 129, 0.12);
-  --warning: #f59e0b;
+  --warning: #96530b; // 5.93:1 on --surface (was 2.15:1)
   --warning-soft: rgba(245, 158, 11, 0.14);
-  --danger: #ef4444;
+  --danger: #c81e1e; // 5.74:1 on --surface (was 3.76:1)
   --danger-soft: rgba(239, 68, 68, 0.12);
-  --info: #3b82f6;
+  --info: #1d4ed8; // 6.70:1 on --surface (was 3.68:1)
   --info-soft: rgba(59, 130, 246, 0.12);
 
   // ---- Gradients & atmosphere ----

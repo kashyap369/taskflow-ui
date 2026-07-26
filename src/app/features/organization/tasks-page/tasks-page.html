@@ -198,7 +198,7 @@
 
   <!-- Create / edit task drawer -->
   @if (showDrawer()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close task form"></button>
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditing() ? 'Edit task' : 'New task' }}</h2>
@@ -280,7 +280,7 @@
 
   <!-- Subtasks drawer -->
   @if (activeTask(); as at) {
-    <div class="drawer-backdrop" (click)="closeSubtasks()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeSubtasks()" aria-label="Close subtasks"></button>
     <aside class="drawer" appDialog (dismiss)="closeSubtasks()">
       <div class="drawer-head">
         <div class="drawer-title">
@@ -304,23 +304,47 @@
       } @else {
         <ul class="subtask-list">
           @for (sub of subTasks(); track sub.id) {
-            <li class="subtask-item" [class.done]="isDone(sub)">
-              <button class="check" (click)="toggleSubtask(sub)"
-                [attr.aria-label]="isDone(sub) ? 'Reopen subtask' : 'Complete subtask'">
-                @if (isDone(sub)) {
-                  <lucide-angular name="Check" size="14"></lucide-angular>
-                }
-              </button>
-              <span class="subtask-title">{{ sub.title }}</span>
-              @if (isDone(sub)) {
-                <button class="mini-btn reopen" (click)="toggleSubtask(sub)" aria-label="Reopen">
-                  <lucide-angular name="RotateCcw" size="14"></lucide-angular>
+            @if (editingSubTaskId() === sub.id) {
+              <li class="subtask-item editing">
+                <form class="subtask-rename" [formGroup]="subTaskEditForm" (ngSubmit)="saveRenameSubtask()">
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="title"
+                    aria-label="Subtask title"
+                    (keydown.escape)="cancelRenameSubtask()"
+                  />
+                  <button type="submit" class="mini-btn save" [disabled]="saving()" aria-label="Save subtask title">
+                    <lucide-angular name="Check" size="14"></lucide-angular>
+                  </button>
+                  <button type="button" class="mini-btn" (click)="cancelRenameSubtask()" aria-label="Cancel rename">
+                    <lucide-angular name="X" size="14"></lucide-angular>
+                  </button>
+                </form>
+              </li>
+            } @else {
+              <li class="subtask-item" [class.done]="isDone(sub)">
+                <button class="check" (click)="toggleSubtask(sub)"
+                  [attr.aria-label]="isDone(sub) ? 'Reopen subtask' : 'Complete subtask'">
+                  @if (isDone(sub)) {
+                    <lucide-angular name="Check" size="14"></lucide-angular>
+                  }
                 </button>
-              }
-              <button class="mini-btn danger" (click)="deleteSubtask(sub)" aria-label="Delete subtask">
-                <lucide-angular name="Trash2" size="14"></lucide-angular>
-              </button>
-            </li>
+                <span class="subtask-title">{{ sub.title }}</span>
+                @if (isDone(sub)) {
+                  <button class="mini-btn reopen" (click)="toggleSubtask(sub)" aria-label="Reopen">
+                    <lucide-angular name="RotateCcw" size="14"></lucide-angular>
+                  </button>
+                }
+                <button class="mini-btn" (click)="startRenameSubtask(sub)"
+                  [attr.aria-label]="'Rename ' + sub.title">
+                  <lucide-angular name="Pencil" size="14"></lucide-angular>
+                </button>
+                <button class="mini-btn danger" (click)="deleteSubtask(sub)" aria-label="Delete subtask">
+                  <lucide-angular name="Trash2" size="14"></lucide-angular>
+                </button>
+              </li>
+            }
           }
         </ul>
       }
@@ -329,7 +353,7 @@
 
   <!-- Time-tracking drawer -->
   @if (timeTask(); as tt) {
-    <div class="drawer-backdrop" (click)="closeTime()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeTime()" aria-label="Close time tracking"></button>
     <aside class="drawer" appDialog (dismiss)="closeTime()">
       <div class="drawer-head">
         <div class="drawer-title">

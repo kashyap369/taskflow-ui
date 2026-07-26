@@ -1,17 +1,22 @@
-@import '../abstracts/colors' ;
-@import '../abstracts/radius' ;
+@import '../abstracts/radius';
 
+// Form controls use the semantic tokens (not the raw `$border-light` / `$primary-500` palette these
+// once referenced), so they follow the active theme. The boundary comes from `--border-input`, which
+// is the one border token held to WCAG 1.4.11's 3:1 — an input's outline is the only thing that
+// identifies the control, unlike a decorative divider. See docs/DESIGN.md.
 .form-control,
 .form-select {
   border-radius: $radius-lg;
-  border: 1px solid $border-light;
+  border: 1px solid var(--border-input);
+  background: var(--surface);
+  color: var(--text);
   min-height: 48px;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: $primary-500;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, .15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 textarea.form-control {

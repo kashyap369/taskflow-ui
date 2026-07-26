@@ -28,14 +28,22 @@
           <form class="register-form" [formGroup]="registerForm" (ngSubmit)="register()">
             <!-- Account type toggle -->
             <div class="field" appReveal [revealDelay]="160">
-              <label class="form-label">I'm signing up as</label>
-              <div class="account-toggle" role="radiogroup" aria-label="Account type">
+              <!-- Not a <label>: this names a radiogroup, not a single form control, so it's a plain
+                   span wired up with aria-labelledby (a <label for> can't target a group). -->
+              <span class="form-label" id="account-type-label">I'm signing up as</span>
+              <!-- Real radio semantics: role="radio" + aria-checked (not aria-pressed, which would
+                   announce two independent toggles inside a group), with a roving tabindex so the
+                   group is one Tab stop and the arrow keys move between the options. -->
+              <div class="account-toggle" role="radiogroup" aria-labelledby="account-type-label">
                 <button
                   type="button"
+                  role="radio"
                   class="toggle-option"
                   [class.active]="!isOrganization()"
-                  [attr.aria-pressed]="!isOrganization()"
+                  [attr.aria-checked]="!isOrganization()"
+                  [attr.tabindex]="!isOrganization() ? 0 : -1"
                   (click)="selectAccountType(AccountType.Individual)"
+                  (keydown)="onAccountTypeKeydown($event)"
                 >
                   <lucide-angular name="User" [size]="18"></lucide-angular>
                   <span class="opt-title">Individual</span>
@@ -43,10 +51,13 @@
                 </button>
                 <button
                   type="button"
+                  role="radio"
                   class="toggle-option"
                   [class.active]="isOrganization()"
-                  [attr.aria-pressed]="isOrganization()"
+                  [attr.aria-checked]="isOrganization()"
+                  [attr.tabindex]="isOrganization() ? 0 : -1"
                   (click)="selectAccountType(AccountType.Organization)"
+                  (keydown)="onAccountTypeKeydown($event)"
                 >
                   <lucide-angular name="Building2" [size]="18"></lucide-angular>
                   <span class="opt-title">Organization</span>

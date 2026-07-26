@@ -171,7 +171,7 @@
 
   <!-- Invite drawer -->
   @if (showInvite()) {
-    <div class="drawer-backdrop" (click)="closeInvite()"></div>
+    <button type="button" class="drawer-backdrop" (click)="closeInvite()" aria-label="Close invite form"></button>
     <aside class="drawer" appDialog (dismiss)="closeInvite()">
       <div class="drawer-head">
         <h2>Invite member</h2>

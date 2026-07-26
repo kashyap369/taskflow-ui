@@ -94,6 +94,39 @@ export class DialogService {
     return result.isConfirmed;
   }
 
+  /**
+   * Type-to-confirm for the irreversible actions where a single click is too cheap (deleting a whole
+   * organization). The confirm button stays inert until the user types `expected` exactly; returns
+   * `true` only then.
+   */
+  async confirmTyped(
+    title: string,
+    text: string,
+    expected: string,
+    confirmText = 'Delete',
+  ): Promise<boolean> {
+    const result = await Swal.fire({
+      ...this.themed(),
+      icon: 'warning',
+      title,
+      text,
+      input: 'text',
+      inputLabel: `Type "${expected}" to confirm`,
+      inputAttributes: { autocapitalize: 'off', autocorrect: 'off', autocomplete: 'off' },
+      showCancelButton: true,
+      confirmButtonText: confirmText,
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: this.cssVar('--danger', '#EF4444'),
+      cancelButtonColor: this.cssVar('--text-subtle', '#6B7280'),
+      reverseButtons: true,
+      focusCancel: true,
+      preConfirm: (value: string) =>
+        value?.trim() === expected ? true : (Swal.showValidationMessage(`Doesn't match.`), false),
+    });
+
+    return result.isConfirmed;
+  }
+
   /** Surface + text tokens so the dialog card matches the active theme. */
   private themed(): { background: string; color: string } {
     return {

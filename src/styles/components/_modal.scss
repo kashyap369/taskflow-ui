@@ -12,3 +12,20 @@
 .modal-footer {
   border-top: 1px solid #eee;
 }
+
+// ======================================
+// Drawer backdrop.
+//
+// The backdrop is a real dismiss control, so it is a labelled <button>, not a <div> — that makes it
+// keyboard-reachable and announced, instead of being a click target only a mouse can reach. Each page
+// still owns the backdrop's *appearance* (position/colour/z-index) in its own SCSS; this global rule
+// only strips the UA button chrome, so one reset covers every drawer in the app.
+// ======================================
+button.drawer-backdrop {
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+}

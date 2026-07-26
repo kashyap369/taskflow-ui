@@ -50,6 +50,12 @@ const getTask = jasmine.createSpy('getTask').and.callFake((taskId: number) =>
   of({ ...task(taskId, 'Build the responsive nav bar', TaskStatus.InProgress, TaskPriority.High), description: 'Sticky, collapses at 768px' }),
 );
 
+const SUBTASKS = [
+  { id: 5, taskId: 1, title: 'Sketch the mobile menu', status: TaskStatus.Todo, createdDate: '2026-07-02T00:00:00Z', completedDate: null },
+];
+const getSubTasks = jasmine.createSpy('getSubTasks').and.returnValue(of(SUBTASKS));
+const updateSubTask = jasmine.createSpy('updateSubTask').and.returnValue(of(void 0));
+
 /** Stubs every call `OrganizationFacade.init()` fans out to, so the page gets real signal data. */
 const repositoryStub = {
   getMyOrganizations: () =>
@@ -66,6 +72,8 @@ const repositoryStub = {
   createTask,
   updateTask,
   deleteTask,
+  getSubTasks,
+  updateSubTask,
 };
 
 describe('TasksPage', () => {
@@ -77,6 +85,8 @@ describe('TasksPage', () => {
     updateTask.calls.reset();
     deleteTask.calls.reset();
     getTask.calls.reset();
+    getSubTasks.calls.reset();
+    updateSubTask.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [TasksPage],
@@ -196,5 +206,43 @@ describe('TasksPage', () => {
     confirmSpy.and.resolveTo(true);
     await component.remove(TASKS[0]);
     expect(deleteTask).toHaveBeenCalledWith(1);
+  });
+
+  // ── Subtask rename (PUT /subtask) ──
+
+  it('starts an inline rename pre-filled with the subtask title', () => {
+    component.openSubtasks(TASKS[0]);
+    component.startRenameSubtask(component.subTasks()[0]);
+
+    expect(component.editingSubTaskId()).toBe(5);
+    expect(component.subTaskEditForm.getRawValue().title).toBe('Sketch the mobile menu');
+  });
+
+  it('saves the rename and leaves edit mode', () => {
+    component.openSubtasks(TASKS[0]);
+    component.startRenameSubtask(component.subTasks()[0]);
+    component.subTaskEditForm.controls.title.setValue('Sketch the mobile nav');
+    component.saveRenameSubtask();
+
+    expect(updateSubTask).toHaveBeenCalledWith(5, 'Sketch the mobile nav');
+    expect(component.editingSubTaskId()).toBeNull();
+  });
+
+  it('does not save an empty rename', () => {
+    component.openSubtasks(TASKS[0]);
+    component.startRenameSubtask(component.subTasks()[0]);
+    component.subTaskEditForm.controls.title.setValue('');
+    component.saveRenameSubtask();
+
+    expect(updateSubTask).not.toHaveBeenCalled();
+    expect(component.editingSubTaskId()).toBe(5);
+  });
+
+  it('cancels the rename when the drawer closes', () => {
+    component.openSubtasks(TASKS[0]);
+    component.startRenameSubtask(component.subTasks()[0]);
+    component.closeSubtasks();
+
+    expect(component.editingSubTaskId()).toBeNull();
   });
 });

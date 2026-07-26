@@ -97,20 +97,44 @@ directly.** They use the **semantic tokens** below, which are redefined per them
 | `--surface-2` | `#f9fafb` | `#1b1b28` | Nested panels, kanban columns |
 | `--surface-inset` | `#f1f5f9` | `#101019` | Wells, track backgrounds |
 | `--elevated` | `#ffffff` | `#1e1e2c` | Popovers, menus, modals |
-| `--border` | `#e9ecf2` | `rgba(255,255,255,.08)` | Default hairline |
-| `--border-strong` | `#d7dbe4` | `rgba(255,255,255,.14)` | Inputs, emphasized dividers |
+| `--border` | `#e9ecf2` | `rgba(255,255,255,.08)` | Default hairline — **decorative** dividers, card edges |
+| `--border-strong` | `#d7dbe4` | `rgba(255,255,255,.14)` | Emphasized dividers |
+| `--border-input` | `#848da0` | `rgba(255,255,255,.34)` | **Form-control boundary** — the one border token held to 3:1 |
+
+**Use `--border-input` on anything a user types into or picks from** (`.form-control`, `.form-select`,
+`.list-search`, `.list-filter`). WCAG 1.4.11 requires 3:1 for a control's boundary because it's the only
+thing identifying the control; `--border` sits at 1.18:1 and is for decoration, where no minimum applies.
 
 ### Text
 | Token | Light | Dark |
 |---|---|---|
 | `--text` | `#0f1222` | `#f4f5fb` |
 | `--text-muted` | `#5b6172` | `#a6abbd` |
-| `--text-subtle` | `#878da0` | `#6f7488` |
+| `--text-subtle` | `#6b7180` | `#7d8296` |
 
 ### Status (each has a `-soft` tint for backgrounds)
-`--success #10b981` · `--warning #f59e0b` · `--danger #ef4444` · `--info #3b82f6`, plus
-`--success-soft`, `--warning-soft`, etc. (low-alpha tints that adapt per theme). Used for badges,
-priority tags (High = danger-soft, Medium = warning-soft, Low = success/ info-soft), progress bars.
+`--success` · `--warning` · `--danger` · `--info`, plus `--success-soft`, `--warning-soft`, etc.
+(low-alpha tints that adapt per theme). Used for badges, priority tags (High = danger-soft,
+Medium = warning-soft, Low = success/info-soft), progress bars.
+
+| Token | Light | Dark |
+|---|---|---|
+| `--success` | `#047857` | `#34d399` |
+| `--warning` | `#96530b` | `#fbbf24` |
+| `--danger` | `#c81e1e` | `#f87171` |
+| `--info` | `#1d4ed8` | `#60a5fa` |
+
+**Why light-mode status hues are dark.** They began on the 500-weight palette (`#10b981` / `#f59e0b` /
+`#ef4444` / `#3b82f6`), which reaches only 2.1–3.8:1 as text on white — every badge and status label
+failed AA. Dark mode was already fine (bright hues on near-black), so only light changed. Where these
+act as a *fill* they pair with white text, which the darker values only improve.
+
+### Contrast is enforced, not eyeballed
+`npm run a11y:contrast` parses the real values out of `themes/_light.scss` / `_dark.scss` and checks
+every foreground/background pairing the UI renders, in both themes — 4.5:1 for body text (1.4.3 AA),
+3:1 for a form-control boundary (1.4.11). It exits non-zero on a failure, so a token can't quietly drift.
+**Run it after touching any colour token.** Storybook additionally runs axe-core per story
+(`@storybook/addon-a11y`, set to `test: 'error'` in `.storybook/preview.ts`).
 
 ### Gradients & atmosphere
 - `--gradient-brand`: `linear-gradient(135deg, var(--primary), var(--secondary))` — the one hero/logo/

@@ -96,6 +96,33 @@ export class RegisterPage {
     this.registerForm.controls.accountType.setValue(type);
   }
 
+  /**
+   * Arrow-key navigation for the account-type radiogroup. A `role="radiogroup"` is expected to move
+   * selection with the arrow keys (WAI-ARIA APG) — Tab reaches the group as one stop, arrows choose
+   * within it — so claiming the role without this would announce a control that doesn't behave like
+   * one. Bound on each radio (which is focusable) rather than the group.
+   */
+  onAccountTypeKeydown(event: KeyboardEvent): void {
+    const keys = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'];
+    if (!keys.includes(event.key)) {
+      return;
+    }
+    event.preventDefault();
+
+    // Only two options, so any arrow key moves to the other one.
+    this.selectAccountType(
+      this.isOrganization() ? AccountType.Individual : AccountType.Organization,
+    );
+
+    // Selection follows focus in a radiogroup — move focus onto the newly checked option. The DOM
+    // still shows the pre-change aria-checked until Angular renders, so target the sibling directly.
+    const current = event.currentTarget as HTMLElement;
+    const sibling =
+      (current.nextElementSibling as HTMLElement | null) ??
+      (current.previousElementSibling as HTMLElement | null);
+    sibling?.focus();
+  }
+
   togglePasswordVisibility(): void {
     this.showPassword.update((value) => !value);
   }

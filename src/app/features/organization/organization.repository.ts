@@ -12,6 +12,7 @@ import {
   DashboardSummary,
   MemberTaskReport,
   OrganizationInvitation,
+  OrganizationDetail,
   OrganizationListItem,
   OrganizationMember,
   OrganizationPermission,
@@ -25,6 +26,7 @@ import {
   Team,
   TeamDetail,
   TeamPerformanceReport,
+  UpdateOrganizationPayload,
   UpdateProjectPayload,
   UpdateRolePayload,
   UpdateTaskPayload,
@@ -47,6 +49,19 @@ export class OrganizationRepository {
 
   createOrganization(payload: CreateOrganizationPayload): Observable<number> {
     return this.api.post<number>(API.Organization.Create, payload);
+  }
+
+  /** The full organization (description / memberCount / createdAt), which `/mine` omits. */
+  getOrganization(organizationId: number): Observable<OrganizationDetail> {
+    return this.api.get<OrganizationDetail>(API.Organization.GetById(organizationId));
+  }
+
+  updateOrganization(payload: UpdateOrganizationPayload): Observable<void> {
+    return this.api.put<void>(API.Organization.Update, payload);
+  }
+
+  deleteOrganization(organizationId: number): Observable<void> {
+    return this.api.delete<void>(API.Organization.Delete(organizationId));
   }
 
   // ── Dashboard ──
