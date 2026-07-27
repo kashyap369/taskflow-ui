@@ -1,50 +1,67 @@
 # TaskFlow UI — What v1 Does *Not* Include
 
-> **v1 is complete as of 2026-07-26 (Phase 22).** "Complete" here means one specific thing:
-> **every endpoint the backend actually exposes is reachable from the UI, and every screen that
-> consumes one is built, themed, accessible and tested.** This file is the honest list of what was
-> deliberately left out, so nobody has to re-derive it later.
+> **v1 is complete as of 2026-07-26 (Phase 22), and Phase 23 added the Member portal** — so **both
+> account types are now complete end to end.** "Complete" means: every endpoint the backend exposes is
+> reachable from the UI, and every screen that consumes one is built, themed, accessible and tested.
+> This file is the honest list of what was deliberately left out, so nobody has to re-derive it later.
 >
 > Nothing below blocks using the app. Items are grouped by *why* they're out, because that decides
 > who can act on them.
+>
+> ---
+>
+> ### ⚠️ 2026-07-26 UPDATE — §1 and §2 are empty, and the frontend has caught up
+> **Backend Phases 10–13 shipped**, taking the API to **82 endpoints**; **frontend Phases 26–29 then
+> consumed every one that has a screen** (80/82 — the 2 left are the standing deliberate skips,
+> `GET /task/mine` and `GET /worklog/mine`). Every backend-blocked item (§1) and every backend defect
+> (§2) is resolved, and nothing in §1's "frontend action" column is outstanding.
+>
+> **What's left is §3 only** — deferred v1.x work that never needed the API: CSV/PDF report export,
+> the calendar page, per-member trend charts, E2E tests. The one backend gap anywhere is
+> **forgot-password**, and it blocks no built screen.
 
 ---
 
-## 1. Backend-blocked — the frontend cannot build these yet
+## 1. Backend-blocked — ✅ NOTHING IS BLOCKED ANY MORE (as of 2026-07-26)
 
-These need API work first. **Don't fake them in the UI.**
+**Backend Phases 10–13 closed every item in this section.** The API is feature-complete at **82
+endpoints**; Organization, Reporting, Admin and Individual are all at 100%. What used to be blocked is
+now ordinary frontend work — see [PHASES.md](PHASES.md) Phases 26–29.
 
-| Gap | What's missing in the API | Frontend impact |
+| Former gap | Resolution | Frontend action |
 |---|---|---|
-| **Member (Individual) portal — personal tasks** | No endpoint creates a task without an `OrganizationId`. `CreateTask` 404s on a null org. Only the *read* side exists (`GET /task/mine`, `/task/mine/personal`, `GET /worklog/mine`). | The whole personal-task workspace. The member dashboard says so plainly rather than showing invented numbers. These are the **only 3 of 71 endpoints still unwired** — they are read-only views of data nothing can create. |
-| **Admin → Organizations overview** | No list-all-organizations endpoint. Only `GET /organization/mine` (the caller's own). | The admin portal can manage users but not organizations. |
-| **Admin → Platform settings** | No settings endpoint at all. | Nothing to build against. |
-| **Admin → open any user** | `GET /user/{id}` is marked `IUserScopedRequest`, so `AccessGuardBehavior.EnsureUserAsync` permits only **yourself or someone sharing an organization with you** — there is **no Admin bypass**. The seeded platform admin belongs to no org. | The user-detail drawer **is built** and works for a permitted caller; for anyone else it renders a *denied* state naming the exact guard. Add an Admin short-circuit in the guard and the drawer starts working platform-wide with no frontend change. |
-| **Forgot password / email verification screens** | No `forgot-password`, `reset-password` or `verify-email` endpoints. Dev accounts are verified directly in the database. | The "Forgot?" link on the sign-in form is inert (`href="#"`). |
+| ~~Member (Individual) portal~~ | ✅ **backend Phase 9** — `POST /task/personal`, `GET /report/me`, `PUT /task/{id}/reopen`. | **Built** (frontend Phase 23). |
+| ~~Admin → Organizations overview~~ | ✅ **backend Phase 13** — `GET /admin/organizations` (AdminOnly) with owner, member/project/task counts. | ✅ **Built** (frontend Phase 27.1). |
+| ~~Admin → Platform settings~~ | ✅ **backend Phase 13** — `GET`/`PUT /admin/settings`. Both flags are really enforced (registration in the register handler, maintenance in middleware). | ✅ **Built** (frontend Phase 27.2), incl. a 503 `MAINTENANCE_MODE` banner at the app root. |
+| ~~Admin → open any user~~ | ✅ **backend Phase 10** — `EnsureUserAsync` now short-circuits for a platform admin. Verified: admin → `GET /user/2` = **200** (was 403). | ✅ **Verified live and the "denied state" branch deleted** (frontend Phase 26.1). |
+| **Forgot password** | ⬜ Still no `forgot-password` / `reset-password` endpoint — **the one remaining backend gap**, and it is not blocking any built screen. | The "Forgot?" link stays inert (`href="#"`). Email verification is done (Phase 23). |
 
-## 2. Backend defects found while building v1 (frontend has a workaround; the API should still be fixed)
+## 2. Backend defects found while building v1 — ✅ ALL FIXED (2026-07-26)
 
-1. **No authorization on organization update/delete.** `UpdateOrganizationCommand` /
-   `DeleteOrganizationCommand` are unmarked by the scoped-request interfaces and their handlers check
-   only existence — so **any authenticated user can rename or delete any organization by id**. The
-   settings page gates on ownership, but that is *usability*, not a security boundary. Fix: an ownership
-   check in the handlers, or `IOrganizationScopedRequest` on the write side.
-2. **`POST /worklog/manual` returns 500 on a domain validation failure** (e.g. an end time in the
-   future) — the domain `ArgumentException` isn't mapped to 400 in the API middleware. The manual
-   time-entry form blocks the future-time case client-side so users never hit it. See
-   `TaskFlow.Domain/.../TaskWorkLog.cs` (`LogManual`).
-3. **`RemoveMember` and `DeactivateMember` are the same operation** — both handlers call
-   `member.Deactivate()`, so a "removed" member stays in the list as *Inactive*. The confirm dialog now
-   describes what actually happens instead of promising a deletion. Decide: hard-remove, or drop one of
-   the two endpoints.
+1. ~~**No authorization on organization update/delete.**~~ ✅ **Fixed, backend Phase 10.** A new
+   `EnsureOrganizationOwnerAsync` guard makes both **owner-only**; a non-owner now gets **403
+   `NOT_ORGANIZATION_OWNER`**. The settings page's ownership gate is still just usability — but there is
+   a real boundary behind it now.
+2. ~~`POST /worklog/manual` returns 500 on a domain validation failure~~ — ✅ **fixed 2026-07-26**: the
+   API middleware now maps `ArgumentException` / `InvalidOperationException` to **400**. The client-side
+   future-time guard is kept as a nicer UX, but is no longer load-bearing.
+3. ~~**`RemoveMember` and `DeactivateMember` are the same operation.**~~ ✅ **Fixed, backend Phase 10.**
+   Remove now really removes (the member vanishes from the list); Deactivate stays a reversible toggle.
+   ✅ **Frontend Phase 26.2 done** — the members-page confirm copy describes a real removal again, and
+   points at Deactivate for the reversible option.
+4. 🚨 **Also found and fixed in backend Phase 10 (the frontend never saw it):** all four
+   `OrganizationMember` commands — remove, deactivate, activate, change-role — had **no authorization at
+   all**, so any authenticated user could act on any organization's members. All four now require the
+   `ManageMembers` permission. No frontend change needed.
 
 ## 3. Deliberately deferred to v1.x — buildable today, just not v1 scope
 
 - **Reporting export (CSV / PDF).** The reports page reads every figure it would export; only the
   serialisation + download is missing.
 - **Richer per-member trend charts.** Currently six stat tiles per member; a time-series would need the
-  report queried per interval (the API supports `?from&to`, so this is client-side looping).
-- **Calendar page.** The only nav item still marked "Coming soon".
+  report queried per interval (the API supports `?from&to`, so this is client-side looping). *(Team,
+  project and priority reporting all gained depth in Phase 29 — the member panel is the one left.)*
+- **Calendar page.** The only nav item still marked "Coming soon" (organization sidebar).
 - **Server-side pagination.** All list paging and filtering is **client-side** over the full list the
   facade holds, because no API endpoint accepts page/size. `createPagination()` + the `Pagination`
   molecule are already the seam — when the API grows paging, swap the source signal for a paged fetch
@@ -61,7 +78,7 @@ These need API work first. **Don't fake them in the UI.**
   stock. Adopt or delete deliberately.
 - **`eslint-plugin-boundaries` v6 migration.** Lint passes but warns that `boundaries/element-types` is
   renamed to `boundaries/dependencies` and that the selector syntax is legacy.
-- **E2E tests.** Coverage is 164 unit specs (TestBed) plus manual live verification. No Playwright/
+- **E2E tests.** Coverage is 204 unit specs (TestBed) plus manual live verification. No Playwright/
   Cypress suite.
 
 ## 4. Known non-goals
@@ -75,7 +92,15 @@ These need API work first. **Don't fake them in the UI.**
 
 ## How to pick this back up
 
-1. Items in **§1** need a backend change first — they're logged in the API repo's docs too.
-2. Items in **§2** are bugs; the frontend workarounds are commented at each call site.
-3. Items in **§3** are ordinary frontend work and follow existing patterns — see
-   [CONVENTIONS.md](CONVENTIONS.md) for the list, drawer, validation and a11y patterns to copy.
+**See also: `D:\Projects\TMS\TaskFlow\docs\ProjectCompletion.md`** — the API ⇄ UI parity ledger. This
+file says what *the frontend* is missing; that one shows both sides at once and tracks who is blocking
+whom. Update it alongside this one.
+
+1. **§1 and §2 are done** — backend Phases 10–13 closed every one, and frontend Phases 26–29 consumed
+   the endpoints they added (**80/82**; the 2 left are the deliberate skips). The only backend gap left
+   anywhere is forgot-password, which blocks no built screen.
+2. **Everything left is §3 frontend work that never needed the API.** In value order: **CSV/PDF report
+   export** ([PHASES.md](PHASES.md) Phase 24.1), the **calendar page** (Phase 25), **per-member trend
+   charts** (Phase 24.2), then E2E tests.
+3. Items in **§3** follow existing patterns — see [CONVENTIONS.md](CONVENTIONS.md) for the list,
+   drawer, validation and a11y patterns to copy.

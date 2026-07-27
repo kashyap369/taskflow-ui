@@ -1,0 +1,175 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head">
+      <h1>Platform settings</h1>
+      <p>
+        The installation-wide singleton behind <code>GET</code> / <code>PUT /admin/settings</code>.
+        These flags are enforced by the API, not just displayed.
+      </p>
+    </div>
+
+    @if (loadingSettings()) {
+      <div class="settings-grid" aria-busy="true" aria-label="Loading platform settings">
+        <section class="panel sk-panel">
+          <app-skeleton width="140px" height="1.3rem" />
+          <app-skeleton width="70%" height="0.85rem" />
+          <app-skeleton width="100%" height="2.6rem" radius="12px" />
+          <app-skeleton width="100%" height="2.6rem" radius="12px" />
+          <app-skeleton width="180px" height="2.6rem" radius="14px" />
+        </section>
+        <section class="panel sk-panel">
+          <app-skeleton width="120px" height="1.3rem" />
+          <app-skeleton width="100%" height="3.5rem" radius="14px" [count]="2" />
+        </section>
+      </div>
+    } @else if (settings(); as s) {
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="settings-grid">
+          <!-- Branding -->
+          <section class="panel">
+            <div class="panel-head">
+              <h2><lucide-angular name="Settings" size="18"></lucide-angular> Identity</h2>
+              <p>How the platform names itself and where users are told to get help.</p>
+            </div>
+
+            <div class="field">
+              <label for="application-name" class="form-label">Application name</label>
+              <input
+                id="application-name"
+                type="text"
+                class="form-control"
+                placeholder="TaskFlow"
+                formControlName="applicationName"
+              />
+              @if (fieldError('applicationName'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
+              }
+            </div>
+
+            <div class="field">
+              <label for="support-email" class="form-label">
+                Support email <span>(optional)</span>
+              </label>
+              <input
+                id="support-email"
+                type="email"
+                class="form-control"
+                placeholder="support@taskflow.com"
+                formControlName="supportEmail"
+              />
+              @if (fieldError('supportEmail'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
+              }
+            </div>
+
+            <dl class="detail-list">
+              <div class="detail-row">
+                <dt><lucide-angular name="CalendarDays" size="15"></lucide-angular> Last updated</dt>
+                <dd>{{ s.updatedAt ? (s.updatedAt | date: 'medium') : 'Never' }}</dd>
+              </div>
+              <div class="detail-row">
+                <dt>Settings ID</dt>
+                <dd class="mono">#{{ s.id }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <!-- Access -->
+          <section class="panel">
+            <div class="panel-head">
+              <h2><lucide-angular name="ShieldAlert" size="18"></lucide-angular> Access</h2>
+              <p>Two switches that really do gate the API.</p>
+            </div>
+
+            <div class="toggle-row">
+              <input
+                id="registration-open"
+                type="checkbox"
+                class="toggle-input"
+                formControlName="registrationOpen"
+              />
+              <label for="registration-open" class="toggle-copy">
+                <span class="toggle-title">
+                  <lucide-angular name="UserPlus" size="16"></lucide-angular>
+                  Registration open
+                </span>
+                <span class="toggle-desc">
+                  When off, <code>POST /auth/register</code> returns
+                  <strong>403 REGISTRATION_CLOSED</strong> — nobody new can sign up.
+                </span>
+              </label>
+            </div>
+
+            @if (registrationClosed) {
+              <p class="inline-warning">
+                <lucide-angular name="Info" size="15"></lucide-angular>
+                Sign-up is closed. Existing accounts are unaffected.
+              </p>
+            }
+
+            <div class="toggle-row">
+              <input
+                id="maintenance-mode"
+                type="checkbox"
+                class="toggle-input"
+                formControlName="maintenanceMode"
+              />
+              <label for="maintenance-mode" class="toggle-copy">
+                <span class="toggle-title">
+                  <lucide-angular name="TriangleAlert" size="16"></lucide-angular>
+                  Maintenance mode
+                </span>
+                <span class="toggle-desc">
+                  When on, every <strong>non-admin</strong> request returns
+                  <strong>503 MAINTENANCE_MODE</strong> with the message below. Admins keep working.
+                </span>
+              </label>
+            </div>
+
+            <div class="field">
+              <label for="maintenance-message" class="form-label">
+                Maintenance message <span>(shown to locked-out users)</span>
+              </label>
+              <textarea
+                id="maintenance-message"
+                rows="3"
+                class="form-control"
+                placeholder="TaskFlow is down for scheduled maintenance. We'll be back shortly."
+                formControlName="maintenanceMessage"
+              ></textarea>
+              @if (fieldError('maintenanceMessage'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
+              }
+            </div>
+
+            @if (maintenanceOn) {
+              <p class="inline-warning danger">
+                <lucide-angular name="TriangleAlert" size="15"></lucide-angular>
+                Maintenance mode locks every non-admin user out of the whole platform as soon as
+                this is saved.
+              </p>
+            }
+          </section>
+        </div>
+
+        <div class="page-actions">
+          <button
+            type="button"
+            class="btn-ghost"
+            (click)="reset()"
+            [disabled]="form.pristine || saving()"
+          >
+            Discard changes
+          </button>
+          <button
+            type="submit"
+            class="btn-primary-cta"
+            [disabled]="saving() || form.pristine || form.invalid"
+          >
+            {{ saving() ? 'Saving…' : 'Save settings' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</section>

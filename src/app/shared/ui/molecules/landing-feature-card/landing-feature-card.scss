@@ -1,8 +1,8 @@
 .feature-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 2rem;
+  border-radius: var(--radius-3xl);
+  padding: var(--space-8);
   height: 100%;
   box-shadow: var(--shadow-sm);
   transition:
@@ -20,12 +20,12 @@
 .feature-icon {
   width: 60px;
   height: 60px;
-  border-radius: 18px;
+  border-radius: var(--radius-2xl);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1.75rem;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.14);
+  margin-bottom: var(--space-7);
+  box-shadow: var(--shadow-md);
   transition: transform var(--dur-2) var(--ease-spring);
 
   .feature-card:hover & {
@@ -35,22 +35,22 @@
 
 h3 {
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: var(--fs-h4);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text);
-  margin-bottom: 0.9rem;
+  margin-bottom: var(--space-4);
 }
 
 p {
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: var(--fs-body-md);
   line-height: 1.75;
   margin: 0;
 }
 
 @media (max-width: 991px) {
   .feature-card {
-    padding: 1.75rem;
+    padding: var(--space-7);
   }
 }

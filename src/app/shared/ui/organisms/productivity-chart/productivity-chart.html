@@ -6,14 +6,20 @@
       <p>Tasks completed vs. created · focus score</p>
     </div>
 
-    <div class="btn-group">
-      <button class="btn" [class.active]="selectedView === 'Week'">Week</button>
-
-      <button class="btn">Month</button>
-
-      <button class="btn">Quarter</button>
+    <div class="btn-group" role="group" aria-label="Chart range">
+      @for (view of views; track view) {
+        <button
+          type="button"
+          class="btn"
+          [class.active]="selectedView() === view"
+          [attr.aria-pressed]="selectedView() === view"
+          (click)="selectView(view)"
+        >
+          {{ view }}
+        </button>
+      }
     </div>
   </div>
 
-  <div echarts class="chart" [options]="chartOption"></div>
+  <div echarts class="chart" [options]="chartOption()"></div>
 </div>

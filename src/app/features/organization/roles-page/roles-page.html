@@ -6,7 +6,7 @@
         <p>Define what people can do in {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="18"></lucide-angular>
           New role
         </button>
@@ -41,7 +41,7 @@
         <app-lottie-player src="/lottie/empty.json" [width]="150" [height]="150" ariaLabel="No roles yet" />
         <h3>No roles yet</h3>
         <p>Create a role (e.g. Manager, Developer) to invite teammates into.</p>
-        <button class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="16"></lucide-angular> New role
         </button>
       </div>
@@ -97,7 +97,7 @@
             @if (role.description) {
               <p>{{ role.description }}</p>
             }
-            <button class="manage-btn" (click)="manage(role.id)">
+            <button type="button" class="manage-btn" (click)="manage(role.id)">
               <lucide-angular name="KeyRound" size="14"></lucide-angular>
               Manage permissions
             </button>
@@ -126,7 +126,7 @@
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditing() ? 'Edit role' : 'New role' }}</h2>
-        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -168,7 +168,7 @@
           <h2>{{ role.name }}</h2>
           <span class="drawer-sub">Toggle what this role can do</span>
         </div>
-        <button class="icon-btn" (click)="closeManage()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeManage()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>

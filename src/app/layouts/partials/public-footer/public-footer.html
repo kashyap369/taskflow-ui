@@ -43,12 +43,12 @@
 
                 <h6>Product</h6>
 
-                @for(link of productLinks; track link){
-
-                <a href="#">
-                    {{link}}
-                </a>
-
+                @for (link of productLinks; track link.label) {
+                  @if (link.fragment) {
+                    <a [routerLink]="['/']" [fragment]="link.fragment">{{ link.label }}</a>
+                  } @else {
+                    <span class="footer-text">{{ link.label }}</span>
+                  }
                 }
 
             </div>
@@ -59,12 +59,12 @@
 
                 <h6>Company</h6>
 
-                @for(link of companyLinks; track link){
-
-                <a href="#">
-                    {{link}}
-                </a>
-
+                @for (link of companyLinks; track link.label) {
+                  @if (link.fragment) {
+                    <a [routerLink]="['/']" [fragment]="link.fragment">{{ link.label }}</a>
+                  } @else {
+                    <span class="footer-text">{{ link.label }}</span>
+                  }
                 }
 
             </div>
@@ -75,12 +75,12 @@
 
                 <h6>Resources</h6>
 
-                @for(link of resourceLinks; track link){
-
-                <a href="#">
-                    {{link}}
-                </a>
-
+                @for (link of resourceLinks; track link.label) {
+                  @if (link.fragment) {
+                    <a [routerLink]="['/']" [fragment]="link.fragment">{{ link.label }}</a>
+                  } @else {
+                    <span class="footer-text">{{ link.label }}</span>
+                  }
                 }
 
             </div>
@@ -104,11 +104,11 @@
 
                 <div class="footer-links">
 
-                    <a href="#">Privacy</a>
+                    <span>Privacy</span>
 
-                    <a href="#">Terms</a>
+                    <span>Terms</span>
 
-                    <a href="#">Cookies</a>
+                    <span>Cookies</span>
 
                 </div>
 

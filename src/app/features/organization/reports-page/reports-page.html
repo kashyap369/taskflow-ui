@@ -18,10 +18,10 @@
       <!-- Date window -->
       <div class="window-bar">
         <div class="presets">
-          <button [class.active]="activePreset() === 'week'" (click)="applyPreset('week')">Week</button>
-          <button [class.active]="activePreset() === 'month'" (click)="applyPreset('month')">Month</button>
-          <button [class.active]="activePreset() === 'year'" (click)="applyPreset('year')">Year</button>
-          <button [class.active]="activePreset() === 'all'" (click)="applyPreset('all')">All time</button>
+          <button type="button" [class.active]="activePreset() === 'week'" (click)="applyPreset('week')">Week</button>
+          <button type="button" [class.active]="activePreset() === 'month'" (click)="applyPreset('month')">Month</button>
+          <button type="button" [class.active]="activePreset() === 'year'" (click)="applyPreset('year')">Year</button>
+          <button type="button" [class.active]="activePreset() === 'all'" (click)="applyPreset('all')">All time</button>
         </div>
         <div class="range">
           <label>
@@ -66,7 +66,7 @@
               <thead>
                 <tr>
                   <th>Team</th><th>Members</th><th>Assigned</th><th>Completed</th>
-                  <th>Tracked (h)</th><th>Avg days</th>
+                  <th>Tracked (h)</th><th>Avg days</th><th>Owned tasks</th>
                 </tr>
               </thead>
               <tbody>
@@ -76,9 +76,83 @@
                     <td>{{ team.activeMembers }}</td>
                     <td>{{ team.tasksAssigned }}</td>
                     <td>{{ team.tasksCompleted }}</td>
-                    <td>{{ team.trackedHours }}</td>
+                    <td>{{ team.trackedHours | number: '1.0-1' }}</td>
                     <td>{{ team.avgCompletionDays | number: '1.0-1' }}</td>
+                    <td>
+                      @if (team.tasks.length) {
+                        <button
+                          type="button"
+                          class="expand-btn"
+                          (click)="toggleTeamTasks(team.teamId)"
+                          [attr.aria-expanded]="expandedTeamId() === team.teamId"
+                          [attr.aria-label]="
+                            (expandedTeamId() === team.teamId ? 'Hide' : 'Show') +
+                            ' the ' + team.tasks.length + ' tasks owned by ' + team.teamName
+                          "
+                        >
+                          {{ team.tasks.length }}
+                          <lucide-angular
+                            [name]="expandedTeamId() === team.teamId ? 'ChevronUp' : 'ChevronDown'"
+                            size="14"
+                          ></lucide-angular>
+                        </button>
+                      } @else {
+                        <span class="muted">0</span>
+                      }
+                    </td>
                   </tr>
+
+                  @if (expandedTeamId() === team.teamId) {
+                    <tr class="subrow">
+                      <td colspan="7">
+                        <!--
+                          The two numbers count different things: Assigned/Completed aggregate over
+                          the team's *members*, while these are the tasks the team *owns*
+                          (Task.TeamId). They can legitimately disagree.
+                        -->
+                        <p class="subrow-note">
+                          Tasks <strong>owned by {{ team.teamName }}</strong> (the team set on the
+                          task). The Assigned and Completed columns count what this team's
+                          <strong>members</strong> hold instead, so the two need not match.
+                        </p>
+                        <table class="report-table nested">
+                          <thead>
+                            <tr>
+                              <th>Task</th><th>Status</th><th>Priority</th>
+                              <th>Assignee</th><th>Started</th><th>Completed</th><th>Hrs</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (t of team.tasks; track t.taskId) {
+                              <tr>
+                                <td class="strong">{{ t.title }}</td>
+                                <td>
+                                  <span class="badge" [attr.data-tone]="taskStatusMeta(t.status).tone">
+                                    {{ taskStatusMeta(t.status).label }}
+                                  </span>
+                                </td>
+                                <td>
+                                  <span class="badge" [attr.data-tone]="taskPriorityMeta(t.priority).tone">
+                                    {{ taskPriorityMeta(t.priority).label }}
+                                  </span>
+                                </td>
+                                <td>{{ t.assignedToFullName ?? '—' }}</td>
+                                <td>{{ t.startDate | date: 'mediumDate' }}</td>
+                                <td>
+                                  {{
+                                    t.actualCompletionDate
+                                      ? (t.actualCompletionDate | date: 'mediumDate')
+                                      : '—'
+                                  }}
+                                </td>
+                                <td>{{ t.trackedHours | number: '1.0-1' }}</td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  }
                 }
               </tbody>
             </table>
@@ -90,7 +164,7 @@
         <!-- Member report -->
         <div class="panel">
           <div class="panel-head"><h2><lucide-angular name="ListChecks" size="18"></lucide-angular> Member report</h2></div>
-          <select class="selector" [ngModel]="selectedMemberId()" (ngModelChange)="onMemberChange($event)">
+          <select class="selector" [ngModel]="selectedMemberId()" (ngModelChange)="onMemberChange($event)" aria-label="Select a member to report on">
             <option [ngValue]="null">Select a member…</option>
             @for (m of members(); track m.id) {
               <option [ngValue]="m.userId">{{ m.userFullName }}</option>
@@ -113,7 +187,7 @@
               <div class="tile"><span class="tv accent-green">{{ r.tasksCompleted }}</span><span class="tl">Completed</span></div>
               <div class="tile"><span class="tv accent-blue">{{ r.tasksInProgress }}</span><span class="tl">In progress</span></div>
               <div class="tile"><span class="tv accent-red">{{ r.tasksOverdue }}</span><span class="tl">Overdue</span></div>
-              <div class="tile"><span class="tv">{{ r.trackedHours }}</span><span class="tl">Tracked hrs</span></div>
+              <div class="tile"><span class="tv">{{ r.trackedHours | number: '1.0-1' }}</span><span class="tl">Tracked hrs</span></div>
             </div>
           } @else {
             <p class="hint">Pick a member to see their throughput for this window.</p>
@@ -123,7 +197,7 @@
         <!-- Project report -->
         <div class="panel">
           <div class="panel-head"><h2><lucide-angular name="FolderKanban" size="18"></lucide-angular> Project report</h2></div>
-          <select class="selector" [ngModel]="selectedProjectId()" (ngModelChange)="onProjectChange($event)">
+          <select class="selector" [ngModel]="selectedProjectId()" (ngModelChange)="onProjectChange($event)" aria-label="Select a project to report on">
             <option [ngValue]="null">Select a project…</option>
             @for (p of projects(); track p.id) {
               <option [ngValue]="p.id">{{ p.title }}</option>
@@ -146,9 +220,43 @@
               </div>
               <div class="proj-meta">
                 <div><strong>{{ r.completedTasks }}/{{ r.totalTasks }}</strong> tasks</div>
-                <div><strong>{{ r.trackedHours }}</strong> tracked hrs</div>
+                <div><strong>{{ r.trackedHours | number: '1.0-1' }}</strong> tracked hrs</div>
               </div>
             </div>
+
+            <!-- Planned vs actual (backend Phase 12 added the dates to ProjectReportDto). -->
+            @if (projectTimeline(); as tl) {
+              <div class="timeline">
+                <div class="timeline-head">
+                  <h3>Timeline</h3>
+                  @if (tl.late) {
+                    <span class="badge" data-tone="danger">Finished after target</span>
+                  }
+                </div>
+                @for (track of tl.tracks; track track.label) {
+                  <div class="tl-row">
+                    <span class="tl-label">{{ track.label }}</span>
+                    <div class="tl-track">
+                      <span
+                        class="tl-bar"
+                        [class.actual]="track.label === 'Actual'"
+                        [class.ongoing]="track.ongoing"
+                        [style.left.%]="track.left"
+                        [style.width.%]="track.width"
+                      ></span>
+                    </div>
+                    <span class="tl-dates">
+                      {{ track.start | date: 'MMM d, y' }} →
+                      {{ track.end ? (track.end | date: 'MMM d, y') : 'ongoing' }}
+                    </span>
+                  </div>
+                }
+                <p class="tl-note">
+                  <strong>Planned</strong> is the project's own window; <strong>Actual</strong> is
+                  the span its tasks really occupied.
+                </p>
+              </div>
+            }
 
             @if (r.memberWorkloads.length) {
               <div class="table-scroll">
@@ -160,7 +268,7 @@
                         <td class="strong">{{ w.fullName }}</td>
                         <td>{{ w.tasksAssigned }}</td>
                         <td>{{ w.tasksCompleted }}</td>
-                        <td>{{ w.trackedHours }}</td>
+                        <td>{{ w.trackedHours | number: '1.0-1' }}</td>
                       </tr>
                     }
                   </tbody>

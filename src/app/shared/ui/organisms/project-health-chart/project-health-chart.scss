@@ -1,7 +1,7 @@
 .health-card {
   background: var(--surface);
-  border-radius: 24px;
-  padding: 28px;
+  border-radius: var(--radius-3xl);
+  padding: var(--space-7);
   height: 100%;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
@@ -14,9 +14,9 @@
 }
 
 .health-card p {
-  margin: 0.25rem 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: var(--fs-body-sm);
 }
 
 .donut-chart {
@@ -28,13 +28,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .legend-left {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -53,6 +53,6 @@
 
 @media (max-width: 768px) {
   .legend-item {
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--space-3);
   }
 }

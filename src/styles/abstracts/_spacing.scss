@@ -1,0 +1,68 @@
+// ======================================
+// Spacing Scale _spacing.scss
+//
+// DESIGN.md §4 specifies a 4px base — but before Phase 3 there was no spacing token in the codebase
+// at all (0 uses anywhere in src/app), so every padding/margin/gap was invented per component.
+// This is that missing scale.
+//
+// Named by step, not by t-shirt size, because spacing has far more steps than radius does and
+// `--space-6` is unambiguous where `--space-lg` is not.
+// ======================================
+
+// Every step is a true multiple of 4px, and the mid-range is dense on purpose: a sparse scale forces
+// big jumps when snapping (1.4rem -> 1.5rem is fine, 1.75rem -> 2rem is a visible reflow), so the
+// steps the codebase actually reaches for all exist.
+$space-0: 0;
+$space-1: 0.25rem; //   4px
+$space-2: 0.5rem; //   8px
+$space-3: 0.75rem; //  12px
+$space-4: 1rem; //  16px
+$space-5: 1.25rem; //  20px
+$space-6: 1.5rem; //  24px  <- default card padding
+$space-7: 1.75rem; //  28px
+$space-8: 2rem; //  32px
+$space-9: 2.25rem; //  36px
+$space-10: 2.5rem; //  40px
+$space-11: 2.75rem; //  44px
+$space-12: 3rem; //  48px
+$space-14: 3.5rem; //  56px
+$space-16: 4rem; //  64px  <- section rhythm, mobile
+$space-20: 5rem; //  80px
+$space-24: 6rem; //  96px  <- section rhythm, desktop
+
+// ======================================
+// Composed rhythm — the repeating layout measurements. Pulling these from one place is what makes
+// two different list pages actually line up.
+// ======================================
+
+$card-padding-y: $space-6;
+$card-padding-x: $space-6;
+$page-header-gap: $space-6;
+$toolbar-gap: $space-3;
+$stack-gap: $space-4;
+
+:root {
+  --space-0: #{$space-0};
+  --space-1: #{$space-1};
+  --space-2: #{$space-2};
+  --space-3: #{$space-3};
+  --space-4: #{$space-4};
+  --space-5: #{$space-5};
+  --space-6: #{$space-6};
+  --space-7: #{$space-7};
+  --space-8: #{$space-8};
+  --space-9: #{$space-9};
+  --space-10: #{$space-10};
+  --space-11: #{$space-11};
+  --space-12: #{$space-12};
+  --space-14: #{$space-14};
+  --space-16: #{$space-16};
+  --space-20: #{$space-20};
+  --space-24: #{$space-24};
+
+  // Composed rhythm
+  --card-padding: #{$card-padding-y} #{$card-padding-x};
+  --page-header-gap: #{$page-header-gap};
+  --toolbar-gap: #{$toolbar-gap};
+  --stack-gap: #{$stack-gap};
+}

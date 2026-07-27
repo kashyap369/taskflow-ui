@@ -15,6 +15,13 @@ export const ADMIN_ROUTES: Routes = [
     path: 'users',
     loadComponent: () => import('./users-page/users-page').then((m) => m.AdminUsersPage),
   },
-  // Organizations overview + platform settings need new backend endpoints
-  // (only GET /organization/mine exists today) — see PHASES.md.
+  {
+    path: 'organizations',
+    loadComponent: () =>
+      import('./organizations-page/organizations-page').then((m) => m.AdminOrganizationsPage),
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./settings-page/settings-page').then((m) => m.AdminSettingsPage),
+  },
 ];

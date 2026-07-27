@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
@@ -37,6 +37,21 @@ export class PublicHeader {
     { label: 'Pricing', fragment: 'pricing' },
     { label: 'Customers', fragment: 'customers' },
   ];
+
+  /**
+   * Mobile nav. This used to be driven by Bootstrap's `data-bs-toggle="collapse"`, but the project
+   * loads no Bootstrap JS (`angular.json` → `scripts: []`), so the public site's mobile menu never
+   * opened at all. Now a signal — Phase 6.
+   */
+  readonly menuOpen = signal(false);
+
+  toggleMenu(): void {
+    this.menuOpen.update((v) => !v);
+  }
+
+  closeMenu(): void {
+    this.menuOpen.set(false);
+  }
 
   toggleTheme(): void {
     this.themeService.toggle();

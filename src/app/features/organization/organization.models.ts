@@ -5,14 +5,9 @@
 // ============================================================
 
 import { Tone } from '@shared/models/tone.model';
+import { OrganizationStatus } from '@shared/models/organization-status.model';
 
 // ── Enums (exact API int values) ──────────────────────────
-export enum OrganizationStatus {
-  Active = 1,
-  Inactive = 2,
-  Suspended = 3,
-}
-
 export enum ProjectStatus {
   Draft = 1,
   Active = 2,
@@ -45,6 +40,14 @@ export {
   invitationStatusMeta,
 } from '@shared/models/invitation.model';
 export type { OrganizationInvitation } from '@shared/models/invitation.model';
+
+// Organization status is rendered by this portal *and* by the admin portal's platform-wide
+// organizations list, so it lives in `shared/models` too — same reason as the two above.
+export {
+  ORGANIZATION_STATUS_META,
+  OrganizationStatus,
+  organizationStatusMeta,
+} from '@shared/models/organization-status.model';
 
 // ── Response DTOs (mirror the API query DTOs) ─────────────
 
@@ -84,6 +87,11 @@ export interface DashboardSummary {
   overdueTasks: number;
   unassignedTasks: number;
   totalTrackedHours: number;
+  // Priority breakdown (backend Phase 12) — the counterpart to the status counts above.
+  lowPriorityTasks: number;
+  mediumPriorityTasks: number;
+  highPriorityTasks: number;
+  criticalPriorityTasks: number;
 }
 
 /** `GET /project/organization/{organizationId}` → ProjectDto[] */
@@ -113,6 +121,9 @@ export interface TaskListItem {
   actualCompletionDate: string | null;
   projectId: number | null;
   organizationId: number | null;
+  /** The team responsible (`Task.TeamId`) — what makes "tasks viewed per team" possible. */
+  teamId: number | null;
+  teamName: string | null;
   createdByUserId: number;
   assignedToUserId: number | null;
   subTaskCount: number;
@@ -226,6 +237,19 @@ export interface MemberTaskReport {
   trackedHours: number;
 }
 
+/** One row of `TeamPerformanceReport.tasks` — a task the team *owns* (`Task.TeamId`). */
+export interface TeamTaskReportItem {
+  taskId: number;
+  title: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  startDate: string;
+  actualCompletionDate: string | null;
+  assignedToUserId: number | null;
+  assignedToFullName: string | null;
+  trackedHours: number;
+}
+
 /** `GET /report/team/{organizationId}?from&to` → TeamPerformanceReportDto[] */
 export interface TeamPerformanceReport {
   teamId: number;
@@ -235,6 +259,13 @@ export interface TeamPerformanceReport {
   tasksCompleted: number;
   trackedHours: number;
   avgCompletionDays: number;
+  /**
+   * ⚠️ Measures something different from the counts above: `tasks` is what the team **owns**
+   * (`Task.TeamId`), while `tasksAssigned`/`tasksCompleted` aggregate over the team's **members**.
+   * A task assigned to a member of team A but owned by team B counts in both, differently — so the
+   * two legitimately disagree and the UI must label which is which.
+   */
+  tasks: TeamTaskReportItem[];
 }
 
 export interface ProjectMemberWorkload {
@@ -253,6 +284,13 @@ export interface ProjectReport {
   completedTasks: number;
   completionPercentage: number;
   trackedHours: number;
+  // Timeline (backend Phase 12): the project's own *planned* window, plus the *actual* span its
+  // tasks occupied. Enough to render planned-vs-actual from one call.
+  startDate: string;
+  expectedCompletionDate: string | null;
+  actualCompletionDate: string | null;
+  firstTaskStartDate: string | null;
+  lastTaskCompletionDate: string | null;
   memberWorkloads: ProjectMemberWorkload[];
 }
 
@@ -273,7 +311,10 @@ export interface CreateProjectPayload {
   organizationId: number;
 }
 
-/** `POST /task` → int (new task id). */
+/**
+ * `POST /task` → int (new task id). `teamId` is optional and **create-only** — see
+ * `UpdateTaskPayload` for why changing it later goes through its own route.
+ */
 export interface CreateTaskPayload {
   title: string;
   description: string;
@@ -282,6 +323,7 @@ export interface CreateTaskPayload {
   organizationId: number;
   expectedCompletionDate: string | null;
   projectId: number | null;
+  teamId: number | null;
 }
 
 /**
@@ -299,6 +341,8 @@ export interface TaskDetail {
   actualCompletionDate: string | null;
   projectId: number | null;
   organizationId: number | null;
+  teamId: number | null;
+  teamName: string | null;
   createdByUserId: number;
   assignedToUserId: number | null;
   assignedToFullName: string | null;
@@ -317,7 +361,13 @@ export interface UpdateProjectPayload {
   expectedCompletionDate: string | null;
 }
 
-/** `PUT /task` → UpdateTaskCommand. Partial: no status/startDate/project reassignment. */
+/**
+ * `PUT /task` → UpdateTaskCommand. Partial: no status/startDate/project reassignment.
+ *
+ * ⚠️ It deliberately carries **no `teamId`** either. The backend kept it off the update command so
+ * a form save can't blank the team — the same trap that already bit `description`. Changing a
+ * task's team goes through `PUT /task/{id}/team/{teamId}` and `DELETE /task/{id}/team` instead.
+ */
 export interface UpdateTaskPayload {
   taskId: number;
   title: string;
@@ -375,16 +425,6 @@ export const PROJECT_STATUS_META: Record<ProjectStatus, { label: string; tone: T
   [ProjectStatus.Archived]: { label: 'Archived', tone: 'neutral' },
   [ProjectStatus.Cancelled]: { label: 'Cancelled', tone: 'danger' },
 };
-
-export const ORGANIZATION_STATUS_META: Record<OrganizationStatus, { label: string; tone: Tone }> = {
-  [OrganizationStatus.Active]: { label: 'Active', tone: 'success' },
-  [OrganizationStatus.Inactive]: { label: 'Inactive', tone: 'neutral' },
-  [OrganizationStatus.Suspended]: { label: 'Suspended', tone: 'danger' },
-};
-
-export function organizationStatusMeta(status: OrganizationStatus): { label: string; tone: Tone } {
-  return ORGANIZATION_STATUS_META[status] ?? { label: 'Unknown', tone: 'neutral' };
-}
 
 export function taskStatusMeta(status: TaskStatus): { label: string; tone: Tone } {
   return TASK_STATUS_META[status] ?? { label: 'Unknown', tone: 'neutral' };

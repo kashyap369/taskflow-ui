@@ -8,6 +8,8 @@ import {
   ArrowRight,
   Building2,
   CalendarDays,
+  ChevronDown,
+  ChevronUp,
   CircleCheckBig,
   Clock,
   FolderKanban,
@@ -22,8 +24,20 @@ import {
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { OrganizationFacade } from '../organization.facade';
+import { taskPriorityMeta, taskStatusMeta } from '../organization.models';
 
 type Preset = 'week' | 'month' | 'year' | 'all';
+
+/** One bar on the planned-vs-actual timeline, positioned as a % of the combined span. */
+interface TimelineTrack {
+  label: string;
+  start: string;
+  end: string;
+  /** True when the range is still running (no completion date yet) — the bar is drawn open-ended. */
+  ongoing: boolean;
+  left: number;
+  width: number;
+}
 
 @Component({
   selector: 'app-reports-page',
@@ -53,6 +67,8 @@ type Preset = 'week' | 'month' | 'year' | 'all';
         ListChecks,
         ArrowRight,
         Building2,
+        ChevronDown,
+        ChevronUp,
       }),
     },
   ],
@@ -105,6 +121,81 @@ export class ReportsPage {
           barMaxWidth: 26,
         },
       ],
+    };
+  });
+
+  readonly taskStatusMeta = taskStatusMeta;
+  readonly taskPriorityMeta = taskPriorityMeta;
+
+  /** Which team's task list is expanded in the performance table (null = none). */
+  readonly expandedTeamId = signal<number | null>(null);
+
+  toggleTeamTasks(teamId: number): void {
+    this.expandedTeamId.update((current) => (current === teamId ? null : teamId));
+  }
+
+  /**
+   * Planned-vs-actual for the selected project, as two bars over one shared span.
+   *
+   * **Planned** is the project's own window (`startDate` → `expectedCompletionDate`); **actual** is
+   * the span its tasks really occupied (`firstTaskStartDate` → `lastTaskCompletionDate`, or the
+   * project's `actualCompletionDate` if it has one). Either can be open-ended: a project with no
+   * target date, or one still running.
+   */
+  readonly projectTimeline = computed<{ tracks: TimelineTrack[]; late: boolean } | null>(() => {
+    const r = this.projectReport();
+    if (!r) {
+      return null;
+    }
+
+    const now = Date.now();
+    const ms = (value: string | null): number | null =>
+      value ? new Date(value).getTime() : null;
+
+    const plannedStart = ms(r.startDate) ?? now;
+    const plannedEndRaw = ms(r.expectedCompletionDate);
+    const actualStart = ms(r.firstTaskStartDate);
+    const actualEndRaw = ms(r.actualCompletionDate) ?? ms(r.lastTaskCompletionDate);
+
+    // An open-ended range is drawn out to "now", but flagged so the bar reads as unfinished.
+    const plannedEnd = plannedEndRaw ?? Math.max(plannedStart, actualEndRaw ?? now);
+    const actualEnd = actualStart === null ? null : (actualEndRaw ?? Math.max(actualStart, now));
+
+    const min = Math.min(plannedStart, actualStart ?? plannedStart);
+    const max = Math.max(plannedEnd, actualEnd ?? plannedEnd);
+    const span = max - min || 1;
+
+    const pct = (from: number, to: number) => ({
+      left: ((from - min) / span) * 100,
+      // Keep a sliver visible for a zero-length range (a project created and finished same-day).
+      width: Math.max(((to - from) / span) * 100, 1.5),
+    });
+
+    const tracks: TimelineTrack[] = [
+      {
+        label: 'Planned',
+        start: r.startDate,
+        end: r.expectedCompletionDate ?? '',
+        ongoing: plannedEndRaw === null,
+        ...pct(plannedStart, plannedEnd),
+      },
+    ];
+
+    if (actualStart !== null && actualEnd !== null) {
+      tracks.push({
+        label: 'Actual',
+        start: r.firstTaskStartDate ?? '',
+        end: r.actualCompletionDate ?? r.lastTaskCompletionDate ?? '',
+        ongoing: actualEndRaw === null,
+        ...pct(actualStart, actualEnd),
+      });
+    }
+
+    return {
+      tracks,
+      // Only a *finished* run that overran the target counts as late — an in-flight project past
+      // its date would otherwise be permanently red, which says nothing useful.
+      late: plannedEndRaw !== null && actualEndRaw !== null && actualEndRaw > plannedEndRaw,
     };
   });
 

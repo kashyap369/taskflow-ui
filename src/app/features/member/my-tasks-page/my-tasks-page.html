@@ -1,0 +1,419 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>My tasks</h1>
+        <p>Your personal workspace — only you can see these.</p>
+      </div>
+      <button type="button" class="btn-primary-cta" (click)="openCreate()">
+        <lucide-angular name="Plus" size="18"></lucide-angular>
+        New task
+      </button>
+    </div>
+
+    @if (loading() && !hasTasks()) {
+      <div class="task-table" aria-busy="true" aria-label="Loading your tasks">
+        @for (row of loadingRows; track row) {
+          <div class="task-row sk-row">
+            <div class="sk-lines">
+              <app-skeleton width="60%" height="0.95rem" />
+              <app-skeleton width="35%" height="0.75rem" />
+            </div>
+            <span><app-skeleton width="80px" height="1.35rem" radius="999px" /></span>
+            <span><app-skeleton width="70px" height="1.35rem" radius="999px" /></span>
+            <span><app-skeleton width="40px" height="0.85rem" /></span>
+            <span><app-skeleton width="150px" height="1.8rem" radius="10px" /></span>
+          </div>
+        }
+      </div>
+    } @else if (!hasTasks()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="ListChecks" size="24"></lucide-angular></span>
+        <h3>Nothing here yet</h3>
+        <p>Create your first personal task — a to-do, an errand, anything you want to track.</p>
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
+          <lucide-angular name="Plus" size="16"></lucide-angular> New task
+        </button>
+      </div>
+    } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search tasks…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search tasks"
+          />
+        </div>
+        <select
+          class="list-filter"
+          [value]="statusFilter()"
+          (change)="onStatusFilter($any($event.target).value)"
+          aria-label="Filter by status"
+        >
+          <option value="">All statuses</option>
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <select
+          class="list-filter"
+          [value]="priorityFilter()"
+          (change)="onPriorityFilter($any($event.target).value)"
+          aria-label="Filter by priority"
+        >
+          <option value="">All priorities</option>
+          @for (opt of priorityOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      @if (pager.total() === 0) {
+        <div class="list-no-match">
+          <p>No tasks match your filters.</p>
+          <button type="button" (click)="clearFilters()">Clear filters</button>
+        </div>
+      }
+
+      <div class="task-table">
+        <div class="task-row task-row--head">
+          <span>Task</span><span>Status</span><span>Priority</span><span>Subtasks</span><span>Actions</span>
+        </div>
+
+        @for (task of pager.items(); track task.id) {
+          <div class="task-row">
+            <div class="col-title">
+              <div class="task-title">{{ task.title }}</div>
+              @if (task.expectedCompletionDate) {
+                <div class="task-meta">Due {{ task.expectedCompletionDate | date: 'mediumDate' }}</div>
+              }
+            </div>
+
+            <span>
+              <span class="badge" [attr.data-tone]="taskStatusMeta(task.status).tone">
+                {{ taskStatusMeta(task.status).label }}
+              </span>
+            </span>
+
+            <span>
+              <span class="badge" [attr.data-tone]="taskPriorityMeta(task.priority).tone">
+                {{ taskPriorityMeta(task.priority).label }}
+              </span>
+            </span>
+
+            <span class="col-sub">
+              <button
+                type="button"
+                class="sub-chip"
+                (click)="openSubTasks(task)"
+                [attr.aria-label]="'Subtasks of ' + task.title"
+              >
+                <lucide-angular name="ListChecks" size="13"></lucide-angular>
+                {{ task.completedSubTaskCount }}/{{ task.subTaskCount }}
+              </button>
+            </span>
+
+            <span class="col-actions">
+              @if (task.status === TaskStatus.Todo) {
+                <button type="button" class="action-btn start" (click)="start(task)">
+                  <lucide-angular name="Play" size="14"></lucide-angular> Start
+                </button>
+              } @else if (task.status === TaskStatus.InProgress) {
+                <button type="button" class="action-btn complete" (click)="complete(task)">
+                  <lucide-angular name="CircleCheckBig" size="14"></lucide-angular> Done
+                </button>
+              } @else if (task.status === TaskStatus.Completed) {
+                <button type="button" class="action-btn reopen" (click)="reopen(task)">
+                  <lucide-angular name="RotateCcw" size="14"></lucide-angular> Reopen
+                </button>
+              }
+
+              <button
+                type="button"
+                class="icon-action"
+                (click)="openTime(task)"
+                [attr.aria-label]="'Track time on ' + task.title"
+                title="Track time"
+              >
+                <lucide-angular name="Clock" size="14"></lucide-angular>
+              </button>
+              <button
+                type="button"
+                class="icon-action"
+                (click)="openEdit(task)"
+                [attr.aria-label]="'Edit ' + task.title"
+                title="Edit task"
+              >
+                <lucide-angular name="Pencil" size="14"></lucide-angular>
+              </button>
+              <button
+                type="button"
+                class="icon-action danger"
+                (click)="remove(task)"
+                [attr.aria-label]="'Delete ' + task.title"
+                title="Delete task"
+              >
+                <lucide-angular name="Trash2" size="14"></lucide-angular>
+              </button>
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="pager-bar">
+        <app-pagination
+          [page]="pager.page()"
+          [pageSize]="pager.pageSize()"
+          [total]="pager.total()"
+          [pageSizes]="pager.pageSizes"
+          itemLabel="tasks"
+          ariaLabel="My tasks pagination"
+          (pageChange)="pager.setPage($event)"
+          (pageSizeChange)="pager.setPageSize($event)"
+        />
+      </div>
+    }
+  </div>
+
+  <!-- Create / edit task drawer -->
+  @if (showDrawer()) {
+    <button type="button" class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close task form"></button>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
+      <div class="drawer-head">
+        <h2>{{ isEditing() ? 'Edit task' : 'New task' }}</h2>
+        <button type="button" class="icon-btn" (click)="closeDrawer()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      <form class="drawer-form" [formGroup]="createForm" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="title" class="form-label">Title</label>
+          <input id="title" type="text" class="form-control" placeholder="Renew my passport" formControlName="title" />
+          @if (fieldError('title'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="description" rows="3" class="form-control" placeholder="Add details…" formControlName="description"></textarea>
+          @if (fieldError('description'); as msg) {
+            <small class="field-msg">{{ msg }}</small>
+          }
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="priority" class="form-label">Priority</label>
+            <select id="priority" class="form-control" formControlName="priority">
+              @for (opt of priorityOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          @if (!isEditing()) {
+            <div class="field">
+              <label for="startDate" class="form-label">Start date</label>
+              <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+            </div>
+          }
+        </div>
+
+        <div class="field">
+          <label for="expectedCompletionDate" class="form-label">Due date <span>(optional)</span></label>
+          <input id="expectedCompletionDate" type="date" class="form-control" formControlName="expectedCompletionDate" />
+        </div>
+
+        @if (isEditing()) {
+          <p class="drawer-note">
+            Status and start date aren't editable here — use Start / Done / Reopen on the row.
+          </p>
+        }
+
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            @if (saving()) {
+              {{ isEditing() ? 'Saving…' : 'Creating…' }}
+            } @else {
+              {{ isEditing() ? 'Save changes' : 'Create task' }}
+            }
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+
+  <!-- Subtasks drawer -->
+  @if (openSubTaskTaskId() !== null) {
+    <button type="button" class="drawer-backdrop" (click)="closeSubTasks()" aria-label="Close subtasks"></button>
+    <aside class="drawer" appDialog (dismiss)="closeSubTasks()">
+      <div class="drawer-head">
+        <h2>Subtasks</h2>
+        <button type="button" class="icon-btn" (click)="closeSubTasks()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      <form class="sub-add" [formGroup]="subTaskForm" (ngSubmit)="addSubTask()">
+        <input type="text" class="form-control" placeholder="Add a step…" formControlName="title" aria-label="New step title" />
+        <button type="submit" class="btn-primary-cta sm" [disabled]="saving()" aria-label="Add step">
+          <lucide-angular name="Plus" size="16"></lucide-angular>
+        </button>
+      </form>
+
+      @if (subTasks().length === 0) {
+        <p class="muted-empty">No subtasks yet. Break this task into steps.</p>
+      } @else {
+        <div class="sub-list">
+          @for (sub of subTasks(); track sub.id) {
+            <div class="sub-row">
+              @if (editingSubTaskId() === sub.id) {
+                <form class="sub-edit" [formGroup]="subTaskEditForm" (ngSubmit)="saveSubTaskEdit()">
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="title"
+                    (keydown.escape)="cancelSubTaskEdit()"
+                    aria-label="Subtask title"
+                  />
+                  <button type="submit" class="icon-action ok" aria-label="Save subtask">
+                    <lucide-angular name="CircleCheckBig" size="15"></lucide-angular>
+                  </button>
+                  <button type="button" class="icon-action" (click)="cancelSubTaskEdit()" aria-label="Cancel">
+                    <lucide-angular name="X" size="15"></lucide-angular>
+                  </button>
+                </form>
+              } @else {
+                <label class="sub-check">
+                  <input
+                    type="checkbox"
+                    [checked]="sub.status === 3"
+                    (change)="toggleSubTask(sub)"
+                  />
+                  <span class="sub-title" [class.done]="sub.status === 3">{{ sub.title }}</span>
+                </label>
+                <button
+                  type="button"
+                  class="icon-action"
+                  (click)="startSubTaskEdit(sub)"
+                  [attr.aria-label]="'Rename ' + sub.title"
+                >
+                  <lucide-angular name="Pencil" size="14"></lucide-angular>
+                </button>
+                <button
+                  type="button"
+                  class="icon-action danger"
+                  (click)="removeSubTask(sub)"
+                  [attr.aria-label]="'Delete ' + sub.title"
+                >
+                  <lucide-angular name="Trash2" size="14"></lucide-angular>
+                </button>
+              }
+            </div>
+          }
+        </div>
+        <p class="drawer-note">
+          Completing every subtask completes the task automatically.
+        </p>
+      }
+    </aside>
+  }
+
+  <!-- Time-tracking drawer -->
+  @if (openWorkLogTaskId() !== null) {
+    <button type="button" class="drawer-backdrop" (click)="closeTime()" aria-label="Close time tracking"></button>
+    <aside class="drawer" appDialog (dismiss)="closeTime()">
+      <div class="drawer-head">
+        <h2>Time tracking</h2>
+        <button type="button" class="icon-btn" (click)="closeTime()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="tracked-total">
+        <span>Total tracked</span>
+        <strong>{{ formatMinutes(totalTrackedMinutes()) }}</strong>
+      </div>
+
+      <!-- Timer -->
+      <form class="timer-card" [class.running]="runningLog()" [formGroup]="timerForm" (ngSubmit)="toggleTimer()">
+        @if (runningLog(); as running) {
+          <div class="timer-live">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            Running since {{ running.startedAt | date: 'shortTime' }}
+          </div>
+        }
+        <input type="text" class="form-control" placeholder="What are you working on?" aria-label="Timer notes" formControlName="notes" />
+        <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+          {{ runningLog() ? 'Stop timer' : 'Start timer' }}
+        </button>
+      </form>
+
+      <!-- Manual entry -->
+      <form class="drawer-form" [formGroup]="manualForm" (ngSubmit)="submitManual()">
+        <h3 class="sub-heading">Log time manually</h3>
+        <div class="field-row">
+          <div class="field">
+            <label for="startedAt" class="form-label">Start</label>
+            <input id="startedAt" type="datetime-local" class="form-control" [max]="maxDateTime" formControlName="startedAt" />
+          </div>
+          <div class="field">
+            <label for="endedAt" class="form-label">End</label>
+            <input id="endedAt" type="datetime-local" class="form-control" [max]="maxDateTime" formControlName="endedAt" />
+            @if (manualForm.controls.endedAt.hasError('order')) {
+              <small class="field-msg">End must be after start.</small>
+            } @else if (manualForm.controls.endedAt.hasError('future')) {
+              <small class="field-msg">End can't be in the future.</small>
+            }
+          </div>
+        </div>
+        <div class="field">
+          <label for="manualNotes" class="form-label">Notes <span>(optional)</span></label>
+          <input id="manualNotes" type="text" class="form-control" formControlName="notes" />
+        </div>
+        <button type="submit" class="btn-ghost full" [disabled]="saving()">Add entry</button>
+      </form>
+
+      <!-- History -->
+      @if (workLogs().length === 0) {
+        <p class="muted-empty">No time logged on this task yet.</p>
+      } @else {
+        <div class="log-list">
+          @for (log of workLogs(); track log.id) {
+            <div class="log-row">
+              <div class="log-main">
+                <strong>{{ formatMinutes(log.durationMinutes) }}</strong>
+                @if (log.isRunning) {
+                  <span class="badge" data-tone="success">Running</span>
+                }
+                <div class="log-time">
+                  {{ log.startedAt | date: 'MMM d, HH:mm' }}
+                  @if (log.endedAt) {
+                    – {{ log.endedAt | date: 'HH:mm' }}
+                  }
+                </div>
+                @if (log.notes) {
+                  <div class="log-notes">{{ log.notes }}</div>
+                }
+              </div>
+              <button
+                type="button"
+                class="icon-action danger"
+                (click)="removeWorkLog(log.id)"
+                aria-label="Delete entry"
+              >
+                <lucide-angular name="Trash2" size="14"></lucide-angular>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </aside>
+  }
+</section>

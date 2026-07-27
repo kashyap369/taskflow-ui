@@ -25,6 +25,7 @@ import {
   Sparkles,
   Sun,
   Users,
+  X,
 } from 'lucide-angular';
 
 import { AuthService } from '@core/auth/auth.service';
@@ -65,6 +66,7 @@ import { OrganizationListItem } from '@features/organization/organization.models
         Check,
         Mail,
         SlidersHorizontal,
+        X, // mobile sidebar toggle swaps Menu -> X while open
       }),
     },
   ],
@@ -86,6 +88,20 @@ export class OrganizationLayout {
 
   readonly switcherOpen = signal(false);
   readonly hasMultipleOrgs = computed(() => this.organizations().length > 1);
+
+  /**
+   * Mobile sidebar. The sidebar is `d-lg-flex` (desktop-only) and the header's hamburger had no
+   * handler at all, so below 992px the org portal had NO navigation whatsoever — Phase 6.
+   */
+  readonly sidebarOpen = signal(false);
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update((v) => !v);
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen.set(false);
+  }
 
   constructor() {
     this.orgFacade.init();

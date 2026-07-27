@@ -1,16 +1,16 @@
 .sign-in-btn {
-  padding: 10px 18px;
-  border-radius: 10px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
   border: none;
-  background: #f1f3ff;
-  color: #2b2b2b;
+  background: var(--primary-soft);
+  color: var(--text);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
 }
 
 .sign-in-btn:hover {
-  background: #6c5ce7; /* hover color */
-  color: #ffffff;
+  background: var(--primary); /* hover color */
+  color: var(--on-accent);
   transform: translateY(-1px);
 }

@@ -4,15 +4,41 @@
 .app-badge {
   display: inline-flex;
   align-items: center;
-  gap: .5rem;
+  gap: var(--space-2);
 
-  padding: .4rem .9rem;
+  padding: var(--space-2) var(--space-4);
 
   border-radius: $radius-full;
 
   background: $primary-50;
   color: $primary-700;
 
-  font-size: .875rem;
+  font-size: var(--fs-body-sm);
   font-weight: 600;
+}
+
+/**
+ * Tone badge — status/priority pills driven by a `data-tone` attribute from the
+ * `*Meta()` helpers in the feature models.
+ *
+ * Defined globally because it was previously copied into six org page stylesheets;
+ * a new page (the member portal's My tasks) rendered white-on-transparent because it
+ * had no copy. The per-page definitions are identical and simply override this with
+ * the same values — they can be deleted as each page is next touched.
+ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-body-xs);
+  font-weight: 700;
+  white-space: nowrap;
+
+  &[data-tone="neutral"] { background: var(--surface-inset); color: var(--text-muted); }
+  &[data-tone="info"]    { background: var(--info-soft); color: var(--info); }
+  &[data-tone="success"] { background: var(--success-soft); color: var(--success); }
+  &[data-tone="warning"] { background: var(--warning-soft); color: var(--warning); }
+  &[data-tone="danger"]  { background: var(--danger-soft); color: var(--danger); }
+  &[data-tone="purple"]  { background: var(--primary-soft); color: var(--primary); }
 }

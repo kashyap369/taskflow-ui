@@ -1,37 +1,389 @@
-@import '../abstracts/colors';
-@import '../abstracts/radius';
+// ======================================
+// Buttons — THE single definition. styles/components/_button.scss
+//
+// Phase 4 replaced 17 copies of `.btn-primary-cta`, 13 of `.btn-ghost` and 15 of `.icon-btn`
+// (11 / 8 / 6 subtly different bodies) with what follows. Templates were deliberately NOT rewritten,
+// so no click handler could break: the legacy class names live on as aliases at the bottom.
+//
+// Everything is a token. See docs/DESIGN.md §7 and docs/DESIGN-PHASES.md Phase 4.
+// ======================================
 
-.btn-primary-custom {
-  background: $gray-900;
-  color: $white;
-  border: none;
-  border-radius: $radius-full;
-  padding: .85rem 1.75rem;
-  font-weight: 600;
-  transition: .3s;
+:root {
+  // The pill decision DESIGN.md §7 calls for, deferred out of Phase 3 so it could be made
+  // deliberately here. The landing page was already pill while every app page was 16px, so this
+  // makes the product match its own marketing site. It is ONE token: set it to var(--radius-lg)
+  // to take the whole app back to rounded rectangles.
+  --btn-radius: var(--radius-full);
 }
 
-.btn-primary-custom:hover {
-  opacity: .9;
+// Every legacy class the skin covers, in one place. Interpolated into each selector list below so a
+// rule can never accidentally apply to `.btn` alone — the pages that need it most (auth submits,
+// page CTAs) never carry `.btn`, so a bare `.btn.is-loading` matches nothing there.
+$btn-all: '.btn, .btn-primary-cta, .btn-ghost, .btn-danger, .btn-ghost-cta, .sign-in-btn, .sign-up-btn, .action-btn';
+$btn-loading: '.btn.is-loading, .btn-primary-cta.is-loading, .btn-ghost.is-loading, .btn-danger.is-loading, .sign-in-btn.is-loading, .sign-up-btn.is-loading, .action-btn.is-loading';
+
+// ======================================
+// Base
+// ======================================
+
+// NB: the legacy aliases are carried on every selector list rather than via `@extend`.
+// `@extend .btn` would also extend BOOTSTRAP's `.btn` (bootstrap is imported first in styles.scss),
+// silently pulling its padding/font/`--bs-*` machinery into all 49 legacy buttons.
+#{$btn-all} {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2); // DESIGN.md §7: icon + label gap
+  border: 1px solid transparent;
+  border-radius: var(--btn-radius);
+  padding: var(--space-3) var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-2) var(--ease-standard),
+    border-color var(--dur-2) var(--ease-standard),
+    color var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-standard),
+    transform var(--dur-1) var(--ease-standard);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  // DESIGN.md §5: press = scale(.97)
+  &:active:not(:disabled):not(.is-loading) {
+    transform: scale(0.97);
+  }
+
+  &:disabled,
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  // Icons inherit the label's color and never shrink in a flex row.
+  svg,
+  lucide-angular {
+    flex-shrink: 0;
+  }
 }
 
-.btn-outline-custom {
-  background: $white;
-  color: $text-primary;
-  border: 1px solid $border-light;
-  border-radius: $radius-full;
-  padding: .85rem 1.75rem;
-  transition: .3s;
+// ======================================
+// Variants
+// ======================================
+
+.btn--primary,
+.btn-primary-cta,
+.sign-in-btn,
+.sign-up-btn {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  color: var(--on-accent);
+  box-shadow: var(--shadow-brand);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg), var(--shadow-brand);
+  }
 }
 
-.btn-outline-custom:hover {
-  background: $bg-secondary;
+.btn--secondary,
+.btn--outline,
+.btn-ghost {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: var(--surface-2);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
 }
 
-.btn-gradient {
-  background: $gradient-primary;
-  color: white;
-  border: none;
-  border-radius: $radius-full;
-  padding: .85rem 1.75rem;
+.btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: var(--surface-inset);
+    color: var(--text);
+  }
+}
+
+.btn--danger,
+.btn-danger {
+  background: var(--danger);
+  border-color: transparent;
+  color: var(--on-accent);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ring-danger);
+  }
+}
+
+// ======================================
+// Sizes & layout modifiers
+// ======================================
+
+.btn--sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-label);
+}
+
+.btn--lg {
+  padding: var(--space-4) var(--space-7);
+  font-size: var(--fs-body-md);
+  font-weight: var(--fw-bold);
+}
+
+.btn--full {
+  width: 100%;
+}
+
+// ======================================
+// Loading
+//
+// Every page previously expressed "saving…" by swapping the label text only, so a slow request
+// looked identical to a dead button. The spinner is a pseudo-element, so no template changes.
+// ======================================
+
+// The alias classes must be listed explicitly: a login button carries `sign-in-btn is-loading`,
+// never `btn`, so a bare `.btn.is-loading` silently matches nothing on the pages that need it most.
+#{$btn-loading} {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+
+  > * {
+    visibility: hidden;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentcolor;
+    border-radius: var(--radius-full);
+    border-inline-start-color: transparent;
+    animation: tf-btn-spin 0.6s linear infinite;
+    color: var(--on-accent);
+  }
+
+  &.btn--secondary::after,
+  &.btn--outline::after,
+  &.btn--ghost::after {
+    color: var(--text);
+  }
+}
+
+@keyframes tf-btn-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #{$btn-all} {
+    transition: none;
+
+    &:hover:not(:disabled),
+    &:active:not(:disabled) {
+      transform: none;
+    }
+  }
+
+  #{$btn-loading} {
+    &::after {
+      animation-duration: 1.6s;
+    }
+  }
+}
+
+// ======================================
+// Icon-only buttons
+//
+// The audit found `.icon-btn` meant three different things. Two are real button skins and live here.
+// The third — the password-reveal glyph sitting *inside* an input — is an input affordance, not a
+// button, and stays scoped to the auth pages (see _input.scss `.input-wrapper .icon-btn`).
+// ======================================
+
+/** Row / card action: edit, delete, expand. Was 30–34px; 36px is a comfortable target. */
+.icon-btn,
+.icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--dur-2) var(--ease-standard),
+    color var(--dur-2) var(--ease-standard),
+    border-color var(--dur-2) var(--ease-standard);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-inset);
+    color: var(--text);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &.danger:hover:not(:disabled) {
+    background: var(--danger-soft);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+}
+
+/** Top-bar affordance: theme toggle, notifications, menu. Circular, slightly larger. */
+.icon-btn--round {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+// ======================================
+// Legacy aliases
+//
+// Kept so Phase 4 required ZERO template edits across 193 buttons. Phase 10 either migrates
+// templates to `<app-button>` or renames these; until then they are the same skin, not copies.
+// ======================================
+
+// `.btn-primary-cta` / `.btn-ghost` / `.btn-danger` are carried on the base and variant selector
+// lists above. Only their size/layout one-offs remain here.
+
+/** Marketing CTAs on the public site — larger, display-weight. */
+.btn-primary-cta.light,
+.btn-ghost-cta {
+  padding: var(--space-4) var(--space-7);
+  font-size: var(--fs-body-md);
+  font-weight: var(--fw-bold);
+}
+
+/** Sits on a dark/gradient band, so it inverts rather than using surface tokens. */
+.btn-ghost-cta.on-dark {
+  background: transparent;
+  border-color: var(--accent-border-strong);
+  color: var(--on-accent);
+
+  &:hover:not(:disabled) {
+    background: var(--accent-surface);
+    border-color: var(--on-accent);
+    color: var(--on-accent);
+  }
+}
+
+/** The white-on-gradient CTA in the landing band. */
+.btn-primary-cta.light {
+  background: var(--surface);
+  color: var(--primary-strong);
+  box-shadow: var(--shadow-lg);
+
+  &:hover:not(:disabled) {
+    background: var(--surface);
+    color: var(--primary-strong);
+  }
+}
+
+.btn-ghost-cta {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+
+  &:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+}
+
+/** The auth submit buttons are always full-width and label-sized. */
+.sign-in-btn,
+.sign-up-btn {
+  width: 100%;
+  font-size: var(--fs-body-md);
+  font-weight: var(--fw-bold);
+}
+
+/**
+ * Small labelled row action ("Start", "Done", "Reopen") — was defined 3x near-identically in
+ * my-tasks / tasks-page / project-detail. State modifiers are tinted, not filled.
+ *
+ * NOTE: members-page uses `.action-btn` for an ICON-only 34px square instead, so it keeps a local
+ * override. Same class name, genuinely different control — a Phase 9/10 rename candidate.
+ */
+.action-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  gap: var(--space-1);
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+
+  &:hover:not(:disabled) {
+    background: var(--surface-inset);
+    color: var(--text);
+  }
+
+  &.start {
+    background: var(--info-soft);
+    color: var(--info);
+    border-color: transparent;
+  }
+
+  &.complete {
+    background: var(--success-soft);
+    color: var(--success);
+    border-color: transparent;
+  }
+
+  &.reopen {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border-color: transparent;
+  }
+}
+
+/** `.full` and `.sm` were per-page one-offs; promoted so the pages that used them keep working. */
+.btn-primary-cta.full,
+.btn-ghost.full {
+  width: 100%;
+}
+
+.btn-primary-cta.sm,
+.btn-ghost.sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-label);
 }

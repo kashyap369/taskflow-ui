@@ -35,4 +35,35 @@ describe('OrganizationLayout', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  // Below 992px the sidebar is off-canvas and the header hamburger is the ONLY way to reach
+  // navigation. Before Phase 6 that button had no handler at all, so the org portal had no
+  // navigation on mobile whatsoever.
+  describe('mobile sidebar', () => {
+    it('starts closed', () => {
+      expect(component.sidebarOpen()).toBeFalse();
+    });
+
+    it('toggles open and closed', () => {
+      component.toggleSidebar();
+      expect(component.sidebarOpen()).toBeTrue();
+      component.toggleSidebar();
+      expect(component.sidebarOpen()).toBeFalse();
+    });
+
+    it('closes on backdrop click', () => {
+      component.toggleSidebar();
+      component.closeSidebar();
+      expect(component.sidebarOpen()).toBeFalse();
+    });
+
+    it('renders the backdrop only while open', () => {
+      expect(fixture.nativeElement.querySelector('.sidebar-backdrop')).toBeNull();
+
+      component.toggleSidebar();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.sidebar-backdrop')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.sidebar').classList).toContain('is-open');
+    });
+  });
 });

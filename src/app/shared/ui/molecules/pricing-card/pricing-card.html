@@ -53,8 +53,9 @@
   </div>
 
   <!-- Button -->
-  <button
+  <button type="button"
     class="pricing-button"
+    (click)="selectPlan()"
     [class.filled]="buttonVariant === 'filled'"
     [class.outline]="buttonVariant === 'outline'">
 

@@ -6,7 +6,7 @@
         <p>Group people into teams inside {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="18"></lucide-angular>
           New team
         </button>
@@ -44,7 +44,7 @@
         <app-lottie-player src="/lottie/empty.json" [width]="150" [height]="150" ariaLabel="No teams yet" />
         <h3>No teams yet</h3>
         <p>Create a team like “Design” or “Engineering” to organize your people.</p>
-        <button class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="16"></lucide-angular> New team
         </button>
       </div>
@@ -133,7 +133,7 @@
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditing() ? 'Edit team' : 'New team' }}</h2>
-        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>

@@ -5,6 +5,15 @@
 // ============================================================
 
 import { Tone } from '@shared/models/tone.model';
+import { OrganizationStatus } from '@shared/models/organization-status.model';
+
+// Organization status is the same enum the organization portal renders, so it lives in
+// `shared/models`. Re-exported so `admin.models` stays the one import for admin pages.
+export {
+  ORGANIZATION_STATUS_META,
+  OrganizationStatus,
+  organizationStatusMeta,
+} from '@shared/models/organization-status.model';
 
 // ── Enums (exact API int values, mirroring TaskFlow.Domain.Enums.Identity) ──
 export enum UserStatus {
@@ -43,6 +52,54 @@ export interface AdminUserDetail {
   isEmailVerified: boolean;
   lastLoginAt: string | null;
   createdAt: string;
+}
+
+/**
+ * `GET /admin/organizations` (AdminOnly) → AdminOrganizationListItemDto[].
+ *
+ * Distinct from `GET /organization/mine`, which returns only the caller's own — a platform admin
+ * belongs to no organization, so `/mine` is always empty for them. This is the only route that
+ * sees every workspace, and the only one carrying the owner and the three counts.
+ */
+export interface AdminOrganization {
+  id: number;
+  name: string;
+  description: string | null;
+  ownerUserId: number;
+  ownerFullName: string;
+  ownerEmail: string;
+  status: OrganizationStatus;
+  memberCount: number;
+  projectCount: number;
+  taskCount: number;
+  createdAt: string;
+}
+
+/**
+ * `GET /admin/settings` → PlatformSettingDto (a singleton row).
+ *
+ * Both flags are really enforced by the API — `registrationOpen: false` makes `POST /auth/register`
+ * return **403 `REGISTRATION_CLOSED`**, and `maintenanceMode: true` makes every non-admin request
+ * return **503 `MAINTENANCE_MODE`** carrying `maintenanceMessage`. Nothing here is cosmetic.
+ */
+export interface PlatformSettings {
+  id: number;
+  applicationName: string;
+  supportEmail: string | null;
+  registrationOpen: boolean;
+  maintenanceMode: boolean;
+  maintenanceMessage: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+/** `PUT /admin/settings` → UpdatePlatformSettingsCommand (all five editable fields, returns 204). */
+export interface UpdatePlatformSettingsPayload {
+  applicationName: string;
+  supportEmail: string | null;
+  registrationOpen: boolean;
+  maintenanceMode: boolean;
+  maintenanceMessage: string | null;
 }
 
 // ── UI label / tone helpers ───────────────────────────────

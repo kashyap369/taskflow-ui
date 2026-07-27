@@ -1,24 +1,281 @@
-@import '../abstracts/radius';
+// ======================================
+// Form controls — THE single definition. styles/components/_input.scss
+//
+// Phase 5 replaced 16 copies of `.form-control`, 13 of `.form-label`, 13 of `.field-msg` and 10 of
+// `.field` with what follows, and added the states that did not exist anywhere in the app:
+// read-only (0 files), invalid (0 files), and a consistent disabled treatment (10 of ~25 files).
+//
+// Templates were NOT rewritten — same approach as Phase 4's buttons.
+// See docs/DESIGN.md §7 and docs/DESIGN-PHASES.md Phase 5.
+// ======================================
 
-// Form controls use the semantic tokens (not the raw `$border-light` / `$primary-500` palette these
-// once referenced), so they follow the active theme. The boundary comes from `--border-input`, which
-// is the one border token held to WCAG 1.4.11's 3:1 — an input's outline is the only thing that
-// identifies the control, unlike a decorative divider. See docs/DESIGN.md.
-.form-control,
-.form-select {
-  border-radius: $radius-lg;
-  border: 1px solid var(--border-input);
-  background: var(--surface);
-  color: var(--text);
-  min-height: 48px;
+:root {
+  // DESIGN.md §4: inputs use `lg`. One token, so it can be retuned in one place — the auth pages
+  // had drifted to `xl` while every other form used `lg`.
+  --input-radius: var(--radius-lg);
+  --input-height: 48px;
+  --input-height-sm: 40px;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--ring);
+// ======================================
+// Field wrapper + label + help text
+// ======================================
+
+.field {
+  margin-bottom: var(--space-4);
+}
+
+.form-label {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--text);
+
+  /** Optional/secondary note inside a label, e.g. "(optional)". */
+  span {
+    color: var(--text-subtle);
+    font-weight: var(--fw-regular);
+  }
+
+  /** Required marker — consistent across every form rather than ad-hoc asterisks in templates. */
+  &.required::after {
+    content: '*';
+    margin-inline-start: var(--space-1);
+    color: var(--danger);
+  }
+}
+
+/** Neutral helper text under a control. */
+.form-hint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--fs-label);
+  color: var(--text-muted);
+}
+
+/** Validation message. `.field-msg` is the name already in 39 templates. */
+.field-msg,
+.form-error {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--fs-label);
+  color: var(--danger);
+}
+
+// ======================================
+// The control itself
+//
+// The boundary comes from `--border-input`, the one border token held to WCAG 1.4.11's 3:1 — an
+// input's outline is the only thing identifying the control, unlike a decorative divider.
+// ======================================
+
+.form-control,
+.form-select,
+.list-search input,
+.list-filter {
+  width: 100%;
+  min-height: var(--input-height);
+  padding: var(--space-3);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body-sm);
+  transition:
+    border-color var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-standard),
+    background var(--dur-2) var(--ease-standard);
+
+  &::placeholder {
+    color: var(--text-subtle); // 4.88:1 light / 4.79:1 dark — verified by npm run a11y:contrast
+    opacity: 1; // Firefox dims placeholders by default, which would break the ratio above
+  }
+
+  &:hover:not(:disabled):not([readonly]) {
+    border-color: var(--border-strong);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  // ---- Disabled: not editable, not submitted, visibly inert ----
+  &:disabled,
+  &[disabled] {
+    background: var(--surface-inset);
+    color: var(--text-subtle);
+    border-color: var(--border);
+    cursor: not-allowed;
+  }
+
+  // ---- Read-only: value matters and is selectable, just not editable ----
+  // Distinct from disabled on purpose: same text contrast, softer field.
+  &[readonly] {
+    background: var(--surface-inset);
+    border-color: var(--border);
+    color: var(--text);
+    cursor: default;
+  }
+
+  // ---- Invalid ----
+  // `[aria-invalid]` is the accessible source of truth; `.is-invalid` is the class hook.
+  &[aria-invalid='true'],
+  &.is-invalid {
+    border-color: var(--danger);
+
+    &:focus,
+    &:focus-visible {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px var(--ring-danger);
+    }
+  }
+}
+
+/** Native select needs its own affordance since we removed the default chrome look. */
+.form-select,
+.list-filter {
+  appearance: none;
+  padding-inline-end: var(--space-8);
+  background-image: linear-gradient(45deg, transparent 50%, currentcolor 50%),
+    linear-gradient(135deg, currentcolor 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% + 2px),
+    calc(100% - 13px) calc(50% + 2px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
 }
 
 textarea.form-control {
   min-height: 120px;
+  line-height: var(--lh-normal);
+  resize: vertical;
+}
+
+/** Native date/time/number pickers inherit the theme instead of the browser default. */
+.form-control[type='date'],
+.form-control[type='datetime-local'],
+.form-control[type='time'],
+.form-control[type='number'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/** Compact controls in dense toolbars. */
+.form-control.sm,
+.form-select.sm,
+.list-filter {
+  min-height: var(--input-height-sm);
+  padding-block: var(--space-2);
+  font-size: var(--fs-label);
+}
+
+// ======================================
+// Leading-icon group
+//
+// The auth pages hand-rolled this with a left pad plus an absolutely-positioned glyph.
+// Promoted so any form can use it.
+// ======================================
+
+.input-icon-group,
+.input-wrapper,
+.list-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  > .field-icon,
+  > lucide-angular:first-child,
+  > svg:first-child {
+    position: absolute;
+    inset-inline-start: var(--space-3);
+    display: flex;
+    color: var(--text-subtle);
+    pointer-events: none; // never eat the click meant for the input
+  }
+
+  > .form-control,
+  > input {
+    padding-inline-start: var(--space-10);
+  }
+
+  /** Leave room for a trailing affordance (password reveal) when one is present. */
+  &:has(.icon-btn) > .form-control {
+    padding-inline-end: var(--space-10);
+  }
+
+  /** The leading glyph picks up the brand colour while the control has focus. */
+  &:focus-within > .field-icon {
+    color: var(--primary);
+  }
+}
+
+/**
+ * The password-reveal glyph. It lives INSIDE the control, so it is an input affordance rather than
+ * a button skin — this is the third meaning of `.icon-btn` the Phase 4 audit untangled.
+ */
+.input-icon-group .icon-btn,
+.input-wrapper .icon-btn {
+  position: absolute;
+  inset-inline-end: var(--space-2);
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  color: var(--text-subtle);
+
+  &:hover:not(:disabled) {
+    background: none;
+    color: var(--primary);
+  }
+}
+
+// ======================================
+// Checkbox / radio
+// ======================================
+
+.form-check-input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  cursor: pointer;
+  accent-color: var(--primary);
+
+  &[type='radio'] {
+    border-radius: var(--radius-full);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/** Native checkboxes/radios elsewhere still pick up the brand colour and focus ring. */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-control,
+  .form-select,
+  .list-filter {
+    transition: none;
+  }
 }

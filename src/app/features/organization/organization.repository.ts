@@ -124,6 +124,16 @@ export class OrganizationRepository {
     return this.api.put<void>(API.Task.Unassign(taskId), {});
   }
 
+  /**
+   * Put a task under a team, or clear it (`teamId: null`). Two dedicated routes rather than a field
+   * on `PUT /task` — the update command deliberately omits `teamId` so a form save can't blank it.
+   */
+  setTaskTeam(taskId: number, teamId: number | null): Observable<void> {
+    return teamId === null
+      ? this.api.delete<void>(API.Task.ClearTeam(taskId))
+      : this.api.put<void>(API.Task.AssignTeam(taskId, teamId), {});
+  }
+
   getProject(projectId: number): Observable<Project> {
     return this.api.get<Project>(API.Project.GetById(projectId));
   }
@@ -166,8 +176,20 @@ export class OrganizationRepository {
   }
 
   // ── Members ──
-  getMembers(organizationId: number): Observable<OrganizationMember[]> {
-    return this.api.get<OrganizationMember[]>(API.Member.ByOrganization(organizationId));
+  /**
+   * Both filters are optional and server-side: `organizationRoleId` narrows to one org role, and
+   * `activeOnly` drops deactivated members — which is what an assignee picker wants, since an
+   * inactive member should never be a candidate. Omitting both returns every member.
+   */
+  getMembers(
+    organizationId: number,
+    filters?: { organizationRoleId?: number | null; activeOnly?: boolean },
+  ): Observable<OrganizationMember[]> {
+    const params = ApiParams.create({
+      organizationRoleId: filters?.organizationRoleId ?? undefined,
+      activeOnly: filters?.activeOnly ? 'true' : undefined,
+    });
+    return this.api.get<OrganizationMember[]>(API.Member.ByOrganization(organizationId), params);
   }
 
   activateMember(organizationId: number, userId: number): Observable<void> {
@@ -234,6 +256,11 @@ export class OrganizationRepository {
 
   removeTeamMember(teamId: number, userId: number): Observable<void> {
     return this.api.delete<void>(API.Team.RemoveMember(teamId, userId));
+  }
+
+  /** `GET /team/{teamId}/tasks` — the tasks this team owns, in the standard list shape. */
+  getTeamTasks(teamId: number): Observable<TaskListItem[]> {
+    return this.api.get<TaskListItem[]>(API.Team.Tasks(teamId));
   }
 
   // ── Subtasks ──

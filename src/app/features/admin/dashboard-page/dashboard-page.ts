@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Building2,
   Clock,
+  Settings,
   Users,
 } from 'lucide-angular';
 
@@ -25,7 +26,7 @@ import { AdminFacade } from '../admin.facade';
     {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider({ Users, Building2, Clock, ArrowRight }),
+      useValue: new LucideIconProvider({ Users, Building2, Clock, Settings, ArrowRight }),
     },
   ],
 })
@@ -34,16 +35,21 @@ export class AdminDashboardPage {
   private readonly facade = inject(AdminFacade);
 
   readonly user = this.auth.user;
-  readonly loading = this.facade.loading;
+
+  /** Both lists feed the tiles, so hold the dashes until neither is still in flight. */
+  readonly loading = computed(() => this.facade.loading() || this.facade.organizationsLoading());
 
   readonly stats = computed(() => [
     { value: this.facade.totalUsers(), label: 'Total users', icon: 'Users' },
-    { value: this.facade.organizationAccounts(), label: 'Organization accounts', icon: 'Building2' },
+    // The real workspace count from `GET /admin/organizations` — not the number of *accounts*
+    // registered as Organization type, which is a different (and usually larger) number.
+    { value: this.facade.totalOrganizations(), label: 'Organizations', icon: 'Building2' },
     { value: this.facade.activeUsers(), label: 'Active users', icon: 'Users' },
     { value: this.facade.pendingUsers(), label: 'Pending verification', icon: 'Clock' },
   ]);
 
   constructor() {
     this.facade.init();
+    this.facade.initOrganizations();
   }
 }

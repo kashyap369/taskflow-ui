@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, output } from '@angular/core';
 import { LucideAngularModule, LucideIconData, CircleCheck } from 'lucide-angular';
 
 export interface PricingPlan {
@@ -48,6 +48,16 @@ export class PricingCard {
 
   @Input({ required: true })
   plan!: PricingPlan;
+
+  /**
+   * The card's CTA had no handler and no output, so every pricing plan's button was inert.
+   * The card stays presentational — it reports the choice and lets the page route. Phase 6.
+   */
+  readonly planSelected = output<PricingPlan>();
+
+  selectPlan(): void {
+    this.planSelected.emit(this.plan);
+  }
 
   readonly defaultFeatureIcon = CircleCheck;
 

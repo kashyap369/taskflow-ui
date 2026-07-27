@@ -5,7 +5,7 @@
         <h1>Users</h1>
         <p>Every account on the platform — the AdminOnly <code>GET /user</code> list.</p>
       </div>
-      <button class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+      <button type="button" class="btn-ghost" (click)="refresh()" [disabled]="loading()">
         <lucide-angular name="RefreshCw" size="16"></lucide-angular>
         Refresh
       </button>
@@ -53,7 +53,7 @@
     } @else if (error()) {
       <div class="notice error">
         <lucide-angular name="Users" size="18"></lucide-angular>
-        {{ error() }} <button class="link-btn" (click)="refresh()">Try again</button>
+        {{ error() }} <button type="button" class="link-btn" (click)="refresh()">Try again</button>
       </div>
     } @else {
       <!-- Filters -->
@@ -165,7 +165,7 @@
     <aside class="drawer" appDialog (dismiss)="closeUser()">
       <div class="drawer-head">
         <h2>Account details</h2>
-        <button class="icon-btn" (click)="closeUser()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeUser()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -178,23 +178,6 @@
             <app-skeleton width="100%" height="3rem" radius="14px" />
             <app-skeleton width="100%" height="3rem" radius="14px" />
             <app-skeleton width="100%" height="3rem" radius="14px" />
-          </div>
-        </div>
-      } @else if (selectedUserDenied()) {
-        <div class="drawer-body">
-          <div class="denied">
-            <span class="denied-icon"><lucide-angular name="ShieldOff" size="22"></lucide-angular></span>
-            <h3>The API won't return this account</h3>
-            <p>
-              <code>GET /user/&#123;id&#125;</code> is guarded by <code>EnsureUserAsync</code>, which
-              allows only <strong>yourself</strong> or someone who <strong>shares an organization</strong>
-              with you — there is no Admin bypass. This admin account belongs to no organization, so it
-              can list every account but open none.
-            </p>
-            <p class="denied-note">
-              Needs a backend fix (an Admin short-circuit in the guard) before this drawer is usable
-              from the platform portal.
-            </p>
           </div>
         </div>
       } @else if (selectedUser(); as u) {

@@ -5,7 +5,7 @@
         <h1>Invitations</h1>
         <p>Organizations that have invited you to join.</p>
       </div>
-      <button class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+      <button type="button" class="btn-ghost" (click)="refresh()" [disabled]="loading()">
         <lucide-angular name="RefreshCw" size="16"></lucide-angular>
         Refresh
       </button>
@@ -30,7 +30,7 @@
       <div class="notice error">
         <lucide-angular name="Mail" size="18"></lucide-angular>
         {{ error() }}
-        <button class="link-btn" (click)="refresh()">Try again</button>
+        <button type="button" class="link-btn" (click)="refresh()">Try again</button>
       </div>
     } @else if (!hasInvitations()) {
       <div class="empty-state">

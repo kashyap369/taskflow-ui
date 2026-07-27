@@ -6,10 +6,13 @@ Angular 20 app using Component-Driven Development with Atomic Design (atoms → 
 
 Before working, read the project docs in [`docs/`](docs/) — they carry full context so you don't have to re-derive it:
 
+- **`D:\Projects\TMS\TaskFlow\docs\ProjectCompletion.md`** — the **API ⇄ UI parity ledger**, the one doc covering *both* projects: which features exist on each side, which of the API's 71 endpoints this frontend consumes, and what's blocking whom. **Read it first** to see whether a task belongs here or in the backend, and **update it** (Changelog row + affected parity rows) whenever work changes what the UI consumes.
+
 - [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — what the app is, the two account types / portals, and how far it's built.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the four buckets, routing/portals, auth/session, HTTP pipeline, state, "where does X go?".
 - [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) — naming, the 5-file component rule, feature-slice shape, forms, HTTP, checklists.
 - [`docs/DESIGN.md`](docs/DESIGN.md) — the design language: fonts, color tokens (light/dark), typography, motion. Pull from tokens, never hardcode.
+- [`docs/DESIGN-PHASES.md`](docs/DESIGN-PHASES.md) — the **design remediation plan**: a full audit of where the UI diverges from DESIGN.md (token adoption, buttons, inputs, dead controls) and a numbered phase per session. When asked to "do Phase N", read this file and do exactly that phase. Also carries the **current typeface decision (Satoshi + Geist)**, which supersedes DESIGN.md §2 until Phase 10 folds it back in.
 - [`docs/PHASES.md`](docs/PHASES.md) — the phased roadmap and **current status** (update at the end of every session).
 - [`docs/V1-GAPS.md`](docs/V1-GAPS.md) — **v1 is complete**; this is what it deliberately excludes and why (backend-blocked / backend defects / deferred v1.x / non-goals). Start post-v1 work here.
 - [`docs/SESSIONS.md`](docs/SESSIONS.md) — append-only session log (gotchas/decisions; add an entry each session).

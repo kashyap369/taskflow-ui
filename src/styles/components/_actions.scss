@@ -12,7 +12,7 @@
   height: 30px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
@@ -46,11 +46,11 @@
 
 /** "These fields can't be edited" hint inside an edit drawer. */
 .drawer-note {
-  margin: -0.35rem 0 1.1rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 10px;
+  margin: -var(--space-1) 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
   background: var(--surface-inset);
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-label);
   line-height: 1.45;
 }

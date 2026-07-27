@@ -4,13 +4,16 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ArrowLeft,
+  ArrowRight,
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
   Mail,
   Pencil,
   Search,
+  SquareCheckBig,
   Trash2,
+  User,
   UserPlus,
   Users,
   X,
@@ -24,7 +27,14 @@ import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
 import { controlValidators, messageFor } from '@shared/validations';
 import { TeamFormModel } from '../organization.form-models';
-import { OrganizationMember, TeamMember } from '../organization.models';
+import {
+  OrganizationMember,
+  TaskListItem,
+  TaskStatus,
+  TeamMember,
+  taskPriorityMeta,
+  taskStatusMeta,
+} from '../organization.models';
 import { OrganizationFacade } from '../organization.facade';
 
 @Component({
@@ -55,6 +65,9 @@ import { OrganizationFacade } from '../organization.facade';
         X,
         Pencil,
         Search,
+        SquareCheckBig,
+        User,
+        ArrowRight,
       }),
     },
   ],
@@ -114,6 +127,80 @@ export class TeamDetailPage {
     const onTeam = new Set(this.team()?.members.map((m) => m.userId) ?? []);
     return this.members().filter((m) => m.isActive && !onTeam.has(m.userId));
   });
+
+  // ── The team's own tasks (`GET /team/{id}/tasks`) ──
+
+  /**
+   * What the team **owns** (`Task.TeamId`) — a different question from who is on it. A task can be
+   * assigned to someone outside the team, and a member's other tasks don't appear here.
+   */
+  readonly tasks = this.facade.teamTasks;
+  readonly hasTasks = computed(() => this.tasks().length > 0);
+  readonly openTaskCount = computed(
+    () => this.tasks().filter((t) => t.status !== TaskStatus.Completed).length,
+  );
+
+  readonly taskSearch = signal('');
+  readonly taskStatusFilter = signal<'' | TaskStatus>('');
+
+  readonly statusOptions: { value: TaskStatus; label: string }[] = [
+    { value: TaskStatus.Todo, label: 'To do' },
+    { value: TaskStatus.InProgress, label: 'In progress' },
+    { value: TaskStatus.Completed, label: 'Completed' },
+    { value: TaskStatus.Blocked, label: 'Blocked' },
+    { value: TaskStatus.Cancelled, label: 'Cancelled' },
+  ];
+
+  readonly filteredTasks = computed<TaskListItem[]>(() => {
+    const term = this.taskSearch().trim().toLowerCase();
+    const status = this.taskStatusFilter();
+    return this.tasks().filter((t) => {
+      const matchesTerm = !term || t.title.toLowerCase().includes(term);
+      const matchesStatus = status === '' || t.status === status;
+      return matchesTerm && matchesStatus;
+    });
+  });
+
+  readonly taskPager = createPagination(this.filteredTasks, { pageSize: 10 });
+
+  readonly taskStatusMeta = taskStatusMeta;
+  readonly taskPriorityMeta = taskPriorityMeta;
+
+  onTaskSearch(value: string): void {
+    this.taskSearch.set(value);
+  }
+
+  onTaskStatusFilter(value: string): void {
+    this.taskStatusFilter.set(value === '' ? '' : (Number(value) as TaskStatus));
+  }
+
+  clearTaskFilters(): void {
+    this.taskSearch.set('');
+    this.taskStatusFilter.set('');
+  }
+
+  /** Take the task off this team. The task itself is untouched — only the team link is cleared. */
+  async removeTaskFromTeam(task: TaskListItem): Promise<void> {
+    const ok = await this.dialog.confirmDelete(
+      'Remove task from team?',
+      `"${task.title}" stays in the organization — only its link to ${this.team()?.name ?? 'this team'} is cleared.`,
+      'Remove',
+    );
+    if (ok) {
+      this.facade.setTaskTeam(task.id, null);
+    }
+  }
+
+  /** The member this task is assigned to, if they're in the organization member list. */
+  assigneeName(task: TaskListItem): string | null {
+    if (task.assignedToUserId == null) {
+      return null;
+    }
+    return (
+      this.members().find((m) => m.userId === task.assignedToUserId)?.userFullName ??
+      `User #${task.assignedToUserId}`
+    );
+  }
 
   constructor() {
     this.facade.init();

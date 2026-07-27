@@ -1,6 +1,11 @@
 <div class="organization-layout d-flex">
   <!-- Sidebar will come later -->
-  <aside class="sidebar d-none d-lg-flex flex-column">
+  <!-- Closes the mobile sidebar on outside click. Desktop never renders it. -->
+  @if (sidebarOpen()) {
+    <div class="sidebar-backdrop d-lg-none" (click)="closeSidebar()" aria-hidden="true"></div>
+  }
+
+  <aside class="sidebar d-lg-flex flex-column" [class.is-open]="sidebarOpen()">
     <!-- Logo -->
 
     <div class="logo">
@@ -158,20 +163,6 @@
 
     <div class="flex-grow-1"></div>
 
-    <!-- Upgrade Card -->
-
-    <div class="upgrade-card">
-      <div class="upgrade-title">
-        <lucide-angular name="Crown" size="18"> </lucide-angular>
-
-        Upgrade to Business
-      </div>
-
-      <p>Unlock advanced reports, unlimited members and custom roles.</p>
-
-      <button class="btn btn-upgrade">See plans</button>
-    </div>
-
     <!-- Help -->
 
     <a class="help-link">
@@ -194,40 +185,21 @@
           <div class="header-left d-flex align-items-center">
             <!-- Mobile Toggle -->
 
-            <button class="btn btn-link d-lg-none p-0 me-3" type="button">
-              <lucide-angular name="Menu" size="22"> </lucide-angular>
+            <button
+              class="btn btn-link d-lg-none p-0 me-3"
+              type="button"
+              (click)="toggleSidebar()"
+              [attr.aria-expanded]="sidebarOpen()"
+              [attr.aria-label]="sidebarOpen() ? 'Close navigation menu' : 'Open navigation menu'"
+            >
+              <lucide-angular [name]="sidebarOpen() ? 'X' : 'Menu'" size="22"> </lucide-angular>
             </button>
 
-            <!-- Search -->
-
-            <div class="search-box">
-              <lucide-angular name="Search" class="search-icon" size="18"> </lucide-angular>
-
-              <input type="text" placeholder="Search projects, tasks, people..." />
-
-              <div class="shortcut">⌘ K</div>
-            </div>
           </div>
 
           <!-- Right -->
 
           <div class="header-right d-flex align-items-center">
-            <!-- Create -->
-
-            <button class="btn btn-create">
-              <lucide-angular name="Plus" size="18"> </lucide-angular>
-
-              Create
-            </button>
-
-            <!-- Notification -->
-
-            <button class="icon-btn position-relative">
-              <lucide-angular name="Bell" size="18"> </lucide-angular>
-
-              <span class="notification-badge"> 3 </span>
-            </button>
-
             <!-- Theme toggle -->
 
             <button

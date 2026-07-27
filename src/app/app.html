@@ -1,2 +1,13 @@
+@if (maintenanceMessage(); as message) {
+  <!--
+    The platform is in maintenance mode: every non-admin request comes back 503. Lives at the app
+    root so it shows in whichever portal the user is in, and is a banner rather than a toast because
+    it describes a state, not a single failed request.
+  -->
+  <div class="maintenance-banner" role="status">
+    <span class="maintenance-title">Maintenance in progress</span>
+    <span class="maintenance-message">{{ message }}</span>
+  </div>
+}
 
 <router-outlet />

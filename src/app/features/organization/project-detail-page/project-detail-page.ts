@@ -146,7 +146,12 @@ export class ProjectDetailPage {
     priority: [TaskPriority.Medium, this.taskRules['priority']],
     startDate: [this.today(), this.taskRules['startDate']],
     expectedCompletionDate: [''],
+    teamId: [''],
   });
+
+  readonly teamOptions = computed<{ value: number; label: string }[]>(() =>
+    this.facade.teams().map((t) => ({ value: t.id, label: t.name })),
+  );
 
   readonly projectForm = this.fb.nonNullable.group({
     title: ['', this.projectRules['title']],
@@ -193,6 +198,7 @@ export class ProjectDetailPage {
       priority: TaskPriority.Medium,
       startDate: this.today(),
       expectedCompletionDate: '',
+      teamId: '',
     });
     this.showDrawer.set(true);
   }
@@ -207,6 +213,7 @@ export class ProjectDetailPage {
       expectedCompletionDate: task.expectedCompletionDate
         ? this.toDateInput(task.expectedCompletionDate)
         : '',
+      teamId: task.teamId ? String(task.teamId) : '',
     });
     this.showDrawer.set(true);
     // The row has no description — fill it from the detail endpoint so saving doesn't blank it.
@@ -229,6 +236,7 @@ export class ProjectDetailPage {
     }
     const v = this.createForm.getRawValue();
     const target = v.expectedCompletionDate ? this.toIso(v.expectedCompletionDate) : null;
+    const teamId = v.teamId ? Number(v.teamId) : null;
     const editing = this.editingTask();
 
     if (editing) {
@@ -239,6 +247,11 @@ export class ProjectDetailPage {
         priority: Number(v.priority) as TaskPriority,
         expectedCompletionDate: target,
       });
+      // `UpdateTaskCommand` carries no `teamId` on purpose — the team moves through its own route,
+      // and only when it actually changed.
+      if (teamId !== editing.teamId) {
+        this.facade.setTaskTeam(editing.id, teamId);
+      }
     } else {
       this.facade.createProjectTask(this.projectId, {
         title: v.title,
@@ -246,6 +259,7 @@ export class ProjectDetailPage {
         priority: Number(v.priority) as TaskPriority,
         startDate: this.toIso(v.startDate),
         expectedCompletionDate: target,
+        teamId,
       });
     }
     this.closeDrawer();

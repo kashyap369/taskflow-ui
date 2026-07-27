@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   LayoutDashboard,
+  ListChecks,
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
@@ -35,6 +36,7 @@ import { MemberFacade } from '@features/member/member.facade';
         LogOut,
         LayoutDashboard,
         Mail,
+        ListChecks,
       }),
     },
   ],

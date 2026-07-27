@@ -156,7 +156,12 @@
                   autocomplete="new-password"
                   formControlName="password"
                 />
-                <button type="button" class="icon-btn" (click)="togglePasswordVisibility()">
+                <button
+                  type="button"
+                  class="icon-btn"
+                  (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                >
                   <lucide-angular [name]="showPassword() ? 'EyeOff' : 'Eye'" [size]="16"></lucide-angular>
                 </button>
               </div>
@@ -190,8 +195,10 @@
               <span class="terms-box">
                 <lucide-angular name="Check" [size]="12"></lucide-angular>
               </span>
+              <!-- No Terms/Privacy pages exist yet, so these are emphasised text rather than
+                   links that go nowhere. Make them routerLinks once the pages are written. -->
               <span class="terms-text">
-                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+                I agree to the <strong>Terms of Service</strong> and <strong>Privacy Policy</strong>.
               </span>
             </label>
             @if (fieldError('acceptTerms'); as msg) {

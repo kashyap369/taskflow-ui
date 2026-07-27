@@ -9,8 +9,10 @@
     "test": "ng test",
     "storybook": "ng run TaskFlowApp:storybook",
     "build-storybook": "ng run TaskFlowApp:build-storybook",
-    "lint": "ng lint",
-    "a11y:contrast": "node scripts/a11y-contrast.mjs"
+    "lint": "ng lint && node scripts/design-lint.mjs",
+    "a11y:contrast": "node scripts/a11y-contrast.mjs",
+    "design:lint": "node scripts/design-lint.mjs",
+    "design:report": "node scripts/design-lint.mjs --all"
   },
   "prettier": {
     "printWidth": 100,

@@ -1,12 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
+  Building2,
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
   LayoutDashboard,
   LogOut,
   Moon,
+  Settings,
   ShieldCheck,
   Sun,
   Users,
@@ -34,6 +36,8 @@ import { AuthFacade } from '@features/auth/auth.facade';
         LogOut,
         LayoutDashboard,
         Users,
+        Building2,
+        Settings,
       }),
     },
   ],

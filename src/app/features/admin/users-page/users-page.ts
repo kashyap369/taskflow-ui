@@ -82,7 +82,6 @@ export class AdminUsersPage {
   readonly selectedUser = this.facade.selectedUser;
   readonly selectedUserId = this.facade.selectedUserId;
   readonly detailLoading = this.facade.detailLoading;
-  readonly selectedUserDenied = this.facade.selectedUserDenied;
 
   readonly userStatusMeta = userStatusMeta;
   readonly accountTypeMeta = accountTypeMeta;

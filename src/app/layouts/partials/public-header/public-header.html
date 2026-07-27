@@ -35,9 +35,11 @@
         <button
           class="navbar-toggler"
           type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarMenu"
-          aria-label="Toggle navigation"
+          (click)="toggleMenu()"
+          [class.is-open]="menuOpen()"
+          [attr.aria-expanded]="menuOpen()"
+          aria-controls="navbarMenu"
+          [attr.aria-label]="menuOpen() ? 'Close navigation' : 'Open navigation'"
         >
           <span></span>
           <span></span>
@@ -46,18 +48,23 @@
       </div>
 
       <!-- Menu -->
-      <div class="collapse navbar-collapse" id="navbarMenu">
+      <div class="navbar-collapse" id="navbarMenu" [class.is-open]="menuOpen()">
         <ul class="navbar-nav mx-auto">
           @for (link of navLinks; track link.fragment) {
             <li class="nav-item">
-              <a class="nav-link" [routerLink]="['/']" [fragment]="link.fragment">
+              <a
+                class="nav-link"
+                [routerLink]="['/']"
+                [fragment]="link.fragment"
+                (click)="closeMenu()"
+              >
                 {{ link.label }}
               </a>
             </li>
           }
         </ul>
 
-        <a routerLink="/auth/login" class="signin d-lg-none">Sign in</a>
+        <a routerLink="/auth/login" class="signin d-lg-none" (click)="closeMenu()">Sign in</a>
       </div>
     </div>
   </nav>

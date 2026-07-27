@@ -42,25 +42,48 @@ generic).
 ### Families
 | Role | Family | Weights loaded | Notes |
 |---|---|---|---|
-| **Display / Headings / UI** | `Plus Jakarta Sans` | 500, 600, 700, 800 | Geometric, friendly, a little character. Used for headings, buttons, labels, nav. |
-| **Body / Long-form** | `Inter` | 400, 500, 600, 700 | Neutral, hyper-legible at small sizes. Paragraphs, descriptions, table cells. |
+| **Display / Headings / UI** | `Satoshi` | 500, 600, 700, 800, 900 | Geometric grotesque with real character — closed apertures, distinctive `a`/`g`/`R`. Headings, buttons, labels, nav. |
+| **Body / Long-form** | `Geist` | 400, 500, 600, 700 | Neutral, hyper-legible at 13–14px. Paragraphs, descriptions, table cells. |
+| **Numeric / metrics / code** | `Geist Mono` | 400, 500, 600 | True tabular figures. Dashboard stats, table numerals, durations, `<code>`. |
 
-Loaded via Google Fonts in `src/index.html` (with `preconnect` + `display=swap`). Exposed as SCSS
-tokens in `styles/abstracts/_typography.scss` and as CSS vars:
+Satoshi loads from **Fontshare**, Geist + Geist Mono from **Google Fonts**, both in `src/index.html`
+(with `preconnect` + `display=swap`). Self-hosting Satoshi's woff2 under `assets/fonts/satoshi/` is
+the eventual goal — it removes a third-party render-blocking request — but is deferred.
+
+Exposed as SCSS tokens **and CSS vars** in `styles/abstracts/_typography.scss` (same pattern as
+`_motion.scss` — the SCSS token and its `--var` mirror live together):
 
 ```
---font-display: 'Plus Jakarta Sans', system-ui, sans-serif;   /* $font-family-display */
---font-body:    'Inter', system-ui, sans-serif;               /* $font-family-base    */
+--font-display: 'Satoshi', system-ui, sans-serif;      /* $font-family-display */
+--font-body:    'Geist', system-ui, sans-serif;        /* $font-family-base    */
+--font-mono:    'Geist Mono', ui-monospace, monospace; /* $font-family-mono    */
 ```
+
+> Replaced Plus Jakarta Sans + Inter in Phase 1. Inter is the default-looking choice a product like
+> this should not be making; see [DESIGN-PHASES.md](DESIGN-PHASES.md) "Typeface decision".
 
 Rule of thumb: **headings and anything bold/short → display; anything you read in sentences → body.**
 
-### Type scale (already in `_typography.scss`)
+### Type scale (in `_typography.scss`, mirrored as `--fs-*`)
 Display `5rem / 4.5 / 4` · H1 `3rem` · H2 `2.25` · H3 `1.875` · H4 `1.5` · H5 `1.25` · H6 `1.125` ·
-Body `xl 1.25 / lg 1.125 / md 1 / sm .875 / xs .75`.
+Body `xl 1.25 / lg 1.125 / md 1 / sm .875 / **label .8125** / xs .75 / **2xs .6875**`.
+
+`--fs-label` (13px — labels, table headers, meta) and `--fs-body-2xs` (11px — chips, priority tags)
+were added in Phase 1: the codebase had ~45 ad-hoc sizes clustered at those two roles with no token
+to land on.
+
+**Fluid tokens** for headlines that scale with the viewport — the discrete scale can't express a
+responsive ramp, and the alternative is hand-rolled `clamp()` drift:
+`--fs-fluid-hero` · `--fs-fluid-h1` · `--fs-fluid-h2` · `--fs-fluid-h4`.
+
+**A component never writes a raw `font-size`.** `npm run design:lint` fails the build on one. The
+single sanctioned exception is `em` on `<code>`/`<kbd>`/`<pre>`, which is context-relative on purpose
+because a mono face runs optically larger at the same px.
 
 ### Weights & tracking
-- Big headings (`≥ H2`): weight **700–800**, letter-spacing **-0.02em to -0.03em** (`$tracking-tight`).
+- Big headings (`≥ H2`): weight **700–800**, letter-spacing **-0.02em to -0.03em**
+  (`--tracking-tight` / `--tracking-tighter`). `$tracking-tight` was `-0.05em`, well past that range
+  and visibly cramped on Satoshi — corrected in Phase 1.
   Tight tracking on large display text is the hallmark of a designed page.
 - Body: weight **400–500**, normal tracking, line-height **1.6–1.8** for comfort.
 - Eyebrow labels (the little "FEATURES" kickers): display, **700**, uppercase, letter-spacing
@@ -69,7 +92,9 @@ Body `xl 1.25 / lg 1.125 / md 1 / sm .875 / xs .75`.
 
 ### Numeric / stats
 For dashboard numbers and metrics use display weight 700–800 with `font-variant-numeric: tabular-nums`
-so columns of numbers align.
+so columns of numbers align. Implemented in Phase 1 via `styles/base/_typography.scss`:
+`.stat-value` / `.metric-value` / `.tabular` get tabular figures automatically; `.metric-mono` adds
+Geist Mono for the big readouts; `.cell-numeric` right-aligns table figures.
 
 ---
 
@@ -136,6 +161,28 @@ every foreground/background pairing the UI renders, in both themes — 4.5:1 for
 **Run it after touching any colour token.** Storybook additionally runs axe-core per story
 (`@storybook/addon-a11y`, set to `test: 'error'` in `.storybook/preview.ts`).
 
+### On-accent — content sitting ON a saturated fill (added Phase 2)
+`--on-accent` (white), `--on-accent-muted`, `--on-accent-subtle`, plus the glass set
+`--accent-surface`, `--accent-surface-2`, `--accent-border`, `--accent-border-strong`,
+`--accent-grid`, `--accent-mint`, `--accent-gold`.
+
+**These are identical in dark mode, and that is the point.** `--on-primary` flips to near-black in
+dark because `--primary` becomes a light violet — but a brand *gradient* stays saturated in both
+themes, so its content stays white. Phase 2 found ~65 `color: #fff` sites relying on this; mapping
+them to `--on-primary` would have turned the auth showcase panel's text black.
+
+### Decorative series vs status (added Phase 2)
+`--accent-violet` · `--accent-blue` · `--accent-pink` · `--accent-amber` · `--accent-emerald` —
+meaning-free colors for avatars, icon tiles, ambient blobs and chart series. Lifted in dark mode.
+
+**Use these when a color means nothing; use status tokens when it means something.** They are not
+interchangeable: light-mode `--warning` is deliberately darkened to `#96530b` so warning *text*
+clears 4.5:1, and Phase 3 caught a rating star mapped to it rendering **brown instead of gold**.
+
+Composed gradients: `--gradient-showcase` (auth panel), `--gradient-admin` (admin's slate identity),
+`--gradient-highlight`, `--gradient-avatar-1/-2/-3`. Plus `--scrim` (modal/drawer backdrop) and the
+status focus rings `--ring-danger` / `--ring-success`.
+
 ### Gradients & atmosphere
 - `--gradient-brand`: `linear-gradient(135deg, var(--primary), var(--secondary))` — the one hero/logo/
   accent gradient. Use it *once or twice* per view, max.
@@ -153,11 +200,20 @@ Soft, colored-neutral shadows; in dark mode shadows are deeper and near-black.
 
 ## 4. Space, Radius, Layout
 
-- **Spacing base = 4 px.** Use multiples (4, 8, 12, 16, 24, 32, 48, 64, 96). Section vertical rhythm:
-  `$section-padding-y: 6rem` (desktop), tighten to ~4rem on mobile.
-- **Radius** (`_radius.scss`): xs 4 · sm 6 · md 8 · lg 12 · xl 16 · 2xl 20 · 3xl 24 · full. Cards use
-  **xl–2xl**, buttons/pills use **full**, chips use **full**, inputs use **lg**. Consistent, generous
+- **Spacing base = 4 px** — `styles/abstracts/_spacing.scss`, added in Phase 3 (before that there was
+  no spacing token in the codebase at all, so every padding was invented per component). Steps are
+  named `--space-1` … `--space-24` by 4px multiple; the mid-range is dense (`7`=28px, `9`=36px,
+  `11`=44px) so snapping never forces a visible reflow. Composed rhythm tokens: `--card-padding`,
+  `--page-header-gap`, `--toolbar-gap`, `--stack-gap`. Section vertical rhythm `--space-24` (6rem)
+  desktop, `--space-16` (4rem) mobile.
+- **Radius** (`_radius.scss`, mirrored as `--radius-*`): xs 4 · sm 6 · md 8 · lg 12 · xl 16 · 2xl 20 ·
+  3xl 24 · full. Cards use **xl–2xl**, chips use **full**, inputs use **lg**. Consistent, generous
   rounding is a big part of the "designed" feel — avoid mixing 6px and 20px randomly.
+  Phase 3 snapped 285 raw values across 24 distinct sizes onto 8 steps with this band table:
+  `≤4→xs · 5-6→sm · 7-9→md · 10-12→lg · 13-16→xl · 17-23→2xl · ≥24→3xl · 999/9999→full`.
+  `50%` (true circles) and `inherit` are left alone — neither is a scale step.
+- **Both are enforced.** `npm run design:lint` fails on a raw `border-radius`. Hex, px and rem values
+  *inside comments* are ignored, so a token's rationale can quote the value it replaced.
 - **Container**: max-width `1320px` (`$container-max-width`), `1rem` gutter.
 - **Focus**: never remove outlines. Use `box-shadow: 0 0 0 3px var(--ring)` on `:focus-visible`.
 
@@ -236,15 +292,28 @@ Angular has no Framer Motion, so we get the same results with platform tools:
 These are conventions the shared/ui library should converge on. See
 [ATOMIC-DESIGN-GUIDE.md](ATOMIC-DESIGN-GUIDE.md) for atom/molecule/organism placement.
 
-- **Buttons**: pill radius (`--radius-full`), display font 600. `primary` = brand fill + brand shadow;
-  `secondary`/`outline` = `--surface` + `--border`; `ghost` = transparent. Press scales `.97`; primary
-  hover deepens to `--primary-strong` and lifts. Icon + label gap `.5rem`.
+- **Buttons** — one definition, `styles/components/_button.scss`. Base `.btn` + variants
+  `.btn--primary` (brand gradient + brand shadow), `.btn--secondary`/`--outline`, `.btn--ghost`,
+  `.btn--danger`; sizes `.btn--sm`/`--lg`; layout `.btn--full`. Pill radius via **`--btn-radius`**
+  (one token — set to `var(--radius-lg)` for rounded rectangles app-wide). Display font 600, icon gap
+  `--space-2`, press `scale(.97)`, focus `0 0 0 3px var(--ring)`, and a real **`.is-loading`** spinner.
+  Legacy names (`.btn-primary-cta`, `.btn-ghost`, `.sign-in-btn`, `.sign-up-btn`, `.action-btn`) are
+  aliases on the same skin, listed in the `$btn-all` variable — **never `@extend .btn`**, that also
+  extends Bootstrap's `.btn`.
+- **Icon buttons**: `.icon-btn`/`.icon-action` = 36px row action; `.icon-btn--round` = 40px circular
+  top-bar affordance. A glyph *inside* a control is an input affordance, not a button — see `_input.scss`.
 - **Cards**: `--surface`, radius `xl–2xl`, `1px --border`, `--shadow-md`; hover lift + `--shadow-lg`.
   Padding `1.5–2rem`.
 - **Chips / badges / priority tags**: pill, `--*-soft` background + solid status text; tiny (`.72rem`),
   display, medium weight. Priority: High→danger, Medium→warning, Low→success.
-- **Inputs**: radius `lg`, `--surface` bg, `1px --border-strong`; focus → `--primary` border +
-  `--ring` shadow. Never a bare browser input.
+- **Inputs** — one definition, `styles/components/_input.scss`. `--input-radius` (= `lg`),
+  `--input-height` 48px, `--surface` bg, `1px --border-input` boundary; focus → `--primary` border +
+  `--ring`. Full vocabulary: `.field`, `.form-label` (+`.required`), `.form-control`, `.form-select`,
+  `.form-hint`, `.field-msg`/`.form-error`, `.input-icon-group`, `.form-check-input`.
+  **States**: `:disabled` (inset bg, not-allowed), `[readonly]` (inset bg, full-contrast text,
+  default cursor — deliberately distinct from disabled), `[aria-invalid]`/`.is-invalid` (danger border
+  + `--ring-danger`). Placeholder is `--text-subtle` with `opacity: 1` so Firefox can't dim it below AA.
+  Never a bare browser input.
 - **Kanban column** (dashboard/hero): `--surface-2` well, radius `xl`, a colored status dot + count
   pill in the header; task cards are `--surface` with a priority chip, a title, a thin progress bar,
   an avatar stack, and small meta icons — matching the reference boards.

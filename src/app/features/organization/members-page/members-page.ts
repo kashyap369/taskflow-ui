@@ -188,14 +188,14 @@ export class MembersPage {
   }
 
   /**
-   * NOTE: the API's `RemoveMember` and `DeactivateMember` handlers are identical — both just
-   * deactivate the membership, so the row stays in this list as **Inactive** rather than
-   * disappearing. The copy says so instead of promising a deletion the backend doesn't perform.
+   * A real removal: `RemoveMember` deletes the membership row, so the member disappears from this
+   * list entirely. (It used to be a duplicate of `DeactivateMember` — backend Phase 10 separated
+   * them. **Deactivate** is still the reversible option.)
    */
   async remove(member: OrganizationMember): Promise<void> {
     const ok = await this.dialog.confirmDelete(
       'Remove member?',
-      `${member.userFullName} will lose access to this organization. They stay listed as Inactive and can be reactivated later.`,
+      `${member.userFullName} will be removed from this organization and disappear from this list. Re-adding them needs a new invitation — use Deactivate instead if you only want to suspend their access.`,
       'Remove',
     );
     if (ok) {

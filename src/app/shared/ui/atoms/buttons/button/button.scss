@@ -1,38 +1,38 @@
 .btn {
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   transition: 0.2s ease;
 }
 
 /* VARIANTS */
 .primary {
-  background: #111827;
-  color: white;
+  background: var(--primary);
+  color: var(--on-accent);
 }
 
 .secondary {
-  background: #e5e7eb;
-  color: #111827;
+  background: var(--surface-inset);
+  color: var(--text);
 }
 
 .danger {
-  background: #ef4444;
-  color: white;
+  background: var(--danger);
+  color: var(--on-accent);
 }
 
 .ghost {
   background: transparent;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-input);
 }
 
 /* SIZES */
-.sm { padding: 6px 10px; font-size: 12px; }
-.md { padding: 10px 16px; font-size: 14px; }
-.lg { padding: 12px 20px; font-size: 16px; }
+.sm { padding: var(--space-1) var(--space-2); font-size: var(--fs-body-xs); }
+.md { padding: var(--space-2) var(--space-4); font-size: var(--fs-body-sm); }
+.lg { padding: var(--space-3) var(--space-5); font-size: var(--fs-body-md); }
 
 .icon {
   display: inline-flex;

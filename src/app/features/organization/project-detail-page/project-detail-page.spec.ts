@@ -45,6 +45,8 @@ const task = (id: number, title: string, status: TaskStatus): TaskListItem => ({
   actualCompletionDate: null,
   projectId: 1,
   organizationId: 2,
+  teamId: null,
+  teamName: null,
   createdByUserId: 1,
   assignedToUserId: null,
   subTaskCount: 0,

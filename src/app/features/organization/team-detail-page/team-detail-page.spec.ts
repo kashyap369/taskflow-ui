@@ -10,7 +10,13 @@ import { of } from 'rxjs';
 import { APP_SETTINGS } from '@core/config/app.tokens';
 import { AppSettings } from '@core/config/app.settings';
 import { OrganizationRepository } from '../organization.repository';
-import { OrganizationStatus, TeamDetail } from '../organization.models';
+import {
+  OrganizationStatus,
+  TaskListItem,
+  TaskPriority,
+  TaskStatus,
+  TeamDetail,
+} from '../organization.models';
 import { TeamDetailPage } from './team-detail-page';
 
 const TEAM: TeamDetail = {
@@ -29,7 +35,33 @@ const TEAM: TeamDetail = {
   ],
 };
 
-/** Stubs the org-wide `init()` fan-out plus `GET /team/{id}`. */
+/** The tasks the team *owns* (`Task.TeamId`) — a different list from its members. */
+const teamTask = (id: number, title: string, status: TaskStatus): TaskListItem => ({
+  id,
+  title,
+  priority: TaskPriority.Medium,
+  status,
+  startDate: '2026-07-01T00:00:00Z',
+  expectedCompletionDate: null,
+  actualCompletionDate: null,
+  projectId: null,
+  organizationId: 2,
+  teamId: 2,
+  teamName: 'Engineering',
+  createdByUserId: 1,
+  assignedToUserId: 2,
+  subTaskCount: 0,
+  completedSubTaskCount: 0,
+});
+
+const TEAM_TASKS: TaskListItem[] = [
+  teamTask(3, 'Build the responsive nav bar', TaskStatus.InProgress),
+  teamTask(4, 'Ship the release notes', TaskStatus.Completed),
+];
+
+const setTaskTeam = jasmine.createSpy('setTaskTeam').and.returnValue(of(void 0));
+
+/** Stubs the org-wide `init()` fan-out plus `GET /team/{id}` and `GET /team/{id}/tasks`. */
 const repositoryStub = {
   getMyOrganizations: () =>
     of([{ id: 2, name: 'Northwind Labs', ownerUserId: 1, status: OrganizationStatus.Active }]),
@@ -42,6 +74,8 @@ const repositoryStub = {
   getTeams: () => of([]),
   getPermissionCatalog: () => of([]),
   getTeam: () => of(TEAM),
+  getTeamTasks: () => of(TEAM_TASKS),
+  setTaskTeam,
 };
 
 describe('TeamDetailPage', () => {
@@ -91,5 +125,25 @@ describe('TeamDetailPage', () => {
     component.editForm.controls.name.markAsTouched();
 
     expect(component.fieldError('name')).toBe('A team name is required.');
+  });
+
+  // `GET /team/{id}/tasks` — what the team owns, loaded alongside `GET /team/{id}`.
+  it('loads the team’s own tasks and counts the open ones', () => {
+    expect(component.hasTasks()).toBeTrue();
+    expect(component.tasks().map((t) => t.id)).toEqual([3, 4]);
+    // One of the two is Completed.
+    expect(component.openTaskCount()).toBe(1);
+  });
+
+  it('filters the team tasks by title and status', () => {
+    component.onTaskSearch('nav');
+    expect(component.filteredTasks().map((t) => t.id)).toEqual([3]);
+
+    component.clearTaskFilters();
+    component.onTaskStatusFilter(String(TaskStatus.Completed));
+    expect(component.filteredTasks().map((t) => t.id)).toEqual([4]);
+
+    component.clearTaskFilters();
+    expect(component.taskPager.total()).toBe(2);
   });
 });

@@ -1,20 +1,40 @@
 // ======================================
-// Font Family _typography.scss
+// Typography tokens — _typography.scss
+//
+// SCSS tokens (for use inside styles/) AND their CSS custom-property mirrors (for use by component
+// SCSS, which must NOT @import abstracts). Same pattern as _motion.scss.
+//
+// RULE: component SCSS uses `var(--fs-*)`, never a raw rem/px font-size.
+// `npm run design:lint` enforces this. See docs/DESIGN.md §2 and docs/DESIGN-PHASES.md Phase 1.
 // ======================================
 
-// Body / long-form — neutral, legible at small sizes
-$font-family-base:
-  'Inter',
+// ======================================
+// Font Families
+// ======================================
+
+// Display / headings / UI — Satoshi: geometric grotesque with real character.
+// Loaded from Fontshare in src/index.html.
+$font-family-display:
+  'Satoshi',
   system-ui,
   -apple-system,
   sans-serif;
 
-// Display / headings / UI — geometric, characterful
-$font-family-display:
-  'Plus Jakarta Sans',
+// Body / long-form — Geist: neutral, hyper-legible at 13–14px.
+// Loaded from Google Fonts in src/index.html.
+$font-family-base:
+  'Geist',
   system-ui,
   -apple-system,
   sans-serif;
+
+// Numeric / metrics / code — Geist Mono, for true tabular figures.
+$font-family-mono:
+  'Geist Mono',
+  ui-monospace,
+  SFMono-Regular,
+  Menlo,
+  monospace;
 
 // ======================================
 // Font Weights
@@ -26,6 +46,7 @@ $fw-medium: 500;
 $fw-semibold: 600;
 $fw-bold: 700;
 $fw-extrabold: 800;
+$fw-black: 900; // Satoshi's heaviest — hero display only
 
 // ======================================
 // Display Sizes
@@ -48,27 +69,115 @@ $fs-h6: 1.125rem;    // 18px
 
 // ======================================
 // Body Sizes
+//
+// `label` and `body-2xs` were added in Phase 1: the codebase had ~45 ad-hoc sizes, and the clusters
+// around .78–.82rem (13px UI labels, table headers, meta text) and .72rem (chips, priority tags) were
+// real, recurring roles with no token to land on. Adding them is what made the sweep an honest
+// mapping rather than a mass of bad roundings.
 // ======================================
 
-$fs-body-xl: 1.25rem;    // 20px
-$fs-body-lg: 1.125rem;   // 18px
-$fs-body-md: 1rem;       // 16px
-$fs-body-sm: .875rem;    // 14px
-$fs-body-xs: .75rem;     // 12px
+$fs-body-xl: 1.25rem;     // 20px
+$fs-body-lg: 1.125rem;    // 18px
+$fs-body-md: 1rem;        // 16px
+$fs-body-sm: .875rem;     // 14px — default UI text
+$fs-label: .8125rem;      // 13px — labels, table headers, meta, small buttons
+$fs-body-xs: .75rem;      // 12px — captions
+$fs-body-2xs: .6875rem;   // 11px — chips, priority tags, badges. Floor: never go below this.
+
+// ======================================
+// Fluid sizes
+//
+// Page headlines scale with the viewport. These are still tokens — the discrete scale above can't
+// express a responsive ramp, and the alternative (9 hand-rolled `clamp()` calls with 6 different
+// sets of endpoints, which is what Phase 1 found) is exactly the drift this system exists to stop.
+// Use a fluid token for a page/section headline; use the discrete scale for everything else.
+// ======================================
+
+$fs-fluid-hero: clamp(2.5rem, 6vw, 4.25rem);   // landing hero only
+$fs-fluid-h1: clamp(2rem, 4vw, 3rem);          // page headline
+$fs-fluid-h2: clamp(1.75rem, 3vw, 2.4rem);     // section headline
+$fs-fluid-h4: clamp(1.1rem, 1.5vw, 1.35rem);   // sub-headline
 
 // ======================================
 // Line Heights
 // ======================================
 
-$lh-tight: 1.1;
-$lh-heading: 1.2;
-$lh-normal: 1.5;
-$lh-relaxed: 1.7;
+$lh-tight: 1.1;      // display
+$lh-heading: 1.25;   // h1–h6
+$lh-snug: 1.4;       // dense UI, table cells
+$lh-normal: 1.5;     // default
+$lh-relaxed: 1.7;    // long-form paragraphs
 
 // ======================================
 // Letter Spacing
+//
+// DESIGN.md §2: big headings get -0.02em to -0.03em. `$tracking-tight` was -0.05em, which is well
+// past that and visibly cramped on Satoshi — corrected in Phase 1.
 // ======================================
 
-$tracking-tight: -0.05em;
+$tracking-tighter: -0.03em;  // display / hero
+$tracking-tight: -0.02em;    // h1–h3
 $tracking-normal: 0;
 $tracking-wide: 0.05em;
+$tracking-eyebrow: 0.12em;   // uppercase kicker labels
+
+// ======================================
+// CSS custom-property mirrors — what component SCSS actually consumes
+// ======================================
+
+:root {
+  // Families
+  --font-display: #{$font-family-display};
+  --font-body: #{$font-family-base};
+  --font-mono: #{$font-family-mono};
+
+  // Display
+  --fs-display-xl: #{$fs-display-xl};
+  --fs-display-lg: #{$fs-display-lg};
+  --fs-display-md: #{$fs-display-md};
+
+  // Headings
+  --fs-h1: #{$fs-h1};
+  --fs-h2: #{$fs-h2};
+  --fs-h3: #{$fs-h3};
+  --fs-h4: #{$fs-h4};
+  --fs-h5: #{$fs-h5};
+  --fs-h6: #{$fs-h6};
+
+  // Body
+  --fs-body-xl: #{$fs-body-xl};
+  --fs-body-lg: #{$fs-body-lg};
+  --fs-body-md: #{$fs-body-md};
+  --fs-body-sm: #{$fs-body-sm};
+  --fs-label: #{$fs-label};
+  --fs-body-xs: #{$fs-body-xs};
+  --fs-body-2xs: #{$fs-body-2xs};
+
+  // Fluid
+  --fs-fluid-hero: #{$fs-fluid-hero};
+  --fs-fluid-h1: #{$fs-fluid-h1};
+  --fs-fluid-h2: #{$fs-fluid-h2};
+  --fs-fluid-h4: #{$fs-fluid-h4};
+
+  // Weights
+  --fw-regular: #{$fw-regular};
+  --fw-medium: #{$fw-medium};
+  --fw-semibold: #{$fw-semibold};
+  --fw-bold: #{$fw-bold};
+  --fw-extrabold: #{$fw-extrabold};
+  --fw-black: #{$fw-black};
+
+  // Line heights
+  --lh-tight: #{$lh-tight};
+  --lh-heading: #{$lh-heading};
+  --lh-snug: #{$lh-snug};
+  --lh-normal: #{$lh-normal};
+  --lh-relaxed: #{$lh-relaxed};
+
+  // Tracking
+  --tracking-tighter: #{$tracking-tighter};
+  --tracking-tight: #{$tracking-tight};
+  --tracking-normal: #{$tracking-normal};
+  --tracking-wide: #{$tracking-wide};
+  --tracking-eyebrow: #{$tracking-eyebrow};
+}

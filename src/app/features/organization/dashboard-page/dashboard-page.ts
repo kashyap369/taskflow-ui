@@ -96,6 +96,23 @@ export class DashboardPage {
     ];
   });
 
+  /**
+   * Priority donut — the counterpart to the status one above. Both read the same summary DTO, but
+   * they slice every task a different way, so their totals match while their segments don't.
+   */
+  readonly prioritySegments = computed<HealthSegment[]>(() => {
+    const s = this.summary();
+    if (!s) {
+      return [];
+    }
+    return [
+      { name: 'Low', value: s.lowPriorityTasks, color: '#94A3B8' },
+      { name: 'Medium', value: s.mediumPriorityTasks, color: '#4F6EF7' },
+      { name: 'High', value: s.highPriorityTasks, color: '#F59E0B' },
+      { name: 'Critical', value: s.criticalPriorityTasks, color: '#F43F5E' },
+    ];
+  });
+
   /** Per-control validators derived from `OrganizationFormModel`'s decorators. */
   private readonly rules = controlValidators(OrganizationFormModel);
 

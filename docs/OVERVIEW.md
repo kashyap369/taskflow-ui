@@ -53,15 +53,15 @@ A strong dashboard backed by the API's Dapper read side:
 - Time & tracking — durations from start → completion (the API's live timer + manual work logs).
 
 ## Where the Frontend Stands vs This Vision
-**Version 1 is complete (2026-07-26, Phase 22).** Every endpoint the backend exposes is reachable from the UI, and every screen that consumes one is built, themed, accessible and tested. In short:
+**All three portals are complete (Phases 26–29, 2026-07-26).** Every endpoint the backend exposes that warrants a screen is reachable from the UI — **80 of 82**, the two exceptions being deliberate skips that would only re-render data already on screen. Every screen is built, themed, accessible and tested. In short:
 - ✅ **Architecture & tooling** — folder buckets, path aliases, ESLint boundaries (zero violations), Storybook, SCSS design system with light/dark tokens, environments, HTTP interceptor pipeline, guards, signal-based auth session.
 - ✅ **Public marketing site** — a substantial landing page renders through the public layout.
 - ✅ **Design system** — atoms/molecules/organisms with Storybook stories and the a11y addon set to fail on an axe violation.
-- ✅ **Auth** — register + login wired end-to-end with role-based redirect (Admin → admin, Organization → org, Individual → member); three login entry screens share one component; session rehydration and logout work. **Forgot-password / email-verification screens are backend-blocked** (no endpoints).
-- ✅ **Organization portal** — dashboard, projects, project detail, tasks, subtasks, work-log/time-tracking, teams, team detail, members + invitations, roles + permissions, reports and settings, all on live API data with full create/edit/delete.
-- ✅ **Admin portal** — real dashboard + a Users page with a detail drawer. Organizations overview and platform settings are **backend-blocked**.
-- 🟡 **Member (Individual) portal** — the invitations page is live in both portals; **personal tasks are backend-blocked** (no endpoint creates a task without an organization).
+- ✅ **Auth** — register → **email verification** → login, with role-based redirect (Admin → admin, Organization → org, Individual → member); three login entry screens share one component; session rehydration and logout work. **Forgot-password is still backend-blocked** (no endpoint).
+- ✅ **Organization portal** — dashboard, projects, project detail, tasks, subtasks, work-log/time-tracking, teams, team detail, members + invitations, roles + permissions, reports and settings, all on live API data with full create/edit/delete. Tasks carry an **owning team** (with a per-team task list on team detail), assignee pickers are **filtered server-side by role and active status**, and reporting covers **priority breakdown, project planned-vs-actual timeline and which tasks each team owns**.
+- ✅ **Admin portal** — dashboard, Users (with a detail drawer that opens **any** account), **Organizations** (every workspace with its owner and counts) and **Platform settings** (application name, support email, and the registration + maintenance switches, both genuinely enforced by the API). A 503 `MAINTENANCE_MODE` surfaces as a banner across every portal.
+- ✅ **Member (Individual) portal** — a real personal workspace: **My tasks** (filters, paging, create/edit drawer, Start/Done/**Reopen**, subtasks, time tracking) and a dashboard on live counts + `GET /report/me`. Plus the invitations page, mounted in both portals.
 - ✅ **Custom validations engine** — the FluentValidation-style decorator engine in `shared/validations/` is built and backs **every** reactive form in the app.
-- ✅ **Automated tests** — 164 unit specs (TestBed), covering facades, page filtering/paging, the validation engine and the shared components. No E2E suite yet.
+- ✅ **Automated tests** — 204 unit specs (TestBed), covering facades, page filtering/paging, the validation engine and the shared components. No E2E suite yet.
 
 The backend is fully implemented end-to-end. See **[V1-GAPS.md](V1-GAPS.md)** for exactly what v1 excludes and why, [PHASES.md](PHASES.md) for the phased history and current status, and [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together.

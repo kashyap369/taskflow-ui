@@ -21,6 +21,7 @@ import {
   Square,
   Trash2,
   User,
+  Users,
   X,
 } from 'lucide-angular';
 
@@ -77,6 +78,7 @@ interface Option {
         Play,
         CircleCheckBig,
         User,
+        Users,
         ArrowRight,
         Building2,
         ListChecks,
@@ -100,7 +102,13 @@ export class TasksPage {
   readonly saving = this.facade.saving;
   readonly tasks = this.facade.tasks;
   readonly projects = this.facade.projects;
-  readonly members = this.facade.members;
+  /** Assignee candidates: active members only, optionally narrowed by role (server-side). */
+  readonly members = this.facade.assignableMembers;
+  /** Every member, filters included — used only to name an assignee the picker no longer offers. */
+  readonly allMembers = this.facade.members;
+  readonly roles = this.facade.roles;
+  readonly teams = this.facade.teams;
+  readonly assigneeRoleId = this.facade.assigneeRoleId;
   readonly currentOrg = this.facade.currentOrg;
   readonly needsOrganization = this.facade.needsOrganization;
 
@@ -202,6 +210,14 @@ export class TasksPage {
     this.projects().map((p) => ({ value: p.id, label: p.title })),
   );
 
+  readonly teamOptions = computed<Option[]>(() =>
+    this.teams().map((t) => ({ value: t.id, label: t.name })),
+  );
+
+  readonly roleOptions = computed<Option[]>(() =>
+    this.roles().map((r) => ({ value: r.id, label: r.name })),
+  );
+
   readonly createForm = this.fb.nonNullable.group({
     title: ['', this.taskRules['title']],
     description: ['', this.taskRules['description']],
@@ -209,6 +225,7 @@ export class TasksPage {
     startDate: [this.today(), this.taskRules['startDate']],
     expectedCompletionDate: [''],
     projectId: [''],
+    teamId: [''],
   });
 
   /** Touched-gated message for a field on the create/edit task drawer. */
@@ -249,6 +266,7 @@ export class TasksPage {
       startDate: this.today(),
       expectedCompletionDate: '',
       projectId: '',
+      teamId: '',
     });
     this.showDrawer.set(true);
   }
@@ -264,6 +282,7 @@ export class TasksPage {
         ? this.toDateInput(task.expectedCompletionDate)
         : '',
       projectId: task.projectId ? String(task.projectId) : '',
+      teamId: task.teamId ? String(task.teamId) : '',
     });
     this.showDrawer.set(true);
     // The row carries no description — pull it from the detail endpoint so saving doesn't blank it.
@@ -287,6 +306,7 @@ export class TasksPage {
 
     const v = this.createForm.getRawValue();
     const target = v.expectedCompletionDate ? this.toIso(v.expectedCompletionDate) : null;
+    const teamId = v.teamId ? Number(v.teamId) : null;
     const editing = this.editing();
 
     if (editing) {
@@ -297,6 +317,11 @@ export class TasksPage {
         priority: Number(v.priority) as TaskPriority,
         expectedCompletionDate: target,
       });
+      // `UpdateTaskCommand` carries no `teamId` on purpose, so the team goes through its own route —
+      // and only when it actually changed, to avoid a pointless second request on every save.
+      if (teamId !== editing.teamId) {
+        this.facade.setTaskTeam(editing.id, teamId);
+      }
     } else {
       this.facade.createTask({
         title: v.title,
@@ -305,6 +330,7 @@ export class TasksPage {
         startDate: this.toIso(v.startDate),
         expectedCompletionDate: target,
         projectId: v.projectId ? Number(v.projectId) : null,
+        teamId,
       });
     }
 
@@ -336,6 +362,31 @@ export class TasksPage {
     } else {
       this.facade.assignTask(task.id, Number(value));
     }
+  }
+
+  onTeamChange(task: TaskListItem, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.facade.setTaskTeam(task.id, value ? Number(value) : null);
+  }
+
+  /** Narrow the assignee candidates to one org role — re-queried server-side. */
+  onAssigneeRoleFilter(value: string): void {
+    this.facade.filterAssigneesByRole(value === '' ? null : Number(value));
+  }
+
+  /** Is this user among the offerable candidates (active, and inside the role filter)? */
+  isAssignable(userId: number): boolean {
+    return this.members().some((m) => m.userId === userId);
+  }
+
+  /**
+   * The current assignee's name when the picker no longer offers them — they were deactivated, or
+   * the role filter excludes them. Without this the `<select>` would fall back to "Unassigned" and
+   * misreport an assigned task.
+   */
+  assigneeName(task: TaskListItem): string {
+    const member = this.allMembers().find((m) => m.userId === task.assignedToUserId);
+    return member ? member.userFullName : `User #${task.assignedToUserId}`;
   }
 
   // ── Subtasks ──

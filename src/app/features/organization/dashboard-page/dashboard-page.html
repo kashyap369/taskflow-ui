@@ -134,7 +134,7 @@
                 <div class="icon orange">
                   <lucide-angular name="TriangleAlert" size="20"></lucide-angular>
                 </div>
-                <small class="stats-info">{{ s.totalTrackedHours }}h tracked</small>
+                <small class="stats-info">{{ s.totalTrackedHours | number: '1.0-1' }}h tracked</small>
               </div>
               <h2>{{ s.overdueTasks }}</h2>
               <p>Overdue</p>
@@ -224,12 +224,17 @@
           </div>
         </div>
 
-        <!-- Task status breakdown (real) -->
-        <div class="col-12 col-xl-4">
+        <!-- Task breakdowns (real) — the same tasks sliced two ways. -->
+        <div class="col-12 col-xl-4 breakdown-col">
           <app-project-health-chart
             title="Task status"
             [subtitle]="(summary()?.totalTasks ?? 0) + ' total tasks'"
             [segments]="taskSegments()"
+          />
+          <app-project-health-chart
+            title="Task priority"
+            [subtitle]="(summary()?.totalTasks ?? 0) + ' total tasks'"
+            [segments]="prioritySegments()"
           />
         </div>
       </div>

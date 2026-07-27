@@ -1,9 +1,9 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { map, switchMap } from 'rxjs/operators';
 
 import { AuthService } from '@core/auth/auth.service';
-import { AccountType } from '@core/auth/roles.enum';
 import { NotificationService } from '@core/services/notification.service';
 
 import { AuthRepository } from './auth.repository';
@@ -54,9 +54,9 @@ export class AuthFacade {
           // Authoritative redirect: Admin → /admin, Organization → /organization, else → /member.
           void this.router.navigateByUrl(this.auth.homeRoute());
         },
-        error: () => {
+        error: (error: HttpErrorResponse) => {
           this._loading.set(false);
-          this._error.set('Sign in failed. Check your credentials and try again.');
+          this._error.set(this.loginErrorMessage(error));
           // Roll back any half-established session (tokens may have been set before /me failed).
           this.auth.endSession();
         },
@@ -64,8 +64,25 @@ export class AuthFacade {
   }
 
   /**
-   * Register use-case. The API returns only the new user id (no tokens), so on success we send the
-   * user to the sign-in screen — the Organization variant for org accounts, else the solo one.
+   * Sign-in is two requests, and only the first one is about credentials.
+   *
+   * `POST /auth/login` stays open during maintenance (so an admin can always get in to turn it off),
+   * but the `GET /user/me` that follows does not — a non-admin therefore authenticates successfully
+   * and *then* gets a 503. Reporting that as "check your credentials" is simply false, and sends the
+   * user to re-type a password that was right. Name the real reason instead.
+   */
+  private loginErrorMessage(error: HttpErrorResponse): string {
+    if (error?.status === 503) {
+      return 'TaskFlow is in maintenance mode. Your sign-in was accepted, but the platform is temporarily unavailable — please try again shortly.';
+    }
+    return 'Sign in failed. Check your credentials and try again.';
+  }
+
+  /**
+   * Register use-case. The API returns only the new user id (no tokens) **and the account starts
+   * PendingVerification**, so signing in would fail with `EMAIL_NOT_VERIFIED`. Send the user to the
+   * verify-email screen (its no-token state explains the inbox step and offers a resend) rather
+   * than to a login form that cannot yet work for them.
    */
   register(request: RegisterRequest): void {
     this._loading.set(true);
@@ -74,11 +91,11 @@ export class AuthFacade {
     this.repository.register(request).subscribe({
       next: () => {
         this._loading.set(false);
-        this.notification.success('Account created successfully. Please sign in.');
+        this.notification.success(
+          'Account created. Check your inbox to verify your email before signing in.',
+        );
 
-        const target =
-          request.accountType === AccountType.Organization ? '/auth/organization' : '/auth/login';
-        void this.router.navigateByUrl(target);
+        void this.router.navigateByUrl('/auth/verify-email');
       },
       error: () => {
         this._loading.set(false);

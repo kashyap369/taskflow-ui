@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
 import { LandingFeatureCard } from '@shared/ui/molecules/landing-feature-card/landing-feature-card';
 import { PricingCard } from '@shared/ui/molecules/pricing-card/pricing-card';
@@ -44,7 +45,14 @@ interface BoardColumn {
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [LandingFeatureCard, PricingCard, ReviewCard, RevealDirective, LucideAngularModule],
+  imports: [
+    RouterLink,
+    LandingFeatureCard,
+    PricingCard,
+    ReviewCard,
+    RevealDirective,
+    LucideAngularModule,
+  ],
   templateUrl: './landing-page.html',
   styleUrl: './landing-page.scss',
   providers: [
@@ -72,6 +80,8 @@ interface BoardColumn {
   ],
 })
 export class LandingPage {
+  private readonly router = inject(Router);
+
   // ======================================================
   // Hero
   // ======================================================
@@ -338,4 +348,22 @@ export class LandingPage {
     primaryButton: 'Get started free',
     secondaryButton: 'Sign in',
   };
+
+  /**
+   * "View live demo" has no hosted demo to open — the product preview in the hero IS the demo, so
+   * the CTA scrolls to it rather than being a dead button. Phase 6.
+   */
+  scrollToPreview(): void {
+    document
+      .getElementById('product-preview')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  /**
+   * Every pricing plan's CTA was inert. There is no per-plan checkout yet, so all plans start the
+   * same signup flow — the plan can be carried into registration once billing exists. Phase 6.
+   */
+  choosePlan(): void {
+    void this.router.navigate(['/auth/register']);
+  }
 }

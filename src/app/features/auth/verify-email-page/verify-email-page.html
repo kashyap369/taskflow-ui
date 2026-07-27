@@ -1,0 +1,76 @@
+<section class="verify-page">
+  <div class="verify-card">
+    @switch (state()) {
+      @case ('verifying') {
+        <span class="state-icon pending" aria-hidden="true">
+          <lucide-angular name="Mail" [size]="26"></lucide-angular>
+        </span>
+        <h1>Verifying your email…</h1>
+        <p>One moment while we confirm your link.</p>
+      }
+
+      @case ('verified') {
+        <span class="state-icon success" aria-hidden="true">
+          <lucide-angular name="CircleCheckBig" [size]="26"></lucide-angular>
+        </span>
+        <h1>Email verified</h1>
+        <p>Your account is active. You can sign in now.</p>
+        <a class="btn-primary-cta" routerLink="/auth/login">
+          Go to sign in <lucide-angular name="ArrowRight" [size]="16"></lucide-angular>
+        </a>
+      }
+
+      @case ('failed') {
+        <span class="state-icon danger" aria-hidden="true">
+          <lucide-angular name="TriangleAlert" [size]="26"></lucide-angular>
+        </span>
+        <h1>That link didn't work</h1>
+        <p>Verification links expire after 48 hours. Enter your email and we'll send a fresh one.</p>
+      }
+
+      @case ('awaiting') {
+        <span class="state-icon pending" aria-hidden="true">
+          <lucide-angular name="Mail" [size]="26"></lucide-angular>
+        </span>
+        <h1>Check your inbox</h1>
+        <p>
+          We sent a verification link to the address you registered with. You'll need to open it
+          before you can sign in.
+        </p>
+      }
+    }
+
+    <!-- Resend is offered whenever the user is not already through -->
+    @if (state() !== 'verified' && state() !== 'verifying') {
+      @if (resent()) {
+        <p class="resent-note">
+          Sent. If that address needs verifying, the link is on its way — check your spam folder too.
+        </p>
+      } @else {
+        <form class="resend-form" [formGroup]="resendForm" (ngSubmit)="resend()">
+          <div class="field">
+            <label for="resend-email" class="form-label">Email</label>
+            <input
+              id="resend-email"
+              type="email"
+              class="form-control"
+              placeholder="you@example.com"
+              autocomplete="email"
+              formControlName="email"
+            />
+            @if (fieldError('email'); as msg) {
+              <small class="field-msg">{{ msg }}</small>
+            }
+          </div>
+          <button type="submit" class="btn-primary-cta full" [disabled]="sending()">
+            {{ sending() ? 'Sending…' : 'Send a new link' }}
+          </button>
+        </form>
+      }
+
+      <p class="alt-link">
+        Already verified? <a routerLink="/auth/login">Sign in</a>
+      </p>
+    }
+  </div>
+</section>

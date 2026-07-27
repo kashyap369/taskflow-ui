@@ -7,7 +7,7 @@
         <p>Everything happening across {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="18"></lucide-angular>
           New task
         </button>
@@ -47,7 +47,7 @@
         <span class="empty-icon"><lucide-angular name="CheckSquare" size="24"></lucide-angular></span>
         <h3>No tasks yet</h3>
         <p>Create your first task to start tracking work.</p>
-        <button class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="16"></lucide-angular> New task
         </button>
       </div>
@@ -86,6 +86,21 @@
             <option [value]="opt.value">{{ opt.label }}</option>
           }
         </select>
+        <!--
+          Narrows who the assignee dropdowns offer (not which rows show) — the API filters this
+          server-side via `?organizationRoleId=`, alongside `?activeOnly=true`.
+        -->
+        <select
+          class="list-filter"
+          [value]="assigneeRoleId() ?? ''"
+          (change)="onAssigneeRoleFilter($any($event.target).value)"
+          aria-label="Limit assignee choices to one role"
+        >
+          <option value="">Assignees: all roles</option>
+          @for (opt of roleOptions(); track opt.value) {
+            <option [value]="opt.value">Assignees: {{ opt.label }}</option>
+          }
+        </select>
       </div>
 
       <div class="task-table">
@@ -117,9 +132,35 @@
                   aria-label="Assignee"
                 >
                   <option value="" [selected]="!task.assignedToUserId">Unassigned</option>
+                  <!--
+                    Active members only. If the current assignee has since been deactivated or
+                    filtered out by role, keep their name in the list so the row doesn't silently
+                    read as unassigned.
+                  -->
+                  @if (task.assignedToUserId && !isAssignable(task.assignedToUserId)) {
+                    <option [value]="task.assignedToUserId" selected>
+                      {{ assigneeName(task) }}
+                    </option>
+                  }
                   @for (m of members(); track m.id) {
                     <option [value]="m.userId" [selected]="m.userId === task.assignedToUserId">
                       {{ m.userFullName }}
+                    </option>
+                  }
+                </select>
+
+                <lucide-angular name="Users" size="12" class="assignee-ico"></lucide-angular>
+                <!-- Team ownership is its own route, so this select writes directly. -->
+                <select
+                  class="assignee-select"
+                  [class.unassigned]="!task.teamId"
+                  (change)="onTeamChange(task, $event)"
+                  aria-label="Owning team"
+                >
+                  <option value="" [selected]="!task.teamId">No team</option>
+                  @for (opt of teamOptions(); track opt.value) {
+                    <option [value]="opt.value" [selected]="opt.value === task.teamId">
+                      {{ opt.label }}
                     </option>
                   }
                 </select>
@@ -139,7 +180,7 @@
             </span>
 
             <span class="col-sub">
-              <button class="subtask-chip" (click)="openSubtasks(task)"
+              <button type="button" class="subtask-chip" (click)="openSubtasks(task)"
                 [attr.aria-label]="'Manage subtasks for ' + task.title">
                 <lucide-angular name="ListChecks" size="14"></lucide-angular>
                 {{ task.completedSubTaskCount }}/{{ task.subTaskCount }}
@@ -147,16 +188,16 @@
             </span>
 
             <span class="col-actions">
-              <button class="action-btn time" (click)="openTime(task)" title="Track time"
+              <button type="button" class="action-btn time" (click)="openTime(task)" title="Track time"
                 aria-label="Track time">
                 <lucide-angular name="Clock" size="14"></lucide-angular> Time
               </button>
               @if (task.status === TaskStatus.Todo) {
-                <button class="action-btn start" (click)="start(task)">
+                <button type="button" class="action-btn start" (click)="start(task)">
                   <lucide-angular name="Play" size="14"></lucide-angular> Start
                 </button>
               } @else if (task.status === TaskStatus.InProgress) {
-                <button class="action-btn complete" (click)="complete(task)">
+                <button type="button" class="action-btn complete" (click)="complete(task)">
                   <lucide-angular name="CircleCheckBig" size="14"></lucide-angular> Complete
                 </button>
               }
@@ -202,7 +243,7 @@
     <aside class="drawer" appDialog (dismiss)="closeDrawer()">
       <div class="drawer-head">
         <h2>{{ isEditing() ? 'Edit task' : 'New task' }}</h2>
-        <button class="icon-btn" (click)="closeDrawer()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeDrawer()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -247,6 +288,20 @@
           }
         </div>
 
+        <!--
+          Team *is* editable, unlike project — but through its own routes, not `PUT /task`.
+          `submit()` calls them only when the value actually changed.
+        -->
+        <div class="field">
+          <label for="teamId" class="form-label">Owning team <span>(optional)</span></label>
+          <select id="teamId" class="form-control" formControlName="teamId">
+            <option value="">No team</option>
+            @for (opt of teamOptions(); track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+
         <div class="field-row">
           @if (!isEditing()) {
             <div class="field">
@@ -263,7 +318,7 @@
         @if (isEditing()) {
           <p class="drawer-note">
             Status, start date and project aren't editable here — use Start / Complete on the row to
-            move a task through its lifecycle.
+            move a task through its lifecycle. The team is, and saves through its own endpoint.
           </p>
         }
 
@@ -290,13 +345,13 @@
           <h2>Subtasks</h2>
           <p class="drawer-sub">{{ at.title }}</p>
         </div>
-        <button class="icon-btn" (click)="closeSubtasks()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeSubtasks()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
 
       <form class="subtask-add" [formGroup]="subTaskForm" (ngSubmit)="addSubtask()">
-        <input type="text" class="form-control" placeholder="Add a subtask…" formControlName="title" />
+        <input type="text" class="form-control" placeholder="Add a subtask…" aria-label="New subtask title" formControlName="title" />
         <button type="submit" class="btn-primary-cta" [disabled]="saving()">
           <lucide-angular name="Plus" size="16"></lucide-angular> Add
         </button>
@@ -327,7 +382,7 @@
               </li>
             } @else {
               <li class="subtask-item" [class.done]="isDone(sub)">
-                <button class="check" (click)="toggleSubtask(sub)"
+                <button type="button" class="check" (click)="toggleSubtask(sub)"
                   [attr.aria-label]="isDone(sub) ? 'Reopen subtask' : 'Complete subtask'">
                   @if (isDone(sub)) {
                     <lucide-angular name="Check" size="14"></lucide-angular>
@@ -335,15 +390,15 @@
                 </button>
                 <span class="subtask-title">{{ sub.title }}</span>
                 @if (isDone(sub)) {
-                  <button class="mini-btn reopen" (click)="toggleSubtask(sub)" aria-label="Reopen">
+                  <button type="button" class="mini-btn reopen" (click)="toggleSubtask(sub)" aria-label="Reopen">
                     <lucide-angular name="RotateCcw" size="14"></lucide-angular>
                   </button>
                 }
-                <button class="mini-btn" (click)="startRenameSubtask(sub)"
+                <button type="button" class="mini-btn" (click)="startRenameSubtask(sub)"
                   [attr.aria-label]="'Rename ' + sub.title">
                   <lucide-angular name="Pencil" size="14"></lucide-angular>
                 </button>
-                <button class="mini-btn danger" (click)="deleteSubtask(sub)" aria-label="Delete subtask">
+                <button type="button" class="mini-btn danger" (click)="deleteSubtask(sub)" aria-label="Delete subtask">
                   <lucide-angular name="Trash2" size="14"></lucide-angular>
                 </button>
               </li>
@@ -363,7 +418,7 @@
           <h2>Time tracking</h2>
           <p class="drawer-sub">{{ tt.title }}</p>
         </div>
-        <button class="icon-btn" (click)="closeTime()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeTime()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -380,13 +435,13 @@
             <span class="running-dot"></span>
             <span>Timer running — {{ formatDuration(running.durationMinutes) }} so far</span>
           </div>
-          <button class="btn-stop" (click)="stopTimer()" [disabled]="saving()">
+          <button type="button" class="btn-stop" (click)="stopTimer()" [disabled]="saving()">
             <lucide-angular name="Square" size="15"></lucide-angular> Stop
           </button>
         </div>
       } @else {
         <form class="timer-card" [formGroup]="timerForm" (ngSubmit)="startTimer()">
-          <input type="text" class="form-control" placeholder="What are you working on? (optional)"
+          <input type="text" class="form-control" placeholder="What are you working on? (optional)" aria-label="Timer notes"
             formControlName="notes" />
           <button type="submit" class="btn-start" [disabled]="saving()">
             <lucide-angular name="Play" size="15"></lucide-angular> Start timer
@@ -415,7 +470,7 @@
           </div>
         </div>
         <div class="field">
-          <input type="text" class="form-control" placeholder="Notes (optional)" formControlName="notes" />
+          <input type="text" class="form-control" placeholder="Notes (optional)" aria-label="Work log notes" formControlName="notes" />
         </div>
         <button type="submit" class="btn-ghost full" [disabled]="saving()">
           <lucide-angular name="Plus" size="15"></lucide-angular> Log time
@@ -447,7 +502,7 @@
                   <div class="log-notes">{{ log.notes }}</div>
                 }
               </div>
-              <button class="mini-btn danger" (click)="deleteLog(log)" aria-label="Delete work log">
+              <button type="button" class="mini-btn danger" (click)="deleteLog(log)" aria-label="Delete work log">
                 <lucide-angular name="Trash2" size="14"></lucide-angular>
               </button>
             </li>

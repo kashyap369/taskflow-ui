@@ -1,0 +1,245 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Organizations</h1>
+        <p>
+          Every workspace on the platform — the AdminOnly <code>GET /admin/organizations</code> list.
+        </p>
+      </div>
+      <button type="button" class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+        <lucide-angular name="RefreshCw" size="16"></lucide-angular>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Stat tiles -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ totalOrganizations() }}</span>
+        <span class="stat-label">Organizations</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ activeOrganizations() }}</span>
+        <span class="stat-label">Active</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ totalProjects() }}</span>
+        <span class="stat-label">Projects platform-wide</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ totalTasks() }}</span>
+        <span class="stat-label">Tasks platform-wide</span>
+      </div>
+    </div>
+
+    @if (loading() && !hasOrganizations()) {
+      <div class="panel" aria-busy="true" aria-label="Loading organizations">
+        <div class="org-list">
+          @for (row of loadingRows; track row) {
+            <div class="org-row sk-row">
+              <div class="org-id">
+                <app-skeleton width="40px" height="40px" radius="12px" />
+                <div class="sk-lines">
+                  <app-skeleton width="45%" height="0.9rem" />
+                  <app-skeleton width="70%" height="0.75rem" />
+                </div>
+              </div>
+              <app-skeleton width="120px" height="0.85rem" />
+              <app-skeleton width="80px" height="1.5rem" radius="999px" />
+              <app-skeleton width="28px" height="0.85rem" />
+            </div>
+          }
+        </div>
+      </div>
+    } @else if (error()) {
+      <div class="notice error">
+        <lucide-angular name="Building2" size="18"></lucide-angular>
+        {{ error() }} <button type="button" class="link-btn" (click)="refresh()">Try again</button>
+      </div>
+    } @else {
+      <!-- Filters -->
+      <div class="list-toolbar">
+        <div class="list-search">
+          <lucide-angular name="Search" size="16"></lucide-angular>
+          <input
+            type="search"
+            placeholder="Search by name, owner or owner email…"
+            [value]="search()"
+            (input)="onSearch($any($event.target).value)"
+            aria-label="Search organizations"
+          />
+        </div>
+        <select
+          class="list-filter"
+          [value]="statusFilter()"
+          (change)="onStatusFilter($any($event.target).value)"
+          aria-label="Filter by status"
+        >
+          <option value="">All statuses</option>
+          @for (opt of statusOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Workspaces</h2>
+          <span class="count">{{ filteredOrganizations().length }}</span>
+        </div>
+
+        @if (!hasOrganizations()) {
+          <div class="lottie-state compact">
+            <app-lottie-player
+              src="/lottie/empty.json"
+              [width]="130"
+              [height]="130"
+              ariaLabel="No organizations"
+            />
+            <p>No organizations have been created yet.</p>
+          </div>
+        } @else if (filteredOrganizations().length === 0) {
+          <div class="list-no-match">
+            <p>No organizations match your filters.</p>
+            <button type="button" (click)="clearFilters()">Clear filters</button>
+          </div>
+        } @else {
+          <div class="org-list">
+            @for (o of pager.items(); track trackById($index, o)) {
+              <!-- A <button> (not a div) so the row is keyboard-reachable and Enter/Space work. -->
+              <button
+                type="button"
+                class="org-row"
+                (click)="open(o)"
+                [attr.aria-label]="'View details for ' + o.name"
+              >
+                <div class="org-id">
+                  <span class="org-avatar">{{ initials(o.name) }}</span>
+                  <div class="who">
+                    <div class="name">{{ o.name }}</div>
+                    <div class="owner">{{ o.ownerFullName }} · {{ o.ownerEmail }}</div>
+                  </div>
+                </div>
+
+                <div class="counts">
+                  <span class="count-chip" title="Active members">
+                    <lucide-angular name="Users" size="13"></lucide-angular>
+                    {{ o.memberCount }}
+                  </span>
+                  <span class="count-chip" title="Projects">
+                    <lucide-angular name="FolderKanban" size="13"></lucide-angular>
+                    {{ o.projectCount }}
+                  </span>
+                  <span class="count-chip" title="Tasks">
+                    <lucide-angular name="SquareCheckBig" size="13"></lucide-angular>
+                    {{ o.taskCount }}
+                  </span>
+                </div>
+
+                <span class="badge" [attr.data-tone]="organizationStatusMeta(o.status).tone">
+                  {{ organizationStatusMeta(o.status).label }}
+                </span>
+
+                <span class="org-ref">#{{ o.id }}</span>
+              </button>
+            }
+          </div>
+
+          <app-pagination
+            [page]="pager.page()"
+            [pageSize]="pager.pageSize()"
+            [total]="pager.total()"
+            [pageSizes]="pager.pageSizes"
+            itemLabel="organizations"
+            ariaLabel="Organizations pagination"
+            (pageChange)="pager.setPage($event)"
+            (pageSizeChange)="pager.setPageSize($event)"
+          />
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Detail drawer. The list DTO carries every field, so opening a row costs no extra request. -->
+  @if (selected(); as o) {
+    <button
+      type="button"
+      class="drawer-backdrop"
+      (click)="close()"
+      aria-label="Close organization details"
+    ></button>
+    <aside class="drawer" appDialog (dismiss)="close()">
+      <div class="drawer-head">
+        <h2>Organization details</h2>
+        <button type="button" class="icon-btn" (click)="close()" aria-label="Close">
+          <lucide-angular name="X" size="18"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="detail-hero">
+          <span class="org-avatar lg">{{ initials(o.name) }}</span>
+          <div class="hero-who">
+            <h3>{{ o.name }}</h3>
+            <span class="badge" [attr.data-tone]="organizationStatusMeta(o.status).tone">
+              {{ organizationStatusMeta(o.status).label }}
+            </span>
+          </div>
+        </div>
+
+        @if (o.description) {
+          <p class="detail-description">{{ o.description }}</p>
+        }
+
+        <div class="detail-tiles">
+          <div class="detail-tile">
+            <lucide-angular name="Users" size="16"></lucide-angular>
+            <span class="tile-value">{{ o.memberCount }}</span>
+            <span class="tile-label">Active members</span>
+          </div>
+          <div class="detail-tile">
+            <lucide-angular name="FolderKanban" size="16"></lucide-angular>
+            <span class="tile-value">{{ o.projectCount }}</span>
+            <span class="tile-label">Projects</span>
+          </div>
+          <div class="detail-tile">
+            <lucide-angular name="SquareCheckBig" size="16"></lucide-angular>
+            <span class="tile-value">{{ o.taskCount }}</span>
+            <span class="tile-label">Tasks</span>
+          </div>
+        </div>
+
+        <dl class="detail-list">
+          <div class="detail-row">
+            <dt><lucide-angular name="User" size="15"></lucide-angular> Owner</dt>
+            <dd>{{ o.ownerFullName }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt><lucide-angular name="Mail" size="15"></lucide-angular> Owner email</dt>
+            <dd>{{ o.ownerEmail }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt><lucide-angular name="CalendarDays" size="15"></lucide-angular> Created</dt>
+            <dd>{{ o.createdAt | date: 'mediumDate' }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Owner user ID</dt>
+            <dd class="mono">#{{ o.ownerUserId }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Organization ID</dt>
+            <dd class="mono">#{{ o.id }}</dd>
+          </div>
+        </dl>
+
+        <p class="drawer-note">
+          Read-only — <code>AdminController</code> exposes no write route for an organization, and
+          rename/delete on <code>OrganizationController</code> are owner-only, so they'd refuse an
+          admin who doesn't own the workspace.
+        </p>
+      </div>
+    </aside>
+  }
+</section>

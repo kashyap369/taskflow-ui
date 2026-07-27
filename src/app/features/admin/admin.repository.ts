@@ -4,7 +4,13 @@ import { Observable } from 'rxjs';
 import { ApiService } from '@core/api/api.service';
 import { API } from '@core/api/api-endpoints';
 
-import { AdminUser, AdminUserDetail } from './admin.models';
+import {
+  AdminOrganization,
+  AdminUser,
+  AdminUserDetail,
+  PlatformSettings,
+  UpdatePlatformSettingsPayload,
+} from './admin.models';
 
 /**
  * Data layer for the platform Admin portal. These endpoints return raw values (the API only wraps
@@ -23,5 +29,20 @@ export class AdminRepository {
   /** `GET /user/{id}` → UserDetailDto. */
   getUser(userId: number): Observable<AdminUserDetail> {
     return this.api.get<AdminUserDetail>(API.User.GetById(userId));
+  }
+
+  /** `GET /admin/organizations` → AdminOrganizationListItemDto[] (AdminOnly). */
+  getOrganizations(): Observable<AdminOrganization[]> {
+    return this.api.get<AdminOrganization[]>(API.Admin.Organizations);
+  }
+
+  /** `GET /admin/settings` → PlatformSettingDto (AdminOnly). */
+  getSettings(): Observable<PlatformSettings> {
+    return this.api.get<PlatformSettings>(API.Admin.Settings);
+  }
+
+  /** `PUT /admin/settings` → 204. */
+  updateSettings(payload: UpdatePlatformSettingsPayload): Observable<void> {
+    return this.api.put<void>(API.Admin.Settings, payload);
   }
 }

@@ -12,9 +12,13 @@ export const MEMBER_ROUTES: Routes = [
       import('./dashboard-page/dashboard-page').then((m) => m.MemberDashboardPage),
   },
   {
+    path: 'my-tasks',
+    loadComponent: () => import('./my-tasks-page/my-tasks-page').then((m) => m.MyTasksPage),
+  },
+  {
     path: 'invitations',
     loadComponent: () =>
       import('./invitations-page/invitations-page').then((m) => m.MemberInvitationsPage),
   },
-  // Additional member pages (my-tasks, calendar, reports, settings) go here.
+  // Additional member pages (calendar, settings) go here.
 ];

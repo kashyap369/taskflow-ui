@@ -1,13 +1,13 @@
 .chart-card {
-  background: #fff;
+  background: var(--surface);
 
-  border-radius: 24px;
+  border-radius: var(--radius-3xl);
 
-  padding: 28px;
+  padding: var(--space-7);
 
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-md);
 
-  border: 1px solid #eef2f7;
+  border: 1px solid var(--border);
 
   height: 100%;
 }
@@ -19,9 +19,9 @@
 
   align-items: center;
 
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 
-  gap: 1rem;
+  gap: var(--space-4);
 
   flex-wrap: wrap;
 }
@@ -31,43 +31,43 @@
 
   font-weight: 700;
 
-  font-size: 1.15rem;
+  font-size: var(--fs-h6);
 }
 
 .chart-header p {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
 
-  color: #6b7280;
+  color: var(--text-muted);
 
-  font-size: 0.9rem;
+  font-size: var(--fs-body-sm);
 }
 
 .btn-group {
-  background: #f5f7fc;
+  background: var(--surface-inset);
 
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 
-  padding: 4px;
+  padding: var(--space-1);
 }
 
 .btn-group .btn {
   border: none;
 
-  padding: 0.45rem 1rem;
+  padding: var(--space-2) var(--space-4);
 
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
 
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .btn-group .btn.active {
-  background: #4f6ef7;
+  background: var(--primary);
 
-  color: #fff;
+  color: var(--on-accent);
 
-  box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
+  box-shadow: var(--shadow-brand);
 }
 
 .chart {

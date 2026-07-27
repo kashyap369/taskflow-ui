@@ -61,7 +61,7 @@
             {{ t.members.length }} {{ t.members.length === 1 ? 'member' : 'members' }}
           </span>
         </div>
-        <button class="btn-primary-cta" (click)="openAdd()">
+        <button type="button" class="btn-primary-cta" (click)="openAdd()">
           <lucide-angular name="UserPlus" size="16"></lucide-angular> Add member
         </button>
       </div>
@@ -71,7 +71,7 @@
         <div class="lottie-state">
           <app-lottie-player src="/lottie/empty.json" [width]="140" [height]="120" ariaLabel="No members yet" />
           <p>No one is on this team yet.</p>
-          <button class="btn-primary-cta" (click)="openAdd()">
+          <button type="button" class="btn-primary-cta" (click)="openAdd()">
             <lucide-angular name="UserPlus" size="16"></lucide-angular> Add member
           </button>
         </div>
@@ -108,7 +108,7 @@
                 </div>
               </div>
               <span class="joined">Joined {{ m.joinedAt | date: 'mediumDate' }}</span>
-              <button class="remove-btn" (click)="remove(m)" aria-label="Remove from team">
+              <button type="button" class="remove-btn" (click)="remove(m)" aria-label="Remove from team">
                 <lucide-angular name="Trash2" size="14"></lucide-angular> Remove
               </button>
             </div>
@@ -128,6 +128,109 @@
           />
         </div>
       }
+
+      <!--
+        The team's own tasks (`GET /team/{id}/tasks`). Deliberately separate from the member list
+        above: this is what the team *owns* (`Task.TeamId`), not what its members happen to hold.
+      -->
+      <section class="tasks-panel">
+        <div class="panel-head">
+          <h2><lucide-angular name="SquareCheckBig" size="18"></lucide-angular> Team tasks</h2>
+          <span class="panel-count">{{ tasks().length }}</span>
+          <p class="panel-sub">
+            Tasks this team is responsible for — {{ openTaskCount() }} still open. A task belongs to
+            one team; who it's assigned to is a separate thing.
+          </p>
+        </div>
+
+        @if (!hasTasks()) {
+          <p class="panel-empty">
+            No tasks are assigned to this team yet. Set a task's owning team from the
+            <a routerLink="/organization/tasks">Tasks</a> page.
+          </p>
+        } @else {
+          <div class="list-toolbar">
+            <div class="list-search">
+              <lucide-angular name="Search" size="16"></lucide-angular>
+              <input
+                type="search"
+                placeholder="Search team tasks…"
+                [value]="taskSearch()"
+                (input)="onTaskSearch($any($event.target).value)"
+                aria-label="Search team tasks"
+              />
+            </div>
+            <select
+              class="list-filter"
+              [value]="taskStatusFilter()"
+              (change)="onTaskStatusFilter($any($event.target).value)"
+              aria-label="Filter team tasks by status"
+            >
+              <option value="">All statuses</option>
+              @for (opt of statusOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+
+          @if (taskPager.total() === 0) {
+            <div class="list-no-match">
+              <p>No team tasks match your filters.</p>
+              <button type="button" (click)="clearTaskFilters()">Clear filters</button>
+            </div>
+          } @else {
+            <div class="task-list">
+              @for (task of taskPager.items(); track task.id) {
+                <div class="task-row">
+                  <div class="task-main">
+                    <div class="task-title">{{ task.title }}</div>
+                    <div class="task-meta">
+                      @if (assigneeName(task); as name) {
+                        <span>
+                          <lucide-angular name="User" size="12"></lucide-angular> {{ name }}
+                        </span>
+                      } @else {
+                        <span class="unassigned">Unassigned</span>
+                      }
+                      @if (task.expectedCompletionDate) {
+                        <span>· Due {{ task.expectedCompletionDate | date: 'mediumDate' }}</span>
+                      }
+                    </div>
+                  </div>
+                  <span class="badge" [attr.data-tone]="taskStatusMeta(task.status).tone">
+                    {{ taskStatusMeta(task.status).label }}
+                  </span>
+                  <span class="badge" [attr.data-tone]="taskPriorityMeta(task.priority).tone">
+                    {{ taskPriorityMeta(task.priority).label }}
+                  </span>
+                  <button
+                    type="button"
+                    class="icon-action danger"
+                    (click)="removeTaskFromTeam(task)"
+                    [attr.aria-label]="'Remove ' + task.title + ' from this team'"
+                    title="Remove from team"
+                  >
+                    <lucide-angular name="X" size="14"></lucide-angular>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <div class="pager-bar">
+              <app-pagination
+                [page]="taskPager.page()"
+                [pageSize]="taskPager.pageSize()"
+                [total]="taskPager.total()"
+                [pageSizes]="taskPager.pageSizes"
+                itemLabel="tasks"
+                ariaLabel="Team tasks pagination"
+                (pageChange)="taskPager.setPage($event)"
+                (pageSizeChange)="taskPager.setPageSize($event)"
+              />
+            </div>
+          }
+        }
+      </section>
     } @else {
       <div class="lottie-state">
         <app-lottie-player src="/lottie/empty.json" [width]="140" [height]="120" ariaLabel="Not found" />
@@ -142,7 +245,7 @@
     <aside class="drawer" appDialog (dismiss)="closeAdd()">
       <div class="drawer-head">
         <h2>Add member</h2>
-        <button class="icon-btn" (click)="closeAdd()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeAdd()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>
@@ -176,7 +279,7 @@
     <aside class="drawer" appDialog (dismiss)="closeEdit()">
       <div class="drawer-head">
         <h2>Edit team</h2>
-        <button class="icon-btn" (click)="closeEdit()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeEdit()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>

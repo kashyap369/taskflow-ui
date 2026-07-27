@@ -40,15 +40,14 @@ export class TokenService {
    * changing the remember-me storage choice — writes to whichever storage currently holds the session.
    */
   updateTokens(accessToken: string, refreshToken: string): void {
-    const storage = localStorage.getItem(this.ACCESS_KEY) ? localStorage : sessionStorage;
+    const storage = this.activeStorage();
     storage.setItem(this.ACCESS_KEY, accessToken);
     storage.setItem(this.REFRESH_KEY, refreshToken);
   }
 
   /** Persist the principal in the same storage that holds the access token. */
   setUser(user: User): void {
-    const storage = localStorage.getItem(this.ACCESS_KEY) ? localStorage : sessionStorage;
-    storage.setItem(this.USER_KEY, JSON.stringify(user));
+    this.activeStorage().setItem(this.USER_KEY, JSON.stringify(user));
   }
 
   getUser(): User | null {
@@ -76,7 +75,20 @@ export class TokenService {
     return !!this.getToken();
   }
 
+  /**
+   * Reads prefer `sessionStorage`, because a **tab-scoped session must beat a shared one**.
+   *
+   * Both stores are visible to every tab on the origin, so a remember-me sign-in in one tab writes a
+   * `localStorage` token that every other tab can see. If `localStorage` won here, a tab holding its
+   * own `sessionStorage` session would silently start acting as whoever signed in elsewhere. The
+   * per-tab session is the more specific answer to "who is using *this* tab", so it wins.
+   */
   private read(key: string): string | null {
-    return localStorage.getItem(key) ?? sessionStorage.getItem(key);
+    return sessionStorage.getItem(key) ?? localStorage.getItem(key);
+  }
+
+  /** The store holding this tab's session — must use the same precedence as `read`. */
+  private activeStorage(): Storage {
+    return sessionStorage.getItem(this.ACCESS_KEY) ? sessionStorage : localStorage;
   }
 }

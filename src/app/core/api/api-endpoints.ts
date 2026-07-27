@@ -4,6 +4,8 @@ export const API = {
     Register: '/auth/register',
     Refresh: '/auth/refresh',
     Logout: '/auth/logout',
+    VerifyEmail: '/auth/verify-email',
+    ResendVerification: '/auth/resend-verification',
   },
 
   // `UserController` is read-only — there is no PUT/DELETE on /user.
@@ -11,6 +13,15 @@ export const API = {
     Me: '/user/me',
     GetAll: '/user',
     GetById: (id: number) => `/user/${id}`,
+  },
+
+  /**
+   * Platform administration — every route is **AdminOnly**. This is the one controller whose data
+   * isn't scoped to an organization, so the system role is the whole authorization story.
+   */
+  Admin: {
+    Organizations: '/admin/organizations',
+    Settings: '/admin/settings',
   },
 
   Organization: {
@@ -22,6 +33,8 @@ export const API = {
   },
 
   Report: {
+    /** Personal report for the signed-in user — the caller's own tasks only. */
+    Me: '/report/me',
     Dashboard: (organizationId: number) => `/report/dashboard/${organizationId}`,
     Member: (userId: number) => `/report/member/${userId}`,
     Team: (organizationId: number) => `/report/team/${organizationId}`,
@@ -38,16 +51,26 @@ export const API = {
 
   Task: {
     Create: '/task',
+    /** Personal task (Individual account) — no organization, no project. */
+    CreatePersonal: '/task/personal',
     Update: '/task',
     GetById: (id: number) => `/task/${id}`,
     Delete: (id: number) => `/task/${id}`,
     ByOrganization: (organizationId: number) => `/task/organization/${organizationId}`,
     ByProject: (projectId: number) => `/task/project/${projectId}`,
     Mine: '/task/mine',
+    MinePersonal: '/task/mine/personal',
     Start: (id: number) => `/task/${id}/start`,
     Complete: (id: number) => `/task/${id}/complete`,
+    Reopen: (id: number) => `/task/${id}/reopen`,
     Assign: (id: number, userId: number) => `/task/${id}/assign/${userId}`,
     Unassign: (id: number) => `/task/${id}/unassign`,
+    /**
+     * Team ownership lives on its own routes, NOT on `PUT /task` — the update command deliberately
+     * omits `teamId` so a form save can't blank it (the same trap that bit `description`).
+     */
+    AssignTeam: (id: number, teamId: number) => `/task/${id}/team/${teamId}`,
+    ClearTeam: (id: number) => `/task/${id}/team`,
   },
 
   Role: {
@@ -88,6 +111,8 @@ export const API = {
     ByOrganization: (organizationId: number) => `/team/organization/${organizationId}`,
     AddMember: (teamId: number, userId: number) => `/team/${teamId}/members/${userId}`,
     RemoveMember: (teamId: number, userId: number) => `/team/${teamId}/members/${userId}`,
+    /** The tasks this team owns (`Task.TeamId`) — teams grouped only people before backend Phase 11. */
+    Tasks: (teamId: number) => `/team/${teamId}/tasks`,
   },
 
   SubTask: {

@@ -127,19 +127,16 @@ describe('AdminUsersPage', () => {
     expect(component.selectedUser()).toBeNull();
   });
 
-  // `EnsureUserAsync` has no Admin bypass, so a refusal is an expected outcome here: the drawer must
-  // stay open and explain itself rather than closing on a bare toast.
-  it('keeps the drawer open and flags a refused detail', () => {
+  // `EnsureUserAsync` now short-circuits for a platform admin (backend Phase 10), so a failure is an
+  // ordinary error: close the drawer instead of parking it on a skeleton that never resolves.
+  it('closes the drawer if the detail request fails', () => {
     getUser.and.returnValue(throwError(() => new Error('Forbidden')));
 
     component.openUser(USERS[1]);
 
-    expect(component.selectedUserDenied()).toBeTrue();
-    expect(component.selectedUserId()).toBe(2);
+    expect(component.selectedUserId()).toBeNull();
+    expect(component.selectedUser()).toBeNull();
     expect(component.detailLoading()).toBeFalse();
-
-    component.closeUser();
-    expect(component.selectedUserDenied()).toBeFalse();
 
     getUser.and.returnValue(of(GRACE_DETAIL));
   });

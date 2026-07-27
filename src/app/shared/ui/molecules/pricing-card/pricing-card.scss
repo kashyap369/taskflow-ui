@@ -12,7 +12,7 @@
 
     height: 100%;
 
-    padding: 2rem;
+    padding: var(--space-8);
 
     border: 1px solid var(--border);
 
@@ -52,13 +52,13 @@
 
     transform: translateX(-50%);
 
-    padding: 8px 18px;
+    padding: var(--space-2) var(--space-4);
 
-    border-radius: 0 0 14px 14px;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 
-    color: #fff;
+    color: var(--on-accent);
 
-    font-size: .72rem;
+    font-size: var(--fs-body-xs);
 
     font-weight: 700;
 
@@ -72,17 +72,17 @@
 
 .pricing-header {
 
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
 
 }
 
 .pricing-title {
 
-    margin: 0 0 .5rem;
+    margin: 0 0 var(--space-2);
 
     font-family: var(--font-display);
 
-    font-size: 1.75rem;
+    font-size: var(--fs-h3);
 
     font-weight: 700;
 
@@ -110,9 +110,9 @@
 
     align-items: flex-end;
 
-    gap: .5rem;
+    gap: var(--space-2);
 
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
 
 }
 
@@ -120,7 +120,7 @@
 
     font-family: var(--font-display);
 
-    font-size: 3.3rem;
+    font-size: var(--fs-h1);
 
     font-weight: 800;
 
@@ -134,11 +134,11 @@
 
 .duration {
 
-    margin-bottom: .55rem;
+    margin-bottom: var(--space-2);
 
     color: var(--text-muted);
 
-    font-size: .95rem;
+    font-size: var(--fs-body-md);
 
 }
 
@@ -150,9 +150,9 @@
 
     height: 54px;
 
-    border-radius: 999px;
+    border-radius: var(--radius-full);
 
-    font-size: 1rem;
+    font-size: var(--fs-body-md);
 
     font-weight: 600;
 
@@ -160,7 +160,7 @@
 
     transition: .25s ease;
 
-    margin-bottom: 2rem;
+    margin-bottom: var(--space-8);
 
 }
 
@@ -214,7 +214,7 @@
 
     background: var(--border);
 
-    margin-bottom: 1.75rem;
+    margin-bottom: var(--space-7);
 
 }
 
@@ -232,7 +232,7 @@
 
     flex-direction: column;
 
-    gap: 1rem;
+    gap: var(--space-4);
 
 }
 
@@ -242,11 +242,11 @@
 
     align-items: center;
 
-    gap: .75rem;
+    gap: var(--space-3);
 
     color: var(--text-muted);
 
-    font-size: .96rem;
+    font-size: var(--fs-body-md);
 
 }
 
@@ -264,13 +264,13 @@
 
     .pricing-card {
 
-        padding: 1.75rem;
+        padding: var(--space-7);
 
     }
 
     .price {
 
-        font-size: 2.8rem;
+        font-size: var(--fs-h1);
 
     }
 
@@ -280,19 +280,19 @@
 
     .pricing-card {
 
-        padding: 1.5rem;
+        padding: var(--space-6);
 
     }
 
     .pricing-title {
 
-        font-size: 1.5rem;
+        font-size: var(--fs-h4);
 
     }
 
     .price {
 
-        font-size: 2.4rem;
+        font-size: var(--fs-h2);
 
     }
 

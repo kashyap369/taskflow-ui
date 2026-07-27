@@ -10,13 +10,13 @@
 
     height: 100%;
 
-    padding: 2rem;
+    padding: var(--space-8);
 
     background: var(--surface);
 
     border: 1px solid var(--border);
 
-    border-radius: 22px;
+    border-radius: var(--radius-2xl);
 
     box-shadow: var(--shadow-sm);
 
@@ -42,17 +42,19 @@
 
     align-items: center;
 
-    gap: .3rem;
+    gap: var(--space-1);
 
-    margin-bottom: 1.4rem;
+    margin-bottom: var(--space-6);
 
 }
 
 .star-icon {
 
-    color: #fbbf24;
+    // Decorative gold, NOT --warning. Light-mode --warning is deliberately darkened to #96530b so
+    // warning *text* clears 4.5:1; a rating star is decoration, and that value renders it brown.
+    color: var(--accent-amber);
 
-    fill: #fbbf24;
+    fill: var(--accent-amber);
 
 }
 
@@ -60,9 +62,9 @@
 
 .review-title {
 
-    margin: 0 0 .75rem;
+    margin: 0 0 var(--space-3);
 
-    font-size: 1.15rem;
+    font-size: var(--fs-h6);
 
     font-weight: 700;
 
@@ -80,7 +82,7 @@
 
     color: var(--text-muted);
 
-    font-size: 1.08rem;
+    font-size: var(--fs-h6);
 
     line-height: 1.9;
 
@@ -94,9 +96,9 @@
 
     align-items: center;
 
-    gap: 1rem;
+    gap: var(--space-4);
 
-    margin-top: 2rem;
+    margin-top: var(--space-8);
 
 }
 
@@ -121,11 +123,11 @@
 
     align-items: center;
 
-    color: #ffffff;
+    color: var(--on-accent);
 
     font-weight: 700;
 
-    font-size: 1.15rem;
+    font-size: var(--fs-h6);
 
 }
 
@@ -149,7 +151,7 @@
 
     align-items: center;
 
-    gap: .45rem;
+    gap: var(--space-2);
 
 }
 
@@ -159,7 +161,7 @@
 
     font-family: var(--font-display);
 
-    font-size: 1rem;
+    font-size: var(--fs-body-md);
 
     font-weight: 700;
 
@@ -175,11 +177,11 @@
 
 .reviewer-designation {
 
-    margin: .2rem 0 0;
+    margin: var(--space-1) 0 0;
 
     color: var(--text-muted);
 
-    font-size: .9rem;
+    font-size: var(--fs-body-sm);
 
     line-height: 1.5;
 
@@ -191,13 +193,13 @@
 
     .review-card {
 
-        padding: 1.5rem;
+        padding: var(--space-6);
 
     }
 
     .review-text {
 
-        font-size: 1rem;
+        font-size: var(--fs-body-md);
 
     }
 
@@ -207,7 +209,7 @@
 
     .review-card {
 
-        padding: 1.25rem;
+        padding: var(--space-5);
 
     }
 

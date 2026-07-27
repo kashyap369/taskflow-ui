@@ -28,6 +28,8 @@ const task = (id: number, title: string, status: TaskStatus, priority: TaskPrior
   actualCompletionDate: null,
   projectId: null,
   organizationId: 2,
+  teamId: null,
+  teamName: null,
   createdByUserId: 1,
   assignedToUserId: null,
   subTaskCount: 0,

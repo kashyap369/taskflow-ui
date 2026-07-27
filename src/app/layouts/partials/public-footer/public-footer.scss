@@ -1,20 +1,20 @@
 .footer {
   background: var(--surface-2);
   border-top: 1px solid var(--border);
-  padding: 4.5rem 0 0;
+  padding: var(--space-16) 0 0;
 }
 
 .footer-logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: var(--space-3);
   text-decoration: none;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 
   span {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 1.3rem;
+    font-size: var(--fs-h5);
     letter-spacing: -0.02em;
     color: var(--text);
   }
@@ -22,12 +22,12 @@
   .logo-circle {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--gradient-brand);
-    color: #fff;
+    color: var(--on-accent);
     box-shadow: var(--shadow-brand);
   }
 }
@@ -36,18 +36,18 @@
   max-width: 340px;
   color: var(--text-muted);
   line-height: 1.7;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
 .footer-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.9rem;
-  border-radius: 999px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
   background: var(--surface);
   border: 1px solid var(--border);
-  font-size: 0.85rem;
+  font-size: var(--fs-body-sm);
   font-weight: 500;
   color: var(--text-muted);
 
@@ -59,17 +59,17 @@
 .footer h6 {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--fs-body-sm);
   color: var(--text);
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 }
 
 .footer a:not(.footer-logo) {
   display: block;
   color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.95rem;
-  padding: 0.35rem 0;
+  font-size: var(--fs-body-md);
+  padding: var(--space-1) 0;
   transition: color var(--dur-2) var(--ease-standard);
 
   &:hover {
@@ -78,24 +78,24 @@
 }
 
 .footer-bottom {
-  margin-top: 4rem;
-  padding: 1.75rem 0;
+  margin-top: var(--space-16);
+  padding: var(--space-7) 0;
   border-top: 1px solid var(--border);
 
   span {
     color: var(--text-subtle);
-    font-size: 0.9rem;
+    font-size: var(--fs-body-sm);
   }
 }
 
 .footer-links {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--space-6);
 
   a {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: var(--fs-body-sm);
 
     &:hover {
       color: var(--primary);

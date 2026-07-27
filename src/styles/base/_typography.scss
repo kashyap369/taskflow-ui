@@ -1,0 +1,115 @@
+// ======================================
+// Base typography — applies the type scale to real elements.
+//
+// This file was empty, which is why every heading in the app was sized ad-hoc by its own component
+// SCSS. Headings now get their size/weight/tracking from the scale by default, so a page only
+// overrides when it genuinely means something different. See docs/DESIGN.md §2.
+// ======================================
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text);
+  line-height: var(--lh-heading);
+  margin-block-end: 0;
+}
+
+h1 {
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-extrabold);
+  letter-spacing: var(--tracking-tighter);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+h4 {
+  font-size: var(--fs-h4);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+h5 {
+  font-size: var(--fs-h5);
+  font-weight: var(--fw-semibold);
+}
+
+h6 {
+  font-size: var(--fs-h6);
+  font-weight: var(--fw-semibold);
+}
+
+p {
+  line-height: var(--lh-relaxed);
+}
+
+small {
+  font-size: var(--fs-body-xs);
+}
+
+// `code` keeps an `em`-relative size on purpose: a mono face runs optically larger than the body
+// face at the same px, so it is sized relative to whatever it sits inside rather than pinned to a
+// scale step. This is the one sanctioned exception to the "no raw font-size" rule.
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+  font-size: .875em;
+  font-feature-settings: 'tnum' 1;
+}
+
+// ======================================
+// Utilities
+// ======================================
+
+/** Hero / marketing display text. */
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display-md);
+  font-weight: var(--fw-black);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tighter);
+}
+
+/** The little uppercase kicker above a section heading (DESIGN.md §2). */
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  color: var(--primary);
+}
+
+/**
+ * Numerals that must line up: dashboard stats, table figures, durations, counts, IDs.
+ * DESIGN.md §2 asks for tabular numerals for metrics; before Phase 1 nothing implemented it, so
+ * columns of numbers visibly jittered as values changed.
+ */
+.tabular,
+.stat-value,
+.metric-value {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/** A metric readout — mono + tabular, for the big dashboard numbers. */
+.metric-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: var(--tracking-tight);
+}
+
+/** Table numeric cells align right and never jitter. */
+.cell-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}

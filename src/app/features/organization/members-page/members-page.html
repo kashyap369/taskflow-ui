@@ -6,7 +6,7 @@
         <p>Invite and manage people in {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button class="btn-primary-cta" (click)="openInvite()" [disabled]="!hasRoles()"
+        <button type="button" class="btn-primary-cta" (click)="openInvite()" [disabled]="!hasRoles()"
           [title]="hasRoles() ? 'Invite a member' : 'Create a role first'">
           <lucide-angular name="UserPlus" size="18"></lucide-angular>
           Invite member
@@ -103,7 +103,8 @@
                 </div>
 
                 <div class="member-role">
-                  <select class="mini-select" (change)="changeRole(member, $event)">
+                  <select class="mini-select" (change)="changeRole(member, $event)"
+                    [attr.aria-label]="'Role for ' + member.userFullName">
                     @for (role of roles(); track role.id) {
                       <option [value]="role.id" [selected]="role.id === member.organizationRoleId">
                         {{ role.name }}
@@ -117,11 +118,13 @@
                 </span>
 
                 <div class="member-actions">
-                  <button class="action-btn" (click)="toggleActive(member)"
-                    [title]="member.isActive ? 'Deactivate' : 'Activate'">
+                  <button type="button" class="action-btn" (click)="toggleActive(member)"
+                    [title]="member.isActive ? 'Deactivate' : 'Activate'"
+                    [attr.aria-label]="(member.isActive ? 'Deactivate ' : 'Activate ') + member.userFullName">
                     <lucide-angular name="Power" size="15"></lucide-angular>
                   </button>
-                  <button class="action-btn danger" (click)="remove(member)" title="Remove">
+                  <button type="button" class="action-btn danger" (click)="remove(member)" title="Remove"
+                    [attr.aria-label]="'Remove ' + member.userFullName">
                     <lucide-angular name="Trash2" size="15"></lucide-angular>
                   </button>
                 </div>
@@ -160,7 +163,7 @@
                 <span class="badge" [attr.data-tone]="invitationStatusMeta(inv.status).tone">
                   {{ invitationStatusMeta(inv.status).label }}
                 </span>
-                <button class="btn-ghost sm" (click)="cancelInvite(inv)">Cancel</button>
+                <button type="button" class="btn-ghost sm" (click)="cancelInvite(inv)">Cancel</button>
               </div>
             }
           </div>
@@ -186,7 +189,7 @@
     <aside class="drawer" appDialog (dismiss)="closeInvite()">
       <div class="drawer-head">
         <h2>Invite member</h2>
-        <button class="icon-btn" (click)="closeInvite()" aria-label="Close">
+        <button type="button" class="icon-btn" (click)="closeInvite()" aria-label="Close">
           <lucide-angular name="X" size="18"></lucide-angular>
         </button>
       </div>

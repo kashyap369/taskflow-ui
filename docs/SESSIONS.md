@@ -3,20 +3,222 @@
 > Append-only. 3–5 lines per session. Focus on gotchas, dead ends, and decisions — things git
 > history doesn't capture.
 >
-> **▶ Next session: v1 IS COMPLETE (Phase 22).** 68 of 71 endpoints wired (the other 3 are
-> backend-blocked personal tasks), `ng lint` **passes with zero errors**, `ng build` passes, **164/164**
-> unit tests green, AA contrast enforced by `npm run a11y:contrast` (run it after touching any colour
-> token).
+> **▶ Next session: ALL THREE portals are complete (Phases 26–29).** **80 of 82** API endpoints
+> consumed — the 2 left are the standing deliberate skips (`GET /task/mine`, `GET /worklog/mine`).
+> `ng lint` **0 errors**, `ng build` passes, **204/204** unit tests green, AA contrast enforced by
+> `npm run a11y:contrast`.
 >
-> Org portal is feature/theme-complete with full CRUD on every entity including the organization itself;
-> the invitation flow works from both sides; Admin has Users + a detail drawer; validation engine,
-> confirm dialogs, skeletons, accessible drawers and list pagination/filtering are in **and now cover
-> every page**.
+> ⚠️ **Two tabs share one `localStorage`.** Signing into a second portal in another tab re-points the
+> first tab's token, and every org-scoped call then 403s ("You do not have access to this resource")
+> because the platform admin belongs to no organization. Decode the JWT before suspecting an endpoint.
 >
-> **Read [V1-GAPS.md](V1-GAPS.md) first** — it's the one honest list of what v1 excludes and why
-> (backend-blocked / backend defects / deferred v1.x / non-goals). Post-v1 work starts at its §3; CSV+PDF
-> report export is the highest-value item. **Three backend findings** (org update/delete unauthorized,
-> the worklog 500, remove-vs-deactivate) are in §2 and need a decision in the API repo.
+> The **Admin portal** now has Organizations + Platform Settings alongside Users; the **Organization
+> portal** has team-scoped tasks, role-filtered assignment, a priority breakdown, a planned-vs-actual
+> project timeline and per-team task drill-down. Nothing in the API is unconsumed and nothing in the
+> UI is waiting on the backend.
+>
+> **Read [V1-GAPS.md](V1-GAPS.md) first.** §1 and §2 are empty — the only backend gap left anywhere is
+> **forgot-password**, which blocks no built screen. Remaining work is §3 (v1.x): CSV/PDF report
+> export, the calendar page, per-member trend charts, E2E tests.
+
+## 2026-07-27 (Design Phases 6 & 7 — functional sweep + accessibility)
+- **`type="button"` added to 77 buttons** (0 untyped remain). Inside a `<form>` an untyped button
+  defaults to `type="submit"`, so icon buttons in drawers were submitting the form.
+- **BOTH mobile menus were completely broken, and neither was in the plan.** `angular.json` has
+  `scripts: []` — **no Bootstrap JS is loaded** — so the public header's `data-bs-toggle="collapse"`
+  hamburger never opened anything. The org layout's hamburger had no handler at all and its sidebar
+  was `d-none d-lg-flex`, meaning **below 992px the org portal had zero navigation**. Both now
+  signal-driven (off-canvas + backdrop + `aria-expanded` + Menu→X). Check `scripts: []` before
+  trusting any `data-bs-*` attribute in this repo.
+- **Hardcoded colors also live in `.ts`.** `productivity-chart.ts` held `#4F6EF7`/`#00A3FF`/`#E8ECF4`
+  for its ECharts palette; `design-lint` only scans SCSS so Phase 2 missed them. ECharts is canvas
+  and can't read CSS vars — they now resolve tokens through `getComputedStyle`. **Extend design-lint
+  to `.ts`.**
+- **Two of my own audit numbers were wrong**, both from regexes matching inside HTML comments and not
+  handling multi-line tags: "126 buttons missing type" was really **77**; "footer socials ×3" don't
+  exist (those were the Product/Company/Resources link columns). **Strip comments before auditing
+  markup** — same lesson as design-lint.
+- **Programmatic `.focus()` does NOT trigger `:focus-visible`** in Chrome, so an automated focus
+  sweep reports false "no focus ring" everywhere. Verify with a real `Tab` keypress.
+- **A unit test caught a production bug**: the sidebar swaps its icon to `X`, which wasn't registered
+  in the org layout's `LucideIconProvider` — blank icon for real users. The org portal needs the API
+  running to browser-verify, so its sidebar is covered by 4 new specs instead (213 tests, +9).
+- Dead UI resolved per user decision: org top bar's ⌘K search / "+ Create" / notification bell /
+  "See plans" **removed**; "View live demo" scrolls to the mockup; the hero board's fake toolbar is
+  now presentational `<div>`s inside `aria-hidden`; legal links are text; login "Forgot?" removed
+  (backend-blocked). `pricing-card` and `productivity-chart` now emit real outputs.
+- 213/213 tests · contrast 42/42 · `ng lint` clean · design-lint clean · 0 untyped buttons ·
+  0 `href="#"` · 0 unnamed icon controls.
+
+## 2026-07-27 (Design Phases 4 & 5 — the button and input systems)
+- **92 duplicate definitions deleted** across ~30 files (47 button + 45 form), replaced by two files:
+  `styles/components/_button.scss` and `_input.scss`. **Zero templates edited**, so no click handler
+  could break — the legacy class names are carried on the new skins' selector lists.
+- **`@extend` is a trap in this codebase.** `@extend .btn` also extends **Bootstrap's** `.btn`
+  (bootstrap is imported first in `styles.scss`), silently pulling its padding/font/`--bs-*` machinery
+  into all 49 legacy buttons. Use explicit selector lists. A `$btn-all` SCSS variable now holds the
+  alias list so every rule covers the same set.
+- **A bare `.btn.is-loading` matched nothing where it mattered** — auth submits carry
+  `sign-in-btn is-loading`, never `btn`. Caught only by testing the state in the browser.
+- **Buttons are now pills** (`--btn-radius: var(--radius-full)`), settling the decision deferred from
+  Phase 3. The landing page was already pill while app pages were 16px. One token to revert.
+- **`.icon-btn` meant three different controls**: 34px row action, 40px circular top-bar affordance,
+  and the password-reveal glyph *inside* an input — that last one is an input affordance and moved to
+  `_input.scss`. Row actions raised 30–34px → 36px.
+- **Three form states did not exist anywhere in the app**: read-only (0 files), invalid (0 files),
+  consistent disabled (10 of ~25). All three added and verified live.
+- **Debugging trap that cost real time:** reading `getComputedStyle` immediately after toggling
+  `disabled`/`aria-invalid` returns the **pre-transition** value, because background/border-color are
+  transitioned. Only `cursor` appeared to change, which looks exactly like a specificity bug — I went
+  hunting through Bootstrap's cascade and Angular's injected component styles before realising the CSS
+  was fine and the *test* was wrong. **Let the transition settle (~350ms) before asserting.**
+- **Duplicates hide at two levels.** A top-level-only search found 37 form definitions; the auth pages
+  had another full set nested inside `.input-icon-group`. Grep for the class, not just `^.class {`.
+- Buttons gained a real **loading spinner** (pseudo-element, no template change — `[class.is-loading]`
+  was already bound). Previously "saving…" was a label swap only, so a slow request looked dead.
+- 204/204 tests · contrast 42/42 · `ng lint` clean · design-lint clean · landing/login/register
+  verified in both themes.
+
+## 2026-07-27 (Design Phases 2 & 3 — color tokens, radius/spacing/elevation rhythm)
+- **Phase 2:** 202 color literals → semantic tokens across 40 files. Zero hex left outside masks.
+- **The trap worth remembering: `color: #fff` must NOT become `--on-primary`.** ~65 of those sit on a
+  brand gradient or a status fill. `--on-primary` flips to near-black in dark mode (because
+  `--primary` becomes a light violet), so that mapping would have turned the auth showcase panel's
+  text black. Added an **`--on-accent`** set that is deliberately *identical* in both themes, since a
+  gradient stays saturated regardless of theme.
+- **`mask-image: #000` is an alpha channel, not a color** — tokenising it breaks the mask. The linter
+  now skips mask properties; it's the one sanctioned raw-color exception.
+- **Decorative ≠ semantic, and only the eye caught it.** A rating star mapped to `--warning` rendered
+  **brown** — light-mode status hues are deliberately darkened (`#96530b`) so warning *text* clears
+  4.5:1. Decorative gold is `--accent-amber`. Every automated check was green while the stars were
+  brown; found by looking at the page.
+- **Phase 3:** 285 radius values (24 distinct sizes → 8 steps), **1185** spacing values snapped to the
+  4px scale, 18 bespoke shadows tokenised. There was **no spacing token in the codebase at all** before
+  this — hence `styles/abstracts/_spacing.scss`.
+- **Gave the spacing scale mid-range steps** (`--space-7`=28px, `9`=36px, `11`=44px). A sparse scale
+  forces destructive snapping — `1.75rem → 2rem` is a visible reflow; with `--space-7` it's exact.
+- **Deliberately did NOT make buttons pills**, though the plan said to. That's Phase 4's call as part
+  of building the one button skin; doing it here meant a jarring interim look plus work Phase 4 redoes.
+  Phase 3 only quantised existing geometry. **Phase 4 still owes that decision.**
+- `design-lint` now **strips comments before matching** — it flagged a hex inside a comment that was
+  explaining why that hex had been replaced. Verified it still catches real violations via a probe file.
+- Enabled rules are now **font-size, color-literal, border-radius**; only `duration` (89, Phase 8)
+  remains pending. 204/204 tests · contrast 42/42 · `ng lint` clean · both themes verified.
+
+## 2026-07-27 (Design Phase 1 — typefaces + type scale + the design linter)
+- New work stream: **[DESIGN-PHASES.md](DESIGN-PHASES.md)**, a 10-phase design remediation plan from a
+  full audit of the frontend. Headline finding: **the token system is well built and almost entirely
+  unused** — 0 uses of the type scale, 0 spacing tokens, 0 radius tokens in features, 197 hardcoded hex,
+  `.btn-primary-cta` *defined* in 17 separate files, and the whole `shared/ui` atomic library
+  (`<app-button>`, `<app-text-input>`, `<app-form-field>`) referenced **0 times**.
+- **Typefaces: Plus Jakarta Sans + Inter → Satoshi (display) + Geist (body) + Geist Mono (metrics).**
+  Satoshi is served from the **Fontshare** CDN — self-hosting its woff2 under `assets/fonts/satoshi/`
+  is still open. Geist/Geist Mono are Google Fonts. Verified all three load; tabular figures confirmed
+  by measuring `1111` vs `8888` at equal width.
+- **381 font-size declarations across 39 files** swept onto the scale. Two gotchas worth remembering:
+  (1) my first sweep silently skipped every `rem` value because the guard regex `/em$/` also matches
+  `rem` — use `(?<!r)em$`; (2) `git ls-files` missed **5 untracked SCSS files**, so the sweep must walk
+  the filesystem, not the index. Both cost a re-run.
+- **The `clamp()` headlines were tokenised, not flattened.** The plan said map them to discrete steps;
+  that would have visibly resized the landing hero. Added `--fs-fluid-hero/-h1/-h2/-h4` instead, which
+  also collapsed 6 clamp signatures into 4. Added `--fs-label` (13px) and `--fs-body-2xs` (11px) for the
+  two real roles the sprawl clustered around.
+- **`styles/base/_typography.scss` was empty** — that is *why* every page sized its own headings. It now
+  sizes `h1`–`h6` from the scale, so pages only override when they mean something different.
+- **New guardrail: `npm run design:lint`** (`scripts/design-lint.mjs`), wired into `npm run lint`. Only
+  the font-size rule is **enabled**; the Phase 2/3/8 rules ship written-but-disabled so the lint can
+  never be "temporarily red". `npm run design:report` prints their counts —
+  **color-literal 208 · border-radius 284 · duration 89** — which is the Phase 2/3/8 burndown.
+- Type CSS vars live in `abstracts/_typography.scss` (alongside their SCSS tokens, per the `_motion.scss`
+  pattern), **not** in the theme files — type is not theme-dependent. Family declarations were removed
+  from `themes/_light.scss`.
+- 204/204 tests green · `a11y:contrast` 42/42 · build clean · no horizontal overflow at 375px.
+
+## 2026-07-26 (follow-up 2 — should the token move to sessionStorage?)
+- **It already is, conditionally.** `TokenService.setTokens` picks `remember ? localStorage :
+  sessionStorage`, so an unchecked "Keep me signed in" already gives a **tab-scoped** session. The
+  cross-tab token swapping happened because the login form defaults `rememberMe: [true]`, so both
+  sign-ins went to the shared store. **Rejected making it sessionStorage-only:** it would delete the
+  30-day remember-me feature and sign users out whenever they open a link in a new tab — a real cost
+  to fix what is only a *testing* inconvenience. It is also **not** a security upgrade: both stores are
+  readable by any script on the origin, and the real hardening is httpOnly cookies (a backend change).
+- **The question did expose a genuine bug: read precedence was backwards.** `read()` was
+  `localStorage ?? sessionStorage`, so a tab holding its own non-remembered session would **silently
+  adopt whoever signed in with remember-me in another tab**. Reads now prefer `sessionStorage`, and
+  `updateTokens`/`setUser` share the same precedence through a new private `activeStorage()` — a
+  tab-scoped session is the more specific answer to "who is using *this* tab". 6 specs added.
+
+## 2026-07-26 (follow-up — "You do not have access to this resource" on the reports page)
+- **The reported 403 was not an endpoint bug.** A full sweep of all 28 org GETs as the owner returns
+  **200 across the board**; the same four reporting URLs as the **platform admin** return **403**,
+  because an admin belongs to no organization. The browser was simply carrying the admin's token —
+  two tabs on one origin share `localStorage`, so signing into `/auth/admin` in one tab re-pointed the
+  other. **Check the JWT's `nameidentifier` before blaming an endpoint**; decoding it took one line and
+  ended the guesswork.
+- **But it exposed a real bug: feature state outlived the session.** Every facade is a
+  `providedIn: 'root'` singleton whose `init()` no-ops once `_loaded` is true, and **nothing reset
+  them on logout** — so signing out and back in as a *different* account left the previous account's
+  organizations, tasks and members on screen, with `init()` refusing to refetch. Wrong, and a small
+  data leak between accounts.
+- **Fixed with one `core` helper, not three ad-hoc effects.** `core/auth/session-reset.ts` exposes
+  `resetOnSessionChange(reset)`; the organization, admin and member facades each call it with a
+  callback clearing every signal they own, `_loaded` flags included. Keyed on the **user id**, so it
+  covers logout *and* account switching, not just the explicit sign-out path.
+- **It deliberately ignores the signed-out → signed-in transition.** There is nothing stale to drop
+  there, and resetting would race with the `init()` the destination page has already started. Three
+  specs pin all of this, including that non-reset.
+
+## 2026-07-26 (Phases 26–29 — Admin + Organization: the last unconsumed endpoints)
+- **Maintenance mode exposed a two-request lie in sign-in.** `POST /auth/login` is exempt from the
+  maintenance middleware (an admin must be able to get in to turn it off) but the `GET /user/me` that
+  follows is not — so a non-admin authenticated **successfully** (login 200), got a 503 on the second
+  call, and was told *"Check your credentials and try again."* The password was right. Whenever a
+  use-case is two requests, one error branch cannot honestly describe both; `AuthFacade` now reads the
+  status and names maintenance explicitly.
+- **A 503 is a platform state, not a request failure — so it gets a banner, not a toast.** Maintenance
+  fails *every* non-admin request, which with the generic handler meant a toast storm that scrolls the
+  one useful message away. New `MaintenanceService` + a sticky banner at the app root; any successful
+  response clears it. Verified live: message text came from the admin's own field.
+- **`PUT /task` deliberately has no `teamId`, and that's load-bearing.** The backend kept team off the
+  update command so a form save can't blank it — the same trap that bit `description` in Phase 17. The
+  drawer still shows a team field, but `submit()` routes it to `PUT/DELETE /task/{id}/team` **and only
+  when the value actually changed**, so an ordinary save doesn't fire a second request.
+- **Assignee pickers must not offer inactive people, and the API is the authority on that.** Added a
+  second members signal (`assignableMembers`) fed by `?activeOnly=true`, kept separate from `members`
+  (the members page manages inactive rows deliberately). Same endpoint, two different questions. The
+  row `<select>` re-adds the *current* assignee when the filter excludes them — otherwise an assigned
+  task silently renders as "Unassigned".
+- **The team report's two numbers genuinely disagree, so the UI says so.** `tasksAssigned/Completed`
+  aggregate over the team's **members**; `tasks[]` is what the team **owns** (`Task.TeamId`). Live data
+  shows Completed **0** next to **1** owned task — correct, and it would read as a bug without the note.
+- **Moved `OrganizationStatus` into `shared/models`** rather than importing it across feature slices —
+  the third time (after `Tone` and `InvitationStatus`) that two features needed the same enum. Lint
+  allows features→features, but the precedent is clearer than the permission.
+
+## 2026-07-26 (Phase 23 — Member portal: the Individual account, end to end)
+- **Building the new portal was the best test the old code ever got.** Two pre-existing bugs surfaced
+  within minutes: `POST /worklog/start` **500'd** on empty notes (`TaskWorkLogs.Notes` was NOT NULL while
+  the domain wrote `notes?.Trim()` — the org form always happened to send a string), and
+  `.badge[data-tone]` turned out to be **copied into six org page stylesheets and defined nowhere
+  globally**, so the new page rendered white-on-transparent — invisible in light mode, accidentally
+  readable in dark. A duplicated style isn't a style: it's six chances to forget the seventh.
+- **Moved `.badge` into the global `_badge.scss`** rather than adding a seventh copy. The six local
+  definitions are identical and now just override it with the same values — deletable as each page is
+  next touched.
+- **Re-exported the task DTOs instead of redefining them.** `member.models.ts` re-exports
+  `TaskListItem` / `SubTask` / `WorkLog` from `organization.models` — same API shapes, so a second
+  definition would only create drift. But the **form models are separate**: a personal task has no
+  project and no assignee, and `POST /task/personal` rejects both, so sharing the org form model would
+  have invited fields the API refuses.
+- **Register redirected to a login form that could not work.** With verification live, a new account is
+  PendingVerification, so "Account created, please sign in" was a dead end. It now goes to
+  `/auth/verify-email`, whose no-token state explains the inbox step and offers resend.
+- **`| number: '1.0-1'` on every tracked-hours figure.** The API returns a raw double and the dashboard
+  proudly displayed `2.505008592222222h`. Fixed in the member portal and the four org places with the
+  same defect.
+- **`GET /report/me` and `/worklog/mine` require `?from&to`** — omit them and the model binder yields
+  `0001-01-01`, so you get an empty result that reads as "no data" rather than an error. The facade
+  always sends a window.
 
 ## 2026-07-26 (Phase 22 — v1 completion pass: dead code, skeletons, lists, validation)
 - **Deleting nine dead components was the single highest-leverage change.** They held **all 27 remaining

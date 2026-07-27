@@ -7,26 +7,28 @@
 
 ---
 
-## ▶ NEXT SESSION — START HERE (**v1 is complete** — Phase 22 closed the last polish gaps)
+## ▶ NEXT SESSION — START HERE (**every API endpoint is consumed** — Phases 26–29 closed the last four)
 
-**Version 1 is done.** Every endpoint the backend exposes is reachable from the UI, every screen that
-consumes one is built, themed, accessible and tested, and the polish backlog is empty:
+**All three portals are complete.** The API surface and the UI now match exactly:
 
-| v1 acceptance | Status |
+| Acceptance | Status |
 |---|---|
-| API coverage | **68 of 71** endpoints wired. The other 3 are the personal-task/work-log "mine" reads — **backend-blocked** (nothing can create the data they'd show). |
-| Lint | **`npx ng lint` passes with zero errors** (was 71 problems at the start of Phase 21). |
+| API coverage | **80 of 82** endpoints wired — everything except the 2 long-standing **deliberate skips** (`GET /task/mine`, `GET /worklog/mine`; both would be a third rendering of data already on screen). Nothing is unconsumed for want of a screen. |
+| Lint | **`npx ng lint` passes with zero errors.** |
 | Build | `ng build` passes. |
-| Unit tests | **164/164 green.** |
+| Unit tests | **204/204 green.** |
 | a11y | Every live template lint-clean; all 42 token contrast pairings meet AA in both themes (`npm run a11y:contrast`). |
 | Loading states | Content-shaped `Skeleton` on every page that loads data. |
 | List pages | `.list-toolbar` + `createPagination` + `<app-pagination>` on every list. |
 | Forms | Every reactive form validates through the `@shared/validations` decorator engine. |
 
-**→ Read [V1-GAPS.md](V1-GAPS.md) before picking anything up.** It is the single honest list of what v1
-deliberately excludes, split by *why*: backend-blocked (§1), backend defects to fix in the API repo (§2),
-deferred v1.x work (§3), and non-goals (§4). Post-v1 work should start from §3 — CSV/PDF report export is
-the highest-value item, then the calendar page and richer member trend charts.
+**→ Read [V1-GAPS.md](V1-GAPS.md) before picking anything up.** §1 (backend-blocked) and §2 (backend
+defects) are **empty**. The only backend gap left anywhere is **forgot-password**, and it blocks no
+built screen. Remaining work is all §3 (deferred v1.x): **CSV/PDF report export** is the highest-value
+item, then the **calendar page** (Phase 25, still open), per-member trend charts, and E2E tests.
+
+**Phases 24–29 status:** 26, 27, 28, 29 are **done** (below). **24** (report export + member trend
+charts) and **25** (calendar page) remain — both need zero backend work.
 
 **No re-explaining needed.** Org portal is feature/theme-complete (Phases 8–10); Admin has a live Users
 page + dashboard (Phase 11); the **`shared/validations/` engine** is built (Phase 12) and now backs
@@ -70,7 +72,209 @@ email-verify DB step, org-seeds-no-roles).
 - **Member (Individual) portal is backend-blocked**: no personal-task create endpoint (`CreateTask` needs
   a non-null `OrganizationId`). Don't build it until the backend adds one — flag it, don't fake it.
 
+> ⚠️ The three items above are now **resolved** (Phase 9, both sides) — kept as historical continuity
+> notes per the section header. The Member portal shipped in Phase 23. The remaining backend gaps are
+> tracked below and in the backend's own `docs/PHASES.md` Phases 10–13.
+
 ---
+
+## ▶ PLANNED — Path to 100%: Organization, Reporting, Admin (Phases 24–29)
+
+> Individual is complete (Phase 23). **Phases 26, 27, 28 and 29 are now DONE** — see the Current
+> Status entry below. **Phases 24 and 25 remain**, and neither needs any backend work.
+
+### Phase 24 — Reporting export + trend charts (⬜ STILL OPEN, zero backend dependency)
+From V1-GAPS §3 — the reports page already holds every figure it needs.
+- **24.1 CSV / PDF export** — an Export button on the reports page. CSV is a client-side serialization of
+  the data already on screen (dashboard summary, member report, team performance, project report); PDF
+  can be a print-stylesheet (`window.print()` scoped to the report panel) or a lightweight lib if the
+  print approach doesn't look right. **Highest-value item in the whole v1.x backlog.**
+- **24.2 Per-member trend charts** — `GET /report/member/{id}?from&to` already exists; loop it over
+  weekly/monthly buckets and render a line chart with the existing `ngx-echarts` setup (already used for
+  the team-performance bar chart).
+
+### Phase 25 — Calendar page (⬜ STILL OPEN, zero backend dependency)
+- The org sidebar still has a `disabled` "Coming soon" nav item. Tasks already carry `startDate` +
+  `expectedCompletionDate` from the list/detail DTOs — enough for a month-grid view with tasks plotted on
+  their due date. Route at `/organization/calendar` following the existing feature-page conventions.
+
+### Phase 26 — Admin drawer unblock + member-removal copy ✅ **DONE**
+- **26.1** `EnsureUserAsync` now short-circuits for a platform admin. **Verified on the backend side:
+  admin → `GET /user/2` = 200** (was 403). This needs **no frontend code change** — do a live pass
+  confirming the drawer opens for any user, then delete the `selectedUserDenied` branch and its
+  denied-state template, which is now dead code.
+- **26.2** `RemoveMember` now really removes (verified: the member vanishes from the list, 2 → 1);
+  `DeactivateMember` stays a reversible toggle (member stays listed as Inactive). Update the
+  members-page confirm copy for "Remove" back to describing a **real removal** — it currently says
+  "will be marked inactive" as an honest workaround for the old collapsed behaviour.
+- Org update/delete authorization needed **no frontend change** — the UI's ownership gate was always a
+  usability affordance; there is a real 403 behind it now.
+
+### Phase 27 — Admin: Organizations + Platform Settings ✅ **DONE**
+The biggest remaining gap in the ledger. The admin dashboard's "backend-blocked" copy is now stale.
+- **27.1 Admin → Organizations page** (`/admin/organizations`) — consume **`GET /admin/organizations`**
+  (AdminOnly). Returns `{ id, name, description, ownerUserId, ownerFullName, ownerEmail, status,
+  memberCount, projectCount, taskCount, createdAt }[]`. Mirror the existing Users page exactly: stat
+  tiles, search, status filter, `createPagination` + `<app-pagination>`, `Skeleton` loading state. New
+  `admin.repository.ts` method + `AdminFacade.organizations` signal + a DTO in `admin.models.ts`.
+- **27.2 Admin → Platform Settings page** (`/admin/settings`) — consume **`GET`/`PUT /admin/settings`**.
+  Shape: `{ id, applicationName, supportEmail, registrationOpen, maintenanceMode, maintenanceMessage,
+  createdAt, updatedAt }`. `PUT` takes all five editable fields and returns 204. One reactive form
+  through `@shared/validations`, same shape as the org settings page (Phase 19). **Both flags are really
+  enforced** by the API (registration → 403 `REGISTRATION_CLOSED`; maintenance → 503 for non-admins), so
+  the form is not cosmetic — say so in the UI copy.
+  - ⚠️ **Worth handling:** with maintenance on, every non-admin request returns **503
+    `MAINTENANCE_MODE`** with the admin's message. Consider surfacing that in `errorInterceptor` as a
+    banner rather than a generic toast.
+- Remove the "coming soon / backend-blocked" copy on the admin dashboard once both land.
+
+### Phase 28 — Team-scoped tasks + role-filtered assignment ✅ **DONE**
+Closes the Organization vision gap: "tasks and reports can be viewed per team."
+- **28.1** Consume **`GET /team/{teamId}/tasks`** → the standard `TaskListItem[]`. Add a **Tasks** panel
+  to `team-detail-page` alongside the member list, reusing the org tasks-page row markup.
+- **28.2** Task create/edit: **`POST /task` now accepts an optional `teamId`**. For *changing* the team
+  on an existing task, use the dedicated routes — **`PUT /task/{taskId}/team/{teamId}`** to set and
+  **`DELETE /task/{taskId}/team`** to clear. ⚠️ **`PUT /task` (update) deliberately does NOT carry
+  `teamId`** — the backend kept it off the update command precisely so a form save can't blank it, the
+  same trap that already bit task `description` (Phase 17). Don't try to add it to `TaskFormModel`'s
+  save payload; call the dedicated route instead.
+- **28.3** Assignee filtering: **`GET /organizationmember/organization/{id}?organizationRoleId=&activeOnly=`**.
+  Verified: `activeOnly=true` narrowed 2 → 1; `organizationRoleId=2` → 2; a role nobody holds → 0. Add a
+  role filter beside the assignee `<select>`, and pass `activeOnly=true` for assignee pickers — an
+  inactive member should never be a candidate.
+- `TaskListItem` and `TaskDetail` now both carry **`teamId` + `teamName`**, so a team column needs no
+  extra request.
+
+### Phase 29 — Reporting depth ✅ **DONE**
+- **29.1** Priority breakdown — `DashboardSummaryDto` now carries `lowPriorityTasks`,
+  `mediumPriorityTasks`, `highPriorityTasks`, `criticalPriorityTasks`. Render like the existing
+  status donut.
+- **29.2** Project timeline — `ProjectReportDto` now carries `startDate`, `expectedCompletionDate`,
+  `actualCompletionDate`, `firstTaskStartDate`, `lastTaskCompletionDate`. Render a planned-vs-actual
+  date-range bar (not a full Gantt — v1.x scope).
+- **29.3** "Which tasks" per team — `TeamPerformanceReportDto` now carries a **`tasks[]`** array of
+  `{ taskId, title, status, priority, startDate, actualCompletionDate, assignedToUserId,
+  assignedToFullName, trackedHours }`. Extend the team-performance table with an expandable task list.
+  - ⚠️ Note the two numbers measure different things: the aggregate counts are based on the team's
+    *members*, while `tasks[]` lists what the team *owns* (`Task.TeamId`). They can legitimately differ
+    — label them so the difference doesn't read as a bug.
+
+### Remaining order
+Only **24** and **25** are left; take them in either order. Neither touches the backend.
+
+### Test data already in place
+Backend verification left **task 3 ("Build the responsive nav bar") assigned to team 2 (Engineering)**
+in org 2, so `GET /team/2/tasks` returns a real row. Clear it with `DELETE /api/task/3/team` if you
+want a pristine seed. Platform settings are seeded at defaults (`TaskFlow`, registration **open**,
+maintenance **off**) with `supportEmail` now set to `support@taskflow.com` by the Phase 27 live pass.
+
+---
+
+## Current Status (2026-07-26, Phases 26–29 — **Admin + Organization**: the last unconsumed endpoints)
+- ✅ **Endpoint consumption is now 74 → 80 of 82** (re-derived from the controllers and the `API` map,
+  not incremented by hand). The only two left are the standing deliberate skips — `GET /task/mine` and
+  `GET /worklog/mine`. Suite **179 → 195 green**; `ng lint` still **0 errors**; `ng build` passes.
+- ✅ **Phase 26 — admin drawer unblocked.** `EnsureUserAsync` now short-circuits for a platform admin,
+  so the `selectedUserDenied` signal, its template branch and its `.denied` styles were **deleted as
+  dead code**. Verified live: as `admin@taskflow.com`, opening **Jane Doe (userId 2)** — a user the
+  admin shares no organization with — renders the full drawer (was 403 before). A failure now closes
+  the drawer rather than parking it on a skeleton. The members-page **Remove** copy went back to
+  describing a **real removal** and points at Deactivate for the reversible option.
+- ✅ **Phase 27.1 — Admin → Organizations** (`/admin/organizations`, 4 files) on `GET
+  /admin/organizations`. Stat tiles (organizations / active / projects and tasks platform-wide),
+  search across name + owner + owner email, status filter, `createPagination` + `<app-pagination>`,
+  `Skeleton` rows, and a read-only detail drawer. **No second request to open a row** — the list DTO
+  already carries owner, counts and `createdAt`. Verified live against 2 real orgs.
+- ✅ **Phase 27.2 — Admin → Platform Settings** (`/admin/settings`, 4 files) on `GET`/`PUT
+  /admin/settings`, validated through a new `admin.form-models.ts` (`PlatformSettingsFormModel`). The
+  save sends **all five fields** — the command is not partial, so omitting one would blank it — and
+  blank optional strings go back as `null`. Verified live: `PUT 204` → re-read → `updatedAt` moved and
+  the support email persisted; a malformed address renders the `@Email` decorator's message and
+  disables Save.
+- ⚠️ **Maintenance mode found a real lie in sign-in.** `POST /auth/login` is exempt from the
+  maintenance middleware but the `GET /user/me` that follows is not — so a non-admin authenticated
+  **successfully** and was then told *"Check your credentials and try again."* `AuthFacade` now
+  inspects the status and names maintenance instead. Verified live at both ends.
+- ✅ **503 `MAINTENANCE_MODE` gets a banner, not a toast.** New `core/services/maintenance.service.ts`
+  + a sticky banner at the **app root** (so it shows in every portal); `errorInterceptor` records the
+  state instead of firing one toast per failed request, and any successful response clears it.
+  Verified by really enabling the flag: org user → 503 with the admin's own message rendered in the
+  banner, admin → 200 throughout. **Flag restored to off.**
+- ✅ **Phase 28 — team-scoped tasks + role-filtered assignment.** `team-detail-page` gained a **Team
+  tasks** panel on `GET /team/{id}/tasks` (search + status filter + pager + remove-from-team). The
+  tasks page and project-detail drawer gained an **owning team** field; `TaskListItem`/`TaskDetail`
+  carry `teamId`/`teamName`, so the row renders a team `<select>` with no extra request. Verified live:
+  `PUT /api/task/2/team/2 → 204` and `DELETE /api/task/2/team → 204`, both reflected in the UI.
+- ⚠️ **`PUT /task` carries no `teamId` on purpose** — the backend kept it off the update command so a
+  form save can't blank it (the trap that bit `description` in Phase 17). `submit()` therefore calls
+  the dedicated route, and **only when the value changed**, so an ordinary save fires no second request.
+- ✅ **Assignee pickers are server-filtered.** A second signal, `assignableMembers`, is fed by
+  `?activeOnly=true` and narrowed by `?organizationRoleId=` from a new toolbar select — kept separate
+  from `members` (the members page deliberately manages inactive rows). Verified live: the network log
+  shows `?activeOnly=true` on load and `?organizationRoleId=2&activeOnly=true` on filter. The row
+  `<select>` re-adds the **current** assignee when the filter excludes them, so an assigned task never
+  renders as "Unassigned".
+- ✅ **Phase 29 — reporting depth.** A **priority donut** beside the status one on the org dashboard
+  (verified: High **2**, matching the summary DTO); a **planned-vs-actual timeline** on the project
+  report (two bars over one shared span, open-ended ranges faded, a "Finished after target" badge only
+  when a *finished* run overran); and an **expandable task list** per team on the performance table.
+- ⚠️ **The team report's two numbers legitimately disagree** — `tasksAssigned/Completed` aggregate over
+  the team's **members**, `tasks[]` is what the team **owns**. Live data shows Completed **0** next to
+  **1** owned task, so the drill-down carries a note saying which is which.
+- ✅ **`OrganizationStatus` moved to `shared/models`** (with its meta + tone map), re-exported from both
+  `organization.models` and `admin.models` — the third enum after `Tone` and `InvitationStatus` that
+  two features need. Every existing import still resolves.
+- ✅ **Verified live in both themes** across the admin portal (organizations, settings, users drawer)
+  and the organization portal (dashboard donuts, tasks, team detail, reports). No console errors. All
+  test data restored: task 2 off its team, maintenance off.
+- ✅ **Follow-up fix — feature state no longer outlives a session.** A reported 403 on the reports page
+  turned out to be an admin token in the browser (two tabs share one `localStorage`), *not* an endpoint
+  fault — all 28 org GETs return 200 for the owner. But it surfaced a real bug: the facades are root
+  singletons whose `init()` no-ops once `_loaded` is true, and nothing cleared them on logout, so a
+  second account inherited the first's data. New `core/auth/session-reset.ts` →
+  `resetOnSessionChange()`, called by the organization, admin and member facades. Suite **195 → 198**.
+- ⏭️ **Next:** Phases **24** (CSV/PDF report export + per-member trend charts) and **25** (calendar
+  page). Both are pure frontend. Backend-side only **forgot-password** remains, and it blocks nothing.
+
+---
+
+## Current Status (2026-07-26, Phase 23 — **Member portal**: the Individual account, end to end)
+- ✅ **The Individual account is now complete on both sides.** Backend Phase 9 unblocked it
+  (`POST /task/personal`, `GET /report/me`, `PUT /task/{id}/reopen`, `POST /auth/verify-email`), and this
+  phase built the whole client half. Endpoint consumption **68 → 74 of 76**; suite **164 → 179 green**;
+  `ng lint` still **0 errors**; all 42 contrast pairings still AA.
+- ✅ **New `my-tasks-page`** (`/member/my-tasks`, 4 files) — the personal workspace. Search + status +
+  priority filters with `createPagination`, a create/edit drawer, Start / **Done** / **Reopen** on the
+  row, a **subtask drawer** (add, inline rename, tick to complete, delete) and a **time-tracking
+  drawer** (live timer + manual entry + history). It follows the org tasks-page patterns exactly, minus
+  everything an organization owns: no project, no assignee, no assignment column.
+- ✅ **Member dashboard is real data now.** It previously showed "My Tasks — coming soon". It now
+  renders live counts off the personal task list (active / completed / overdue / tracked) plus a
+  **`GET /report/me`** panel with week / month / year presets. Nothing is hardcoded — an empty
+  workspace shows zeros and a "create your first task" card.
+- ✅ **New `verify-email-page`** (`/auth/verify-email`, 5 files) — lands from the link in the welcome
+  email, verifies automatically, and offers **resend** when the link is missing or expired. **Register
+  now redirects here instead of to the sign-in form**, which could not have worked: a new account is
+  PendingVerification until the link is opened.
+- ✅ **Member data layer** — `member.models.ts` (re-exports the task DTOs from `organization.models`
+  rather than duplicating them, plus `PersonalTaskReport`), `member.form-models.ts` (own decorated
+  models: a personal task has no project or assignee, so sharing the org model would invite fields the
+  API rejects), and the repository/facade grown with personal tasks, subtasks, work logs and the report.
+- ⚠️ **The new page immediately found two real bugs**, both pre-existing:
+  1. **`POST /worklog/start` 500'd** when notes were empty — `TaskWorkLogs.Notes` was NOT NULL in the DB
+     while the domain wrote `notes?.Trim()`. The org portal never hit it because its form always sent a
+     string. Fixed in the backend (`string?` + `IsRequired(false)` + migration `MakeWorkLogNotesNullable`).
+  2. **`.badge[data-tone]` was copied into six org page stylesheets and defined nowhere globally**, so
+     the new page rendered white-on-transparent — invisible in light mode. Moved into the global
+     `styles/components/_badge.scss`; the six local copies now simply override it with identical values.
+- ⚠️ **Tracked hours rendered as `2.505008592222222h`.** The API returns a raw double. Added
+  `| number: '1.0-1'` on the member dashboard **and** the four org places with the same defect.
+- ✅ **Verified live as a brand-new account created through the real sign-up form**: register → the
+  verify page → email link → "Email verified" → sign in → create tasks → Start → Done → **Reopen** →
+  subtask ticked and the parent auto-completed (1/1) → timer start/stop → manual 2h30m entry →
+  dashboard showed **2.5h tracked**. Checked in light *and* dark.
+- ⏭️ **Next:** the remaining V1-GAPS §3 items — CSV/PDF export, the calendar page, richer trend charts,
+  E2E tests. Backend-side, the §3.0 vision gaps and defects §4.2/§4.3/§4.4 remain.
 
 ## Current Status (2026-07-26, Phase 22 — **v1 completion pass**: dead code, skeletons, lists, validation)
 - ✅ **v1 is complete.** This phase closed every item left in the "Polish & Hardening" bucket, so the
@@ -797,22 +1001,22 @@ email-verify DB step, org-seeds-no-roles).
   extend tokens to the organization pages/components; make the dashboard charts theme-aware; add a theme
   toggle to the portal top bars.
 
-## Phase 1 — Design System / Component Library 🟡 (in progress)
+## Phase 1 — Design System / Component Library ✅ (every component a feature needs exists)
 - ✅ Atoms: `buttons/` (`button`, `sign-in-button`, `sign-up-button`), `inputs/` (`text-input`,
   `email-input`, `text-area-input`) — full 5 files each.
 - ✅ Molecules (5 files each): `pricing-card`, `review-card`, `feature-card`, `landing-feature-card`,
-  `master-card`, `deadline-molecule`, `recent-activity-molecule`, `project-overview-molecule`,
-  `notification-pop-up-molecule`, `bar-chart-molecule`, `donut-chart-molecule`,
-  `create-project-modal-molecule`, `view-project-modal-molecule`, `task-detail-modal-molecule`,
-  `pagination` (list pager — summary, rows-per-page, windowed page buttons).
+  `master-card`, `form-field`, `search-bar`, `pagination` (list pager — summary, rows-per-page,
+  windowed page buttons).
+- ✅ Atoms also include `skeletons/skeleton` and `animations/lottie-player`.
 - ✅ Organisms: `productivity-chart`, `project-health-chart`.
-- 🟡 Placeholder-only (`.gitkeep`): atoms `avatars`/`badges`/`icons`/`spinners`; molecules
-  `form-field`, `search-bar` (folders exist, 5 files not filled); organisms `data-table`/`navbar`/`sidebar`.
-- ⏭️ Next: fill the form atoms/molecules needed by real feature forms (form-field, password-field,
-  select, search-bar); build the `sidebar`/`navbar`/`data-table` organisms the portals need; make chart
-  components `input()`-driven (currently hardcoded).
+- ✅ **The 9 `*-molecule` scaffold components were deleted in Phase 22** — unused, wrongly named, and
+  holding the last 27 a11y lint errors.
+- 🟡 `Button`, `SignInButton`, `FeatureCard`, `FormField`, `MasterCard`, `SearchBar` exist with stories
+  but nothing renders them. Kept as design-system stock; adopt or delete deliberately (V1-GAPS §3).
+- ⏭️ Possible later: `sidebar`/`navbar`/`data-table` organisms (the portals inline their own chrome,
+  which works fine).
 
-## Phase 2 — Auth, Session & Role-Based Portals 🟡 (in progress)
+## Phase 2 — Auth, Session & Role-Based Portals ✅ (except backend-blocked screens)
 
 > The multi-portal login is the current focus. Detailed so the next session can pick up precisely.
 
@@ -850,7 +1054,8 @@ email-verify DB step, org-seeds-no-roles).
 - ✅ **Session bootstrap on refresh** — DONE via storage persistence of the `User` principal
   (`TokenService` + `AuthService` constructor). (A future hardening: also validate the token against
   `/user/me` on load to catch server-side expiry/revocation.)
-- ⬜ Handle login errors in the UI (the `error` signal is set; surface it on the form, not just a toast).
+- ✅ Login/register errors are surfaced **on the form** (`<div class="form-error" role="alert">`), not
+  only as a toast.
 
 ## Phase 3 — Public Marketing Site ✅ (mostly)
 - ✅ `PublicLayout` (header/navbar/footer partials) + landing page (~400 lines) with pricing/review/feature cards.
@@ -891,14 +1096,15 @@ email-verify DB step, org-seeds-no-roles).
 - ⬜ Organizations overview + platform settings — **backend-blocked** (no list-all-orgs or settings
   endpoint; only `GET /organization/mine`).
 
-## Phase 7 — Reporting & Dashboard (headline feature) 🟡 (reports page done)
+## Phase 7 — Reporting & Dashboard (headline feature) ✅ (export + trends deferred to v1.x)
 - ✅ Reports page consuming dashboard summary + member/team/project report endpoints; echarts team
   bar chart, member stat tiles, project completion ring + workload table (fed by the org facade).
 - ✅ Date-window (From/To) controls with Week/Month/Year/All presets, reactive via effects.
 - ✅ Work-log durations UI (Phase 9) — time-tracking drawer feeds `trackedHours` on dashboard/reports.
-- ⬜ Richer per-member trend charts; export (CSV/PDF).
+- ⬜ Richer per-member trend charts; export (CSV/PDF). **Both are doable with today's API** — see
+  V1-GAPS §3; export is the highest-value post-v1 item.
 
-## Phase 8 — Polish & Hardening 🟡 (validation engine done)
+## Phase 8 — Polish & Hardening ✅ (closed by Phase 22)
 - ✅ Custom `shared/validations/` decorator engine (FluentValidation-style) — built + unit-tested + wired
   into the register form. See CONVENTIONS.md "shared/validations engine". Import from `@shared/validations`.
 - 🟡 Real unit/component tests — the **whole suite is green (118/118)** after fixing 15 pre-existing specs
@@ -909,20 +1115,23 @@ email-verify DB step, org-seeds-no-roles).
   team-member remove, invitation cancel, subtask/worklog delete). See Phase 13 status.
 - ✅ **Loading skeletons** — theme-aware `Skeleton` atom (`shared/ui/atoms/skeletons/skeleton/`) over
   `ngx-skeleton-loader`, applied to the users/projects/tasks/members loading states. See Phase 14.
-- ⬜ Extend skeletons to the remaining list pages (teams, roles, reports, project-detail, team-detail,
-  dashboard); empty states.
-- ⬜ Adopt the validation engine in the remaining forms (login + org create-drawers).
+- ✅ **Skeletons now cover every page that loads data** (Phase 22): teams, roles, project-detail,
+  team-detail, settings, org dashboard, reports. Loading branches are ordered before empty branches.
+- ✅ **Every reactive form now validates through the engine** (Phase 22) — no inline `Validators.*` left
+  anywhere in the app. Models: `organization.form-models.ts` + `login-page.model.ts`.
 - ✅ **Drawer a11y** — `DialogDirective` (`appDialog`) gives all 10 slide-in drawers focus-trap, Escape,
   focus-restore, and `role=dialog`/`aria-modal`/`aria-labelledby`. See Phase 15.
 - ✅ **Broader a11y pass** (Phase 21) — every live template is a11y-lint clean (drawer backdrops and row
   click-targets are real `<button>`s; the register account-type toggle has proper radiogroup semantics);
   `npm run a11y:contrast` parses the theme partials and holds all 42 token pairings to AA in both themes;
   the Storybook a11y addon now fails a story on an axe violation. See Phase 21 status.
-- ⬜ Delete the 8 dead `*-molecule` components — unused scaffold holding the last 27 a11y lint errors.
+- ✅ **Deleted the 9 dead `*-molecule` components** (Phase 22) — `npx ng lint` now passes with **zero**
+  errors.
 - ✅ **Pagination/filtering for list views** — `createPagination()` (`@shared/utils/pagination`) + the
   `Pagination` molecule + the global `.list-toolbar` styles, on the admin-users / tasks / projects /
   members pages. Client-side until the API pages. See Phase 16 status and CONVENTIONS "List pages".
-- ⬜ Apply the list pattern to the remaining lists (teams, roles, invitations, project/team detail).
+- ✅ **The list pattern now covers every list** (Phase 22): teams, roles, project-detail tasks,
+  team-detail members, and a pager on the pending-invitations panel.
 - ⬜ `PagedResponse<T>` envelope support in `core/api` when the API adds pagination (then swap the
   client-side `createPagination` source for a server-driven one).
 

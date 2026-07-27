@@ -2,22 +2,22 @@
 
     display:flex;
     flex-direction:column;
-    gap:.5rem;
+    gap: var(--space-2);
 
     width:100%;
 }
 
 .textarea-label{
 
-    font-size:.95rem;
+    font-size:var(--fs-body-md);
     font-weight:600;
-    color:#212529;
+    color:var(--text);
 
 }
 
 .required{
 
-    color:#dc3545;
+    color: var(--danger);
 
 }
 
@@ -29,66 +29,66 @@
 
     min-height:140px;
 
-    padding:14px 16px;
+    padding: var(--space-3) var(--space-4);
 
-    border:1px solid #ced4da;
+    border:1px solid var(--border-input);
 
-    border-radius:12px;
+    border-radius: var(--radius-lg);
 
-    font-size:.95rem;
+    font-size:var(--fs-body-md);
 
     outline:none;
 
     transition:.2s ease;
 
-    background:#fff;
+    background:var(--surface);
 
 }
 
 .textarea:focus{
 
-    border-color:#4f46e5;
+    border-color:var(--primary);
 
-    box-shadow:0 0 0 .25rem rgba(79,70,229,.12);
+    box-shadow:0 0 0 3px var(--ring);
 
 }
 
 .textarea.success{
 
-    border-color:#16a34a;
+    border-color:var(--success);
 
 }
 
 .textarea.invalid{
 
-    border-color:#dc3545;
+    border-color:var(--danger);
 
 }
 
 .textarea:disabled{
 
-    background:#f8f9fa;
+    background:var(--surface-inset);
     cursor:not-allowed;
 
 }
 
 .helper-text{
 
-    color:#6c757d;
-    font-size:.8rem;
+    color:var(--text-muted);
+    font-size:var(--fs-label);
 
 }
 
 .success-text{
 
-    color:#16a34a;
-    font-size:.8rem;
+    color: var(--success);
+    font-size:var(--fs-label);
 
 }
 
 .error-text{
 
-    color:#dc3545;
-    font-size:.8rem;
+    color: var(--danger);
+    font-size:var(--fs-label);
 
 }

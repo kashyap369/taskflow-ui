@@ -17,22 +17,22 @@
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
-  padding: 2.25rem 1.5rem;
+  padding: var(--space-9) var(--space-6);
 }
 
 .brand {
-  gap: 0.7rem;
+  gap: var(--space-3);
 }
 
 .brand-logo {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--gradient-brand);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: var(--shadow-brand);
   transition: transform var(--dur-2) var(--ease-spring);
 
@@ -44,27 +44,27 @@
 .brand-name {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.15rem;
+  font-size: var(--fs-h6);
   letter-spacing: -0.02em;
   color: var(--text);
 }
 
 .form-wrapper {
-  padding: 1.75rem 0;
+  padding: var(--space-7) 0;
 }
 
 .variant-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.8rem;
-  margin-bottom: 1rem;
-  border-radius: 999px;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
   align-self: flex-start;
   background: var(--primary-soft);
   color: var(--primary);
   font-family: var(--font-display);
-  font-size: 0.78rem;
+  font-size: var(--fs-body-xs);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -72,68 +72,48 @@
 .title {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 2.1rem;
+  font-size: var(--fs-h2);
   letter-spacing: -0.03em;
   color: var(--text);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 .subtitle {
   color: var(--text-muted);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-6);
 }
 
 .form-error {
-  padding: 0.7rem 1rem;
-  margin-bottom: 1.25rem;
-  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-lg);
   background: var(--danger-soft);
   color: var(--danger);
   border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
-  font-size: 0.88rem;
+  font-size: var(--fs-body-sm);
   font-weight: 500;
-}
-
-.field {
-  margin-bottom: 1rem;
 }
 
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.9rem;
-}
-
-.form-label {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text);
-  margin-bottom: 0.4rem;
-  display: inline-block;
-}
-
-.field-msg {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--danger);
-  font-size: 0.82rem;
+  gap: var(--space-4);
 }
 
 // ── Account-type toggle ──
 .account-toggle {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .toggle-option {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.15rem;
-  padding: 0.85rem 1rem;
-  border-radius: 14px;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-xl);
   border: 1.5px solid var(--border-strong);
   background: var(--surface);
   color: var(--text-muted);
@@ -153,12 +133,12 @@
   .opt-title {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: var(--fs-body-md);
     color: var(--text);
   }
 
   .opt-sub {
-    font-size: 0.78rem;
+    font-size: var(--fs-body-xs);
     color: var(--text-subtle);
   }
 
@@ -184,69 +164,14 @@
   display: flex;
   align-items: center;
 
-  .field-icon {
-    position: absolute;
-    left: 0.9rem;
-    color: var(--text-subtle);
-    pointer-events: none;
-    display: flex;
-    transition: color var(--dur-2) var(--ease-standard);
-  }
-
-  .form-control {
-    width: 100%;
-    height: 48px;
-    padding-left: 2.6rem;
-    border-radius: 14px;
-    border: 1px solid var(--border-input);
-    background: var(--surface);
-    color: var(--text);
-    transition:
-      border-color var(--dur-2) var(--ease-standard),
-      box-shadow var(--dur-2) var(--ease-standard);
-
-    &::placeholder {
-      color: var(--text-subtle);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--ring);
-    }
-  }
-
-  &:focus-within .field-icon {
-    color: var(--primary);
-  }
-
-  .icon-btn {
-    position: absolute;
-    right: 0.75rem;
-    border: none;
-    background: none;
-    color: var(--text-subtle);
-    display: flex;
-    padding: 0.25rem;
-    cursor: pointer;
-    transition: color var(--dur-2) var(--ease-standard);
-
-    &:hover {
-      color: var(--primary);
-    }
-  }
-
-  &:has(.icon-btn) .form-control {
-    padding-right: 2.5rem;
-  }
 }
 
 // ── Terms checkbox ──
 .terms {
   display: flex;
   align-items: flex-start;
-  gap: 0.6rem;
-  margin: 0.5rem 0 1.5rem;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-6);
   cursor: pointer;
   user-select: none;
 
@@ -260,14 +185,14 @@
     width: 20px;
     height: 20px;
     flex-shrink: 0;
-    margin-top: 1px;
-    border-radius: 7px;
+    margin-top: var(--space-0);
+    border-radius: var(--radius-md);
     border: 1.5px solid var(--border-strong);
     background: var(--surface);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--on-accent);
     transition: all var(--dur-2) var(--ease-spring);
 
     lucide-angular {
@@ -288,7 +213,7 @@
   }
 
   .terms-text {
-    font-size: 0.88rem;
+    font-size: var(--fs-body-sm);
     color: var(--text-muted);
     line-height: 1.5;
 
@@ -304,57 +229,10 @@
   }
 }
 
-.sign-up-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: none;
-  border-radius: 14px;
-  padding: 0.85rem 1rem;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--on-primary);
-  background: var(--gradient-brand);
-  box-shadow: var(--shadow-brand);
-  cursor: pointer;
-  transition:
-    transform var(--dur-2) var(--ease-standard),
-    box-shadow var(--dur-2) var(--ease-standard),
-    opacity var(--dur-2) var(--ease-standard);
-
-  lucide-angular {
-    transition: transform var(--dur-2) var(--ease-out);
-  }
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-
-    lucide-angular {
-      transform: translateX(4px);
-    }
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0) scale(0.99);
-  }
-
-  &:disabled {
-    cursor: default;
-    opacity: 0.75;
-  }
-
-  &.is-loading {
-    opacity: 0.85;
-  }
-}
-
 .signin-text {
   color: var(--text-muted);
-  font-size: 0.9rem;
-  margin: 1.25rem 0 0;
+  font-size: var(--fs-body-sm);
+  margin: var(--space-5) 0 0;
 
   a {
     color: var(--primary);
@@ -371,8 +249,8 @@
 .showcase-side {
   position: relative;
   overflow: hidden;
-  color: #fff;
-  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #4f46e5 70%, #3b82f6 100%);
+  color: var(--on-accent);
+  background: var(--gradient-showcase);
 }
 
 .aurora {
@@ -393,7 +271,7 @@
     height: 380px;
     top: -80px;
     right: -60px;
-    background: #a78bfa;
+    background: var(--accent-violet);
   }
 
   .b2 {
@@ -401,7 +279,7 @@
     height: 420px;
     bottom: -120px;
     left: -80px;
-    background: #60a5fa;
+    background: var(--accent-blue);
     animation-delay: 2s;
   }
 
@@ -410,7 +288,7 @@
     height: 260px;
     top: 40%;
     left: 45%;
-    background: #f472b6;
+    background: var(--accent-pink);
     opacity: 0.4;
     animation-delay: 4s;
   }
@@ -431,7 +309,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  padding: 3.5rem;
+  padding: var(--space-14);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -439,22 +317,22 @@
 
 .eyebrow {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-label);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--on-accent-muted);
 }
 
 .showcase-headline {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+  font-size: var(--fs-fluid-h2);
   letter-spacing: -0.03em;
-  margin: 0.75rem 0 0;
+  margin: var(--space-3) 0 0;
 
   .grad {
-    background: linear-gradient(90deg, #fde68a, #fca5f1);
+    background: var(--gradient-highlight);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -464,46 +342,46 @@
 .perks {
   list-style: none;
   padding: 0;
-  margin: 2rem 0;
+  margin: var(--space-8) 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .perk {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  font-size: 1.02rem;
+  gap: var(--space-3);
+  font-size: var(--fs-body-md);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--on-accent-muted);
 
   .perk-check {
     width: 28px;
     height: 28px;
     flex-shrink: 0;
-    border-radius: 9px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.24);
-    color: #d1fae5;
+    background: var(--accent-surface);
+    border: 1px solid var(--accent-border);
+    color: var(--accent-mint);
   }
 }
 
 .showcase-foot {
   .stats-row {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
   }
 }
 
 .stat-card {
   flex: 1 1 130px;
-  border-radius: 14px;
-  padding: 1rem 1.15rem;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4) var(--space-5);
+  background: var(--accent-surface);
+  border: 1px solid var(--accent-border);
   backdrop-filter: blur(6px);
   transition: transform var(--dur-2) var(--ease-standard);
 
@@ -515,22 +393,22 @@
 .stat-value {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.35rem;
+  font-size: var(--fs-h5);
 }
 
 .stat-label {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--fs-label);
+  color: var(--on-accent-subtle);
 }
 
 // ─────────────────────────── Responsive ───────────────────────────
 @media (max-width: 575.98px) {
   .form-side-inner {
-    padding: 2rem 1.25rem;
+    padding: var(--space-8) var(--space-5);
   }
 
   .title {
-    font-size: 1.8rem;
+    font-size: var(--fs-h3);
   }
 
   .field-row {
@@ -538,7 +416,7 @@
     gap: 0;
 
     .field {
-      margin-bottom: 1rem;
+      margin-bottom: var(--space-4);
     }
   }
 }

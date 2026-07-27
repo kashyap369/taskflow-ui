@@ -41,4 +41,20 @@ export class AuthRepository {
   logout(refreshToken: string | null): Observable<ApiResponse<void>> {
     return this.api.post<ApiResponse<void>>(API.Auth.Logout, { refreshToken });
   }
+
+  /**
+   * `POST /auth/verify-email` — turns a PendingVerification account into an Active one.
+   * A new account **cannot sign in** until this succeeds. Idempotent server-side.
+   */
+  verifyEmail(token: string): Observable<ApiResponse<void>> {
+    return this.api.post<ApiResponse<void>>(API.Auth.VerifyEmail, { token });
+  }
+
+  /**
+   * `POST /auth/resend-verification`. Always reports success, even for an unknown or
+   * already-verified address — the API deliberately refuses to confirm whether an account exists.
+   */
+  resendVerification(email: string): Observable<ApiResponse<void>> {
+    return this.api.post<ApiResponse<void>>(API.Auth.ResendVerification, { email });
+  }
 }

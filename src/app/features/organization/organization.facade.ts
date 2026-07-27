@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, forkJoin } from 'rxjs';
 
 import { AuthService } from '@core/auth/auth.service';
+import { resetOnSessionChange } from '@core/auth/session-reset';
 import { NotificationService } from '@core/services/notification.service';
 
 import { OrganizationRepository } from './organization.repository';
@@ -61,6 +62,9 @@ export class OrganizationFacade {
   private readonly _invitations = signal<OrganizationInvitation[]>([]);
   private readonly _teams = signal<Team[]>([]);
   private readonly _teamDetail = signal<TeamDetail | null>(null);
+  private readonly _teamTasks = signal<TaskListItem[]>([]);
+  private readonly _assignableMembers = signal<OrganizationMember[]>([]);
+  private readonly _assigneeRoleId = signal<number | null>(null);
   private readonly _subTasks = signal<SubTask[]>([]);
   private readonly _subTasksTaskId = signal<number | null>(null);
   private readonly _workLogs = signal<WorkLog[]>([]);
@@ -88,6 +92,15 @@ export class OrganizationFacade {
   readonly invitations = this._invitations.asReadonly();
   readonly teams = this._teams.asReadonly();
   readonly teamDetail = this._teamDetail.asReadonly();
+  /** The open team's own tasks (`GET /team/{id}/tasks`) — what the team *owns*, not who's on it. */
+  readonly teamTasks = this._teamTasks.asReadonly();
+  /**
+   * Candidates for an assignee picker: **active members only**, optionally narrowed to one org role.
+   * Filtered server-side (`?activeOnly=&organizationRoleId=`) rather than over `members`, because a
+   * deactivated member should never be offerable and the API is the authority on who's active.
+   */
+  readonly assignableMembers = this._assignableMembers.asReadonly();
+  readonly assigneeRoleId = this._assigneeRoleId.asReadonly();
   readonly subTasks = this._subTasks.asReadonly();
   readonly subTasksTaskId = this._subTasksTaskId.asReadonly();
   readonly workLogs = this._workLogs.asReadonly();
@@ -121,6 +134,28 @@ export class OrganizationFacade {
     const user = this.user();
     return org != null && user != null && org.ownerUserId === user.id;
   });
+
+  constructor() {
+    // Everything below is scoped to the signed-in user, and `init()` won't refetch once `_loaded`
+    // is true — so without this, a second account would inherit the first account's workspace.
+    resetOnSessionChange(() => this.resetForNewSession());
+  }
+
+  /** Drop every signal this facade owns, so the next `init()` starts from scratch. */
+  private resetForNewSession(): void {
+    this.resetOrgScopedState();
+    this._organizations.set([]);
+    this._permissionCatalog.set([]);
+    this._selectedRole.set(null);
+    this._teamReport.set([]);
+    this._memberReport.set(null);
+    this._projectReport.set(null);
+    this.clearSubTasks();
+    this.clearWorkLogs();
+    this._loaded.set(false);
+    this._loading.set(false);
+    this._saving.set(false);
+  }
 
   /** Resolve the current organization (once) and load its dashboard data. */
   init(): void {
@@ -176,8 +211,13 @@ export class OrganizationFacade {
       members: this.repository.getMembers(organizationId),
       invitations: this.repository.getInvitations(organizationId),
       teams: this.repository.getTeams(organizationId),
+      // Same endpoint, different question: `members` is everyone (the members page manages
+      // inactive rows too), while this is the assignee-picker candidate list.
+      assignable: this.repository.getMembers(organizationId, { activeOnly: true }),
     }).subscribe({
-      next: ({ summary, projects, tasks, roles, members, invitations, teams }) => {
+      next: ({ summary, projects, tasks, roles, members, invitations, teams, assignable }) => {
+        this._assignableMembers.set(assignable);
+        this._assigneeRoleId.set(null);
         this._summary.set(summary);
         this._projects.set(projects);
         this._tasks.set(tasks);
@@ -294,6 +334,8 @@ export class OrganizationFacade {
     this._tasks.set([]);
     this._roles.set([]);
     this._members.set([]);
+    this._assignableMembers.set([]);
+    this._assigneeRoleId.set(null);
     this._invitations.set([]);
     this._teams.set([]);
     this.clearProjectDetail();
@@ -479,6 +521,28 @@ export class OrganizationFacade {
   }
 
   /**
+   * Put a task under a team, or clear it (`teamId: null`). Its own routes, not a field on
+   * `PUT /task` — see `UpdateTaskPayload` for why the update command deliberately omits `teamId`.
+   */
+  setTaskTeam(taskId: number, teamId: number | null): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this.repository.setTaskTeam(taskId, teamId).subscribe({
+      next: () => {
+        this.notification.success(teamId === null ? 'Task removed from team.' : 'Task moved to team.');
+        this.afterTaskChange(organizationId);
+        // The open team's task list gains or loses this row.
+        const team = this._teamDetail();
+        if (team) {
+          this.reloadTeamTasks(team.id);
+        }
+      },
+    });
+  }
+
+  /**
    * Refresh org tasks + summary, and the open project's tasks *and header* (if any) after a task
    * change — the header's task counts / completion % move with its tasks.
    */
@@ -489,6 +553,10 @@ export class OrganizationFacade {
     if (project) {
       this.reloadProjectTasks(project.id);
       this.reloadProjectDetail(project.id);
+    }
+    const team = this._teamDetail();
+    if (team) {
+      this.reloadTeamTasks(team.id);
     }
   }
 
@@ -692,6 +760,29 @@ export class OrganizationFacade {
     this.repository.getMembers(organizationId).subscribe({
       next: (members) => this._members.set(members),
     });
+    this.reloadAssignableMembers(organizationId);
+  }
+
+  /**
+   * Narrow the assignee-picker candidates to one org role (`null` = every role). Re-queries the API
+   * rather than filtering `members` client-side — `?organizationRoleId=` is what the endpoint grew
+   * the parameter for, and the role a member holds can change under us.
+   */
+  filterAssigneesByRole(organizationRoleId: number | null): void {
+    this._assigneeRoleId.set(organizationRoleId);
+    const organizationId = this.currentOrgId();
+    if (organizationId != null) {
+      this.reloadAssignableMembers(organizationId);
+    }
+  }
+
+  private reloadAssignableMembers(organizationId: number): void {
+    this.repository
+      .getMembers(organizationId, {
+        organizationRoleId: this._assigneeRoleId(),
+        activeOnly: true,
+      })
+      .subscribe({ next: (members) => this._assignableMembers.set(members) });
   }
 
   // ── Invitations ──
@@ -796,11 +887,16 @@ export class OrganizationFacade {
 
   // ── Team detail + members ──
 
+  /** The team's people *and* the tasks it owns — two separate endpoints, one page. */
   loadTeamDetail(teamId: number): void {
     this._loading.set(true);
-    this.repository.getTeam(teamId).subscribe({
-      next: (team) => {
+    forkJoin({
+      team: this.repository.getTeam(teamId),
+      tasks: this.repository.getTeamTasks(teamId),
+    }).subscribe({
+      next: ({ team, tasks }) => {
         this._teamDetail.set(team);
+        this._teamTasks.set(tasks);
         this._loading.set(false);
       },
       error: () => this._loading.set(false),
@@ -809,6 +905,13 @@ export class OrganizationFacade {
 
   clearTeamDetail(): void {
     this._teamDetail.set(null);
+    this._teamTasks.set([]);
+  }
+
+  private reloadTeamTasks(teamId: number): void {
+    this.repository.getTeamTasks(teamId).subscribe({
+      next: (tasks) => this._teamTasks.set(tasks),
+    });
   }
 
   addTeamMember(userId: number): void {

@@ -4,11 +4,100 @@
     <h1>
       @if (user(); as u) { Welcome back, {{ u.fullName }} } @else { Welcome back }
     </h1>
-    <p>Here's what's on your plate today. This portal is the Individual (solo user) experience.</p>
+    <p>Everything here is yours alone — no organization can see it.</p>
   </div>
 
+  <!-- Live task counts -->
+  @if (tasksLoading() && !hasTasks()) {
+    <div class="stat-grid" aria-busy="true" aria-label="Loading your tasks">
+      @for (tile of loadingTiles; track tile) {
+        <div class="stat-card sk-tile">
+          <app-skeleton width="42px" height="42px" radius="14px" />
+          <app-skeleton width="50px" height="1.8rem" />
+          <app-skeleton width="80px" height="0.85rem" />
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="stat-grid" appReveal>
+      <div class="stat-card">
+        <span class="stat-icon primary"><lucide-angular name="ListChecks" [size]="20"></lucide-angular></span>
+        <strong>{{ activeCount() }}</strong>
+        <span class="stat-label">Active {{ activeCount() === 1 ? 'task' : 'tasks' }}</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon success"><lucide-angular name="CircleCheckBig" [size]="20"></lucide-angular></span>
+        <strong>{{ completedCount() }}</strong>
+        <span class="stat-label">Completed</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon warning"><lucide-angular name="TriangleAlert" [size]="20"></lucide-angular></span>
+        <strong>{{ overdueCount() }}</strong>
+        <span class="stat-label">Overdue</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon info"><lucide-angular name="Clock" [size]="20"></lucide-angular></span>
+        <strong>{{ (report()?.trackedHours ?? 0) | number: '1.0-1' }}h</strong>
+        <span class="stat-label">Tracked</span>
+      </div>
+    </div>
+  }
+
+  @if (!tasksLoading() && !hasTasks()) {
+    <div class="start-card" appReveal [revealDelay]="80">
+      <h3>Your workspace is empty</h3>
+      <p>Create your first personal task — a to-do, an errand, anything you want to track.</p>
+      <a class="btn-primary-cta" routerLink="/member/my-tasks">
+        <lucide-angular name="Plus" [size]="16"></lucide-angular> New task
+      </a>
+    </div>
+  }
+
+  <!-- Personal report -->
+  <div class="panel" appReveal [revealDelay]="120">
+    <div class="panel-head">
+      <h2>Your activity</h2>
+      <div class="preset-row" role="group" aria-label="Report window">
+        @for (p of presets; track p.value) {
+          <button
+            type="button"
+            class="preset"
+            [class.active]="preset() === p.value"
+            [attr.aria-pressed]="preset() === p.value"
+            (click)="selectPreset(p.value)"
+          >
+            {{ p.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (reportLoading() && !report()) {
+      <div class="report-grid" aria-busy="true" aria-label="Loading your report">
+        @for (tile of loadingTiles; track tile) {
+          <app-skeleton width="100%" height="72px" radius="16px" />
+        }
+      </div>
+    } @else if (report(); as r) {
+      <div class="report-grid">
+        <div class="report-tile"><span class="rv">{{ r.tasksCreated }}</span><span class="rl">Created</span></div>
+        <div class="report-tile"><span class="rv accent-green">{{ r.tasksCompleted }}</span><span class="rl">Completed</span></div>
+        <div class="report-tile"><span class="rv accent-blue">{{ r.tasksInProgress }}</span><span class="rl">In progress</span></div>
+        <div class="report-tile"><span class="rv">{{ r.tasksTodo }}</span><span class="rl">To do</span></div>
+        <div class="report-tile"><span class="rv accent-red">{{ r.tasksOverdue }}</span><span class="rl">Overdue</span></div>
+        <div class="report-tile"><span class="rv">{{ r.trackedHours | number: '1.0-1' }}</span><span class="rl">Tracked hrs</span></div>
+      </div>
+      <p class="report-window">
+        {{ r.from | date: 'mediumDate' }} – {{ r.to | date: 'mediumDate' }}
+      </p>
+    } @else {
+      <p class="muted-empty">No activity in this window yet.</p>
+    }
+  </div>
+
+  <!-- Invitations -->
   @if (pendingInvitations() > 0) {
-    <a class="invite-callout" routerLink="/member/invitations" appReveal>
+    <a class="invite-callout" routerLink="/member/invitations" appReveal [revealDelay]="160">
       <span class="callout-icon">
         <lucide-angular name="Mail" [size]="20"></lucide-angular>
       </span>
@@ -25,7 +114,7 @@
       <lucide-angular name="ArrowRight" [size]="18" class="callout-arrow"></lucide-angular>
     </a>
   } @else {
-    <a class="invite-callout is-quiet" routerLink="/member/invitations" appReveal>
+    <a class="invite-callout is-quiet" routerLink="/member/invitations" appReveal [revealDelay]="160">
       <span class="callout-icon quiet">
         <lucide-angular name="Mail" [size]="20"></lucide-angular>
       </span>
@@ -38,13 +127,4 @@
       <lucide-angular name="ArrowRight" [size]="18" class="callout-arrow"></lucide-angular>
     </a>
   }
-
-  <div class="placeholder-card" appReveal [revealDelay]="120">
-    <h3>My Tasks — coming soon</h3>
-    <p>
-      Personal task lists, subtasks, calendar and weekly/monthly/yearly tracking will live here. This
-      is waiting on the API: creating a task currently requires an <code>OrganizationId</code>, so
-      there's no endpoint for a personal task yet.
-    </p>
-  </div>
 </section>

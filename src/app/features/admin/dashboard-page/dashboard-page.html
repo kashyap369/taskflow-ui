@@ -26,11 +26,26 @@
     <lucide-angular name="ArrowRight" [size]="20" class="tool-arrow"></lucide-angular>
   </a>
 
-  <div class="placeholder-card" appReveal [revealDelay]="320">
-    <h3>Organizations &amp; platform settings — coming soon</h3>
-    <p>
-      A platform-wide organizations overview and settings need new backend endpoints
-      (only <code>GET /organization/mine</code> exists today).
-    </p>
-  </div>
+  <a class="tool-card" routerLink="/admin/organizations" appReveal [revealDelay]="300">
+    <span class="tool-icon"><lucide-angular name="Building2" [size]="22"></lucide-angular></span>
+    <div class="tool-main">
+      <h3>Organizations</h3>
+      <p>
+        Every workspace on the platform, with its owner and its member, project and task counts.
+      </p>
+    </div>
+    <lucide-angular name="ArrowRight" [size]="20" class="tool-arrow"></lucide-angular>
+  </a>
+
+  <a class="tool-card" routerLink="/admin/settings" appReveal [revealDelay]="360">
+    <span class="tool-icon"><lucide-angular name="Settings" [size]="22"></lucide-angular></span>
+    <div class="tool-main">
+      <h3>Platform settings</h3>
+      <p>
+        Application name, support email, and the registration and maintenance switches — both are
+        enforced by the API, not just displayed.
+      </p>
+    </div>
+    <lucide-angular name="ArrowRight" [size]="20" class="tool-arrow"></lucide-angular>
+  </a>
 </section>

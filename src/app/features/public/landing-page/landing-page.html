@@ -26,12 +26,13 @@
         </p>
 
         <div class="hero-actions" appReveal [revealDelay]="240">
-          <button class="btn-primary-cta">
+          <a routerLink="/auth/register" class="btn-primary-cta">
             Start for free
             <lucide-angular name="ArrowRight" [size]="18"></lucide-angular>
-          </button>
+          </a>
 
-          <button class="btn-ghost-cta">
+          <!-- There is no hosted demo; the product preview below IS the demo, so this scrolls to it. -->
+          <button type="button" class="btn-ghost-cta" (click)="scrollToPreview()">
             <lucide-angular name="Play" [size]="16"></lucide-angular>
             View live demo
           </button>
@@ -50,23 +51,34 @@
       </div>
     </div>
 
-    <!-- Product board mock -->
-    <div class="board-shell" appReveal="scale" [revealDelay]="200">
-      <div class="board-window">
+    <!--
+      Product board mock. This is a STATIC illustration of the product, not a working board — its
+      toolbar is rendered as presentational divs rather than <button>s so it neither invites clicks
+      nor lands in the tab order. Phase 6.
+    -->
+    <div
+      class="board-shell"
+      id="product-preview"
+      appReveal="scale"
+      [revealDelay]="200"
+      role="img"
+      aria-label="Preview of the TaskFlow project board"
+    >
+      <div class="board-window" aria-hidden="true">
         <div class="board-toolbar">
           <div class="board-tabs">
             @for (tab of boardTabs; track tab.label) {
-              <button class="board-tab" [class.active]="tab.active">
+              <div class="board-tab" [class.active]="tab.active">
                 <lucide-angular [name]="tab.icon" [size]="15"></lucide-angular>
                 <span>{{ tab.label }}</span>
-              </button>
+              </div>
             }
           </div>
 
-          <button class="board-create">
+          <div class="board-create">
             <lucide-angular name="Plus" [size]="15"></lucide-angular>
             Create Task
-          </button>
+          </div>
         </div>
 
         <div class="board-grid">
@@ -229,7 +241,7 @@
     <div class="row g-4 justify-content-center">
       @for (plan of plans; track plan.title; let i = $index) {
         <div class="col-lg-4 col-md-6" appReveal [revealDelay]="i * 90">
-          <app-pricing-card [plan]="plan"></app-pricing-card>
+          <app-pricing-card [plan]="plan" (planSelected)="choosePlan()"></app-pricing-card>
         </div>
       }
     </div>
@@ -262,11 +274,11 @@
       <h2>{{ cta.title }}</h2>
       <p>{{ cta.description }}</p>
       <div class="cta-actions">
-        <button class="btn-primary-cta light">
+        <a routerLink="/auth/register" class="btn-primary-cta light">
           {{ cta.primaryButton }}
           <lucide-angular name="ArrowRight" [size]="18"></lucide-angular>
-        </button>
-        <button class="btn-ghost-cta on-dark">{{ cta.secondaryButton }}</button>
+        </a>
+        <a routerLink="/auth/login" class="btn-ghost-cta on-dark">{{ cta.secondaryButton }}</a>
       </div>
     </div>
   </div>
