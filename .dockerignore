@@ -1,0 +1,11 @@
+.git
+.angular
+.claude
+.vscode
+node_modules
+dist
+storybook-static
+screenshots
+docs
+*.log
+*.pdf
