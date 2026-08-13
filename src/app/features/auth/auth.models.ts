@@ -7,6 +7,18 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface EmailRequest {
+  email: string;
+}
+
+export interface LoginWithCodeRequest extends EmailRequest {
+  code: string;
+}
+
+export interface ResetPasswordRequest extends LoginWithCodeRequest {
+  newPassword: string;
+}
+
 /**
  * Mirrors `RegisterUserCommand`. `accountType` is sent to the API as an int (see `accountTypeToInt`);
  * the backend enum is Individual = 1, Organization = 2.

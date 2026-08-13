@@ -6,6 +6,10 @@ export const API = {
     Logout: '/auth/logout',
     VerifyEmail: '/auth/verify-email',
     ResendVerification: '/auth/resend-verification',
+    RequestLoginCode: '/auth/login-code/request',
+    LoginWithCode: '/auth/login-code/verify',
+    ForgotPassword: '/auth/password/forgot',
+    ResetPassword: '/auth/password/reset',
   },
 
   // `UserController` is read-only — there is no PUT/DELETE on /user.

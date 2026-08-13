@@ -1,13 +1,22 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { AuthService } from '@core/auth/auth.service';
 import { NotificationService } from '@core/services/notification.service';
+import { ApiResponse } from '@core/api/api-response';
 
 import { AuthRepository } from './auth.repository';
-import { LoginRequest, RegisterRequest, toUser } from './auth.models';
+import {
+  LoginRequest,
+  LoginResponse,
+  LoginWithCodeRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+  toUser,
+} from './auth.models';
 
 /**
  * Application layer for auth. Orchestrates the login use-case:
@@ -28,12 +37,92 @@ export class AuthFacade {
   private readonly _error = signal<string | null>(null);
   readonly error = this._error.asReadonly();
 
+  private readonly _loginCodeSent = signal(false);
+  readonly loginCodeSent = this._loginCodeSent.asReadonly();
+
+  private readonly _recoveryCodeSent = signal(false);
+  readonly recoveryCodeSent = this._recoveryCodeSent.asReadonly();
+
+  private readonly _passwordReset = signal(false);
+  readonly passwordReset = this._passwordReset.asReadonly();
+
   login(request: LoginRequest, remember = false): void {
+    this.completeLogin(this.repository.login(request), remember);
+  }
+
+  requestLoginCode(email: string): void {
     this._loading.set(true);
     this._error.set(null);
 
-    this.repository
-      .login(request)
+    this.repository.requestLoginCode({ email }).subscribe({
+      next: () => {
+        this._loading.set(false);
+        this._loginCodeSent.set(true);
+      },
+      error: (error: HttpErrorResponse) => {
+        this._loading.set(false);
+        this._error.set(this.requestErrorMessage(error));
+      },
+    });
+  }
+
+  loginWithCode(request: LoginWithCodeRequest, remember = false): void {
+    this.completeLogin(this.repository.loginWithCode(request), remember);
+  }
+
+  requestPasswordReset(email: string): void {
+    this._loading.set(true);
+    this._error.set(null);
+    this._passwordReset.set(false);
+
+    this.repository.forgotPassword({ email }).subscribe({
+      next: () => {
+        this._loading.set(false);
+        this._recoveryCodeSent.set(true);
+      },
+      error: (error: HttpErrorResponse) => {
+        this._loading.set(false);
+        this._error.set(this.requestErrorMessage(error));
+      },
+    });
+  }
+
+  resetPassword(request: ResetPasswordRequest): void {
+    this._loading.set(true);
+    this._error.set(null);
+
+    this.repository.resetPassword(request).subscribe({
+      next: () => {
+        this._loading.set(false);
+        this._passwordReset.set(true);
+        this.notification.success('Password updated. You can sign in with it now.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this._loading.set(false);
+        this._error.set(this.apiMessage(error, 'We could not reset your password. Request a new code and try again.'));
+      },
+    });
+  }
+
+  resetCodeFlow(): void {
+    this._error.set(null);
+    this._loginCodeSent.set(false);
+  }
+
+  resetRecoveryFlow(): void {
+    this._error.set(null);
+    this._recoveryCodeSent.set(false);
+    this._passwordReset.set(false);
+  }
+
+  private completeLogin(
+    source: Observable<ApiResponse<LoginResponse>>,
+    remember: boolean,
+  ): void {
+    this._loading.set(true);
+    this._error.set(null);
+
+    source
       .pipe(
         switchMap((loginRes) => {
           // Persist tokens first so the /user/me request is authenticated.
@@ -75,7 +164,19 @@ export class AuthFacade {
     if (error?.status === 503) {
       return 'TaskFlow is in maintenance mode. Your sign-in was accepted, but the platform is temporarily unavailable — please try again shortly.';
     }
-    return 'Sign in failed. Check your credentials and try again.';
+    return this.apiMessage(error, 'Sign in failed. Check your details and try again.');
+  }
+
+  private requestErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 429) {
+      return 'Too many requests. Wait a minute, then try again.';
+    }
+    return this.apiMessage(error, 'We could not send a code. Check your connection and try again.');
+  }
+
+  private apiMessage(error: HttpErrorResponse, fallback: string): string {
+    const message = (error.error as { message?: string } | null)?.message;
+    return message?.trim() || fallback;
   }
 
   /**

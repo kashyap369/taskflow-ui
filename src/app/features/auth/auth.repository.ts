@@ -7,6 +7,9 @@ import { ApiResponse } from '@core/api/api-response';
 
 import {
   LoginRequest,
+  LoginWithCodeRequest,
+  EmailRequest,
+  ResetPasswordRequest,
   LoginResponse,
   RegisterRequest,
   UserProfileResponse,
@@ -22,6 +25,22 @@ export class AuthRepository {
 
   login(request: LoginRequest): Observable<ApiResponse<LoginResponse>> {
     return this.api.post<ApiResponse<LoginResponse>>(API.Auth.Login, request);
+  }
+
+  requestLoginCode(request: EmailRequest): Observable<ApiResponse<void>> {
+    return this.api.post<ApiResponse<void>>(API.Auth.RequestLoginCode, request);
+  }
+
+  loginWithCode(request: LoginWithCodeRequest): Observable<ApiResponse<LoginResponse>> {
+    return this.api.post<ApiResponse<LoginResponse>>(API.Auth.LoginWithCode, request);
+  }
+
+  forgotPassword(request: EmailRequest): Observable<ApiResponse<void>> {
+    return this.api.post<ApiResponse<void>>(API.Auth.ForgotPassword, request);
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<ApiResponse<void>> {
+    return this.api.post<ApiResponse<void>>(API.Auth.ResetPassword, request);
   }
 
   /** Create an account. Returns the new user's id (no tokens — the user then signs in). */

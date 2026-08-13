@@ -31,11 +31,17 @@ export const AUTH_ROUTES: Routes = [
     loadComponent: () => import('./register-page/register-page').then((m) => m.RegisterPage),
   },
   {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./forgot-password-page/forgot-password-page').then(
+        (m) => m.ForgotPasswordPage,
+      ),
+  },
+  {
     // Landed on from the welcome email (`?token=…`). Without this step a new
     // account is PendingVerification and cannot sign in at all.
     path: 'verify-email',
     loadComponent: () =>
       import('./verify-email-page/verify-email-page').then((m) => m.VerifyEmailPage),
   },
-  // Future auth screens (forgot-password) are added here as sibling routes.
 ];

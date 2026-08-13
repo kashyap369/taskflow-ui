@@ -19,11 +19,23 @@
           <h1 class="title" appReveal [revealDelay]="60">{{ config.title }}</h1>
           <p class="subtitle" appReveal [revealDelay]="120">{{ config.subtitle }}</p>
 
+          <div class="method-switch" role="group" aria-label="Sign-in method" appReveal [revealDelay]="160">
+            <button type="button" [class.active]="signInMethod() === 'password'" [attr.aria-pressed]="signInMethod() === 'password'" (click)="useSignInMethod('password')">
+              <lucide-angular name="Lock" [size]="15"></lucide-angular>
+              Password
+            </button>
+            <button type="button" [class.active]="signInMethod() === 'code'" [attr.aria-pressed]="signInMethod() === 'code'" (click)="useSignInMethod('code')">
+              <lucide-angular name="KeyRound" [size]="15"></lucide-angular>
+              Email code
+            </button>
+          </div>
+
           @if (error()) {
             <div class="form-error" role="alert" appReveal>{{ error() }}</div>
           }
 
-          <form class="login-form" [formGroup]="loginForm" (ngSubmit)="login()">
+          @if (signInMethod() === 'password') {
+          <form class="login-form auth-method" [formGroup]="loginForm" (ngSubmit)="login()">
             <div class="field" appReveal [revealDelay]="200">
               <label for="email" class="form-label">Email</label>
               <div class="input-icon-group">
@@ -45,11 +57,7 @@
             <div class="field" appReveal [revealDelay]="260">
               <div class="d-flex justify-content-between align-items-center">
                 <label for="password" class="form-label">Password</label>
-                <!--
-                  Password reset is backend-blocked — the API exposes no forgot-password endpoint
-                  (see docs/V1-GAPS.md). A link here promised a flow that cannot work, so it is
-                  removed until the endpoint exists rather than left as a dead `href="#"`.
-                -->
+                <a class="forgot-link" routerLink="/auth/forgot-password" [queryParams]="{ from: loginPath }">Forgot password?</a>
               </div>
               <div class="input-icon-group">
                 <lucide-angular name="Lock" [size]="16" class="field-icon"></lucide-angular>
@@ -95,6 +103,56 @@
               }
             </button>
           </form>
+          } @else {
+            <form class="login-form auth-method" [formGroup]="codeForm" (ngSubmit)="submitCodeLogin()">
+              <div class="field">
+                <label for="code-email" class="form-label">Email</label>
+                <div class="input-icon-group">
+                  <lucide-angular name="Mail" [size]="16" class="field-icon"></lucide-angular>
+                  <input id="code-email" type="email" class="form-control" placeholder="you@company.com" autocomplete="email" formControlName="email" [readonly]="loginCodeSent()" />
+                </div>
+                @if (codeFieldError('email'); as msg) {
+                  <small class="field-msg">{{ msg }}</small>
+                }
+              </div>
+
+              @if (loginCodeSent()) {
+                <div class="code-sent-note" role="status">
+                  <span>Enter the 6-digit code sent to your email. It expires in 10 minutes.</span>
+                  <button type="button" (click)="changeCodeEmail()">Change email</button>
+                </div>
+                <div class="field">
+                  <label for="login-code" class="form-label">Sign-in code</label>
+                  <div class="input-icon-group">
+                    <lucide-angular name="KeyRound" [size]="16" class="field-icon"></lucide-angular>
+                    <input id="login-code" type="text" class="form-control code-input" placeholder="000000" inputmode="numeric" autocomplete="one-time-code" maxlength="6" formControlName="code" />
+                  </div>
+                  @if (codeFieldError('code'); as msg) {
+                    <small class="field-msg">{{ msg }}</small>
+                  }
+                </div>
+              }
+
+              <label class="remember">
+                <input type="checkbox" formControlName="rememberMe" />
+                <span class="remember-box"></span>
+                <span class="remember-text">Keep me signed in for 30 days</span>
+              </label>
+
+              <button type="submit" class="sign-in-btn" [class.is-loading]="loading()" [disabled]="loading()">
+                <span>{{ loading() ? 'Please wait…' : loginCodeSent() ? 'Sign in with code' : 'Send sign-in code' }}</span>
+                @if (!loading()) {
+                  <lucide-angular name="ArrowRight" [size]="16"></lucide-angular>
+                }
+              </button>
+
+              @if (loginCodeSent()) {
+                <button type="button" class="resend-button" [disabled]="loading() || resendSeconds() > 0" (click)="resendCode()">
+                  {{ resendSeconds() > 0 ? 'Resend available in ' + resendSeconds() + 's' : 'Resend code' }}
+                </button>
+              }
+            </form>
+          }
 
           <div class="alt-links" appReveal [revealDelay]="440">
             <span>Sign in as</span>
@@ -120,14 +178,13 @@
         <span class="aurora-blob b1"></span>
         <span class="aurora-blob b2"></span>
         <span class="aurora-blob b3"></span>
-        <span class="grid-overlay"></span>
       </div>
 
       <div class="showcase-inner" [style.--px]="px()" [style.--py]="py()">
         <div class="showcase-head">
           <span class="eyebrow">{{ config.showcaseTag }}</span>
           <h2 class="showcase-headline">
-            {{ config.headline }} <span class="grad">{{ config.headlineAccent }}</span>.
+            {{ config.headline }} <span class="headline-accent">{{ config.headlineAccent }}</span>.
           </h2>
         </div>
 

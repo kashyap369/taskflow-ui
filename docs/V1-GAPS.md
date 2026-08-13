@@ -17,8 +17,8 @@
 > (§2) is resolved, and nothing in §1's "frontend action" column is outstanding.
 >
 > **What's left is §3 only** — deferred v1.x work that never needed the API: CSV/PDF report export,
-> the calendar page, per-member trend charts, E2E tests. The one backend gap anywhere is
-> **forgot-password**, and it blocks no built screen.
+> the calendar page, per-member trend charts, and E2E tests. Account recovery and email-code sign-in
+> shipped end to end on 2026-08-14.
 
 ---
 
@@ -34,7 +34,7 @@ now ordinary frontend work — see [PHASES.md](PHASES.md) Phases 26–29.
 | ~~Admin → Organizations overview~~ | ✅ **backend Phase 13** — `GET /admin/organizations` (AdminOnly) with owner, member/project/task counts. | ✅ **Built** (frontend Phase 27.1). |
 | ~~Admin → Platform settings~~ | ✅ **backend Phase 13** — `GET`/`PUT /admin/settings`. Both flags are really enforced (registration in the register handler, maintenance in middleware). | ✅ **Built** (frontend Phase 27.2), incl. a 503 `MAINTENANCE_MODE` banner at the app root. |
 | ~~Admin → open any user~~ | ✅ **backend Phase 10** — `EnsureUserAsync` now short-circuits for a platform admin. Verified: admin → `GET /user/2` = **200** (was 403). | ✅ **Verified live and the "denied state" branch deleted** (frontend Phase 26.1). |
-| **Forgot password** | ⬜ Still no `forgot-password` / `reset-password` endpoint — **the one remaining backend gap**, and it is not blocking any built screen. | The "Forgot?" link stays inert (`href="#"`). Email verification is done (Phase 23). |
+| ~~Forgot password~~ | ✅ Four endpoints now cover reset-code request/verification and passwordless login. Codes are hashed, expiring, single-use and attempt-limited. | ✅ Built in frontend Phase 30 for personal, organization, and admin login variants. |
 
 ## 2. Backend defects found while building v1 — ✅ ALL FIXED (2026-07-26)
 
@@ -97,8 +97,8 @@ file says what *the frontend* is missing; that one shows both sides at once and 
 whom. Update it alongside this one.
 
 1. **§1 and §2 are done** — backend Phases 10–13 closed every one, and frontend Phases 26–29 consumed
-   the endpoints they added (**80/82**; the 2 left are the deliberate skips). The only backend gap left
-   anywhere is forgot-password, which blocks no built screen.
+   the endpoints they added (**84/86**; the 2 left are the deliberate skips). Account recovery is
+   complete on both sides.
 2. **Everything left is §3 frontend work that never needed the API.** In value order: **CSV/PDF report
    export** ([PHASES.md](PHASES.md) Phase 24.1), the **calendar page** (Phase 25), **per-member trend
    charts** (Phase 24.2), then E2E tests.

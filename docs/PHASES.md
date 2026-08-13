@@ -5,11 +5,22 @@
 > consumes it and is at the start of feature build-out. Phase order roughly follows the backend so
 > each frontend phase has a working API behind it.
 
+## ✅ Phase 30 — Account recovery & email-code sign-in (2026-08-14)
+
+- Personal, organization, and admin login variants now switch between password and email-code
+  sign-in without changing the authoritative post-login role/account routing.
+- Added `/auth/forgot-password` with generic email submission, six-digit code entry, strong and
+  confirmed new-password validation, resend cooldown, error/retry states, and safe return to the
+  login variant that opened it.
+- Consumes the API's four new auth endpoints. Coverage **80/82 → 84/86**; the same two deliberate
+  read-endpoint skips remain. `ng build`, lint, and design lint pass. Karma bundles successfully,
+  but sandboxed Chrome crashes before executing specs because its GPU sandbox cannot initialize.
+
 ---
 
 ## ▶ NEXT SESSION — START HERE (**every API endpoint is consumed** — Phases 26–29 closed the last four)
 
-**All three portals are complete.** The API surface and the UI now match exactly:
+**All three portals plus account recovery are complete.** The API surface and the UI now match exactly:
 
 | Acceptance | Status |
 |---|---|

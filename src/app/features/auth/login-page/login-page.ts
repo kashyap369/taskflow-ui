@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -16,13 +16,14 @@ import {
   ShieldCheck,
   Sparkles,
   User,
+  KeyRound,
 } from 'lucide-angular';
 
 import { RevealDirective } from '@shared/directives/reveal.directive';
 import { controlValidators, messageFor } from '@shared/validations';
 import { AuthFacade } from '../auth.facade';
 import { LoginRequest } from '../auth.models';
-import { LoginFormModel } from './login-page.model';
+import { LoginCodeFormModel, LoginFormModel } from './login-page.model';
 
 type LoginVariant = 'solo' | 'organization' | 'admin';
 
@@ -86,6 +87,7 @@ const VARIANTS: Record<LoginVariant, VariantConfig> = {
         User,
         Building2,
         ShieldCheck,
+        KeyRound,
       }),
     },
   ],
@@ -94,9 +96,11 @@ export class LoginPage {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthFacade);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = this.auth.loading;
   readonly error = this.auth.error;
+  readonly loginCodeSent = this.auth.loginCodeSent;
 
   readonly variant: LoginVariant =
     (this.route.snapshot.data['variant'] as LoginVariant) ?? 'solo';
@@ -104,6 +108,9 @@ export class LoginPage {
   readonly config = VARIANTS[this.variant];
 
   showPassword = signal(false);
+  signInMethod = signal<'password' | 'code'>('password');
+  resendSeconds = signal(0);
+  private resendTimer: ReturnType<typeof setInterval> | null = null;
 
   // Pointer parallax for the showcase scene
   px = signal(0);
@@ -111,6 +118,7 @@ export class LoginPage {
 
   /** Per-control validators derived from `LoginFormModel`'s decorators. */
   private readonly rules = controlValidators(LoginFormModel);
+  private readonly codeRules = controlValidators(LoginCodeFormModel);
 
   loginForm = this.fb.nonNullable.group({
     email: ['', this.rules['email']],
@@ -118,9 +126,26 @@ export class LoginPage {
     rememberMe: [true],
   });
 
+  codeForm = this.fb.nonNullable.group({
+    email: ['', this.codeRules['email']],
+    code: ['', this.codeRules['code']],
+    rememberMe: [true],
+  });
+
+  constructor() {
+    effect(() => {
+      if (this.loginCodeSent()) this.startResendCooldown();
+    });
+    this.destroyRef.onDestroy(() => this.clearResendTimer());
+  }
+
   /** Touched-gated message for a field, straight from the decorator that failed. */
   fieldError(property: string): string | null {
     return messageFor(this.loginForm, property);
+  }
+
+  codeFieldError(property: string): string | null {
+    return messageFor(this.codeForm, property);
   }
 
   // Cross-links to the other login variants
@@ -135,6 +160,20 @@ export class LoginPage {
 
   togglePasswordVisibility(): void {
     this.showPassword.update((value) => !value);
+  }
+
+  useSignInMethod(method: 'password' | 'code'): void {
+    const email =
+      this.signInMethod() === 'password'
+        ? this.loginForm.controls.email.value
+        : this.codeForm.controls.email.value;
+    this.signInMethod.set(method);
+    this.auth.resetCodeFlow();
+    this.clearResendTimer();
+    this.resendSeconds.set(0);
+    this.loginForm.controls.email.setValue(email);
+    this.codeForm.controls.email.setValue(email);
+    this.codeForm.controls.code.reset();
   }
 
   onShowcaseMove(event: MouseEvent): void {
@@ -159,6 +198,53 @@ export class LoginPage {
     const request: LoginRequest = { email, password };
 
     this.auth.login(request, rememberMe);
+  }
+
+  submitCodeLogin(): void {
+    const { email, code, rememberMe } = this.codeForm.getRawValue();
+    if (!this.loginCodeSent()) {
+      this.codeForm.controls.email.markAsTouched();
+      if (this.codeForm.controls.email.invalid) return;
+      this.auth.requestLoginCode(email);
+      return;
+    }
+
+    this.codeForm.markAllAsTouched();
+    if (this.codeForm.invalid) return;
+    this.auth.loginWithCode({ email, code }, rememberMe);
+  }
+
+  resendCode(): void {
+    if (this.resendSeconds() > 0 || this.loading()) return;
+    this.startResendCooldown();
+    this.auth.requestLoginCode(this.codeForm.controls.email.value);
+  }
+
+  changeCodeEmail(): void {
+    this.auth.resetCodeFlow();
+    this.codeForm.controls.code.reset();
+    this.clearResendTimer();
+    this.resendSeconds.set(0);
+  }
+
+  private startResendCooldown(): void {
+    this.clearResendTimer();
+    this.resendSeconds.set(60);
+    this.resendTimer = setInterval(() => {
+      this.resendSeconds.update((seconds) => Math.max(0, seconds - 1));
+      if (this.resendSeconds() === 0) this.clearResendTimer();
+    }, 1000);
+  }
+
+  private clearResendTimer(): void {
+    if (this.resendTimer !== null) {
+      clearInterval(this.resendTimer);
+      this.resendTimer = null;
+    }
+  }
+
+  get loginPath(): string {
+    return this.variant === 'solo' ? '/auth/login' : `/auth/${this.variant}`;
   }
 
   // Showcase content

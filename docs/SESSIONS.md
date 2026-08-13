@@ -21,6 +21,16 @@
 > **forgot-password**, which blocks no built screen. Remaining work is §3 (v1.x): CSV/PDF report
 > export, the calendar page, per-member trend charts, E2E tests.
 
+## 2026-08-14 (Forgot password + OTP login, end to end)
+- Added a password/email-code method switch to the shared login page, so personal, organization, and
+  admin variants inherit the same passwordless flow and continue through the existing session/profile
+  routing pipeline.
+- Added a dedicated recovery page with generic request copy, one-time-code autofill semantics,
+  resend countdown, cross-field password confirmation, strong-password rules, loading/error/success
+  states, responsive composition, and reduced-motion handling.
+- Wired four new API endpoints through the existing repository/facade layers. Build and lint are clean;
+  Karma compiled all specs but ChromeHeadless crashed during sandbox/GPU startup before test execution.
+
 ## 2026-07-27 (Design Phases 6 & 7 — functional sweep + accessibility)
 - **`type="button"` added to 77 buttons** (0 untyped remain). Inside a `<form>` an untyped button
   defaults to `type="submit"`, so icon buttons in drawers were submitting the form.
