@@ -18,7 +18,9 @@
 
     overflow: hidden;
 
-    transition: all .3s ease;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      box-shadow var(--dur-2) var(--ease-standard);
 
     background: var(--surface);
 
@@ -82,7 +84,7 @@
 
     font-size: var(--fs-body-md);
 
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 
     color: var(--text);
 
@@ -118,7 +120,7 @@
 
     font-size: var(--fs-body-xs);
 
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 
     letter-spacing: .8px;
 
@@ -138,7 +140,7 @@
 
     font-size: var(--fs-h3);
 
-    font-weight: 800;
+    font-weight: var(--fw-extrabold);
 
     line-height: 1.1;
 
@@ -152,7 +154,7 @@
 
     font-size: var(--fs-body-sm);
 
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 
 }
 
@@ -172,7 +174,7 @@
 
     font-size: var(--fs-body-xs);
 
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
 
     color: var(--text);
 
@@ -272,7 +274,7 @@
 
     font-size: var(--fs-body-2xs);
 
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 
     color: var(--on-accent);
 
@@ -390,7 +392,7 @@
 
     font-size: var(--fs-body-sm);
 
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 
     color: var(--text);
 
@@ -418,7 +420,6 @@
 
     background: linear-gradient(90deg, var(--accent-blue), var(--accent-violet));
 
-    transition: width .4s ease;
 
 }
 

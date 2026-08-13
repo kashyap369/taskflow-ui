@@ -1,8 +1,8 @@
-.page { padding: var(--space-6); }
+.page { padding: var(--page-padding); }
 
 .page-head {
   margin-bottom: var(--space-6);
-  h1 { font-size: var(--fs-h3); font-weight: 700; color: var(--text); margin: 0 0 var(--space-1); }
+  h1 { font-size: var(--fs-page-title); font-weight: var(--fw-bold); color: var(--text); margin: 0 0 var(--space-1); }
   p { color: var(--text-muted); margin: 0; }
   code {
     background: var(--surface-inset); padding: var(--space-0) var(--space-2); border-radius: var(--radius-sm);
@@ -18,7 +18,7 @@
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2xl);
   padding: var(--space-5) var(--space-6); box-shadow: var(--shadow-sm);
   .stat-value {
-    display: block; font-family: var(--font-display); font-weight: 800; font-size: var(--fs-h3);
+    display: block; font-family: var(--font-display); font-weight: var(--fw-extrabold); font-size: var(--fs-h3);
     color: var(--text); font-variant-numeric: tabular-nums;
   }
   .stat-label { color: var(--text-muted); font-size: var(--fs-body-sm); }
@@ -32,15 +32,15 @@
   background: var(--warning-soft); border: 1px solid var(--warning); color: var(--text);
   &.error { background: var(--danger-soft); border-color: var(--danger); }
   .link-btn {
-    border: none; background: none; color: var(--primary); font-weight: 700; cursor: pointer;
+    border: none; background: none; color: var(--primary); font-weight: var(--fw-bold); cursor: pointer;
     padding: 0; text-decoration: underline;
   }
 }
 
 .lottie-state {
-  max-width: 460px; margin: 2.5rem auto; text-align: center;
+  max-width: 460px; margin: var(--space-10) auto; text-align: center;
   p { color: var(--text-muted); margin: 0; }
-  &.compact { margin: 1rem auto; }
+  &.compact { margin: var(--space-4) auto; }
 }
 
 /* Panel */
@@ -50,9 +50,9 @@
 }
 .panel-head {
   display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4);
-  h2 { font-size: var(--fs-h6); font-weight: 700; color: var(--text); margin: 0; }
+  h2 { font-size: var(--fs-h6); font-weight: var(--fw-bold); color: var(--text); margin: 0; }
   .count {
-    background: var(--primary-soft); color: var(--primary); font-weight: 700; font-size: var(--fs-body-xs);
+    background: var(--primary-soft); color: var(--primary); font-weight: var(--fw-bold); font-size: var(--fs-body-xs);
     padding: var(--space-0) var(--space-2); border-radius: var(--radius-full);
   }
 }
@@ -77,10 +77,10 @@
 .avatar {
   width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: var(--gradient-admin); color: var(--on-accent); font-weight: 700; font-size: var(--fs-body-sm);
+  background: var(--gradient-admin); color: var(--on-accent); font-weight: var(--fw-bold); font-size: var(--fs-body-sm);
 }
 .who { min-width: 0; }
-.name { font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name { font-weight: var(--fw-semibold); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .email { font-size: var(--fs-label); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .user-ref { font-size: var(--fs-label); color: var(--text-subtle); font-variant-numeric: tabular-nums; }
 
@@ -91,7 +91,7 @@
 /* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); border-radius: var(--radius-full);
-  font-size: var(--fs-body-xs); font-weight: 700; white-space: nowrap;
+  font-size: var(--fs-body-xs); font-weight: var(--fw-bold); white-space: nowrap;
   &[data-tone="neutral"] { background: var(--surface-inset); color: var(--text-muted); }
   &[data-tone="info"]    { background: var(--info-soft); color: var(--info); }
   &[data-tone="success"] { background: var(--success-soft); color: var(--success); }
@@ -103,23 +103,23 @@
 /* User detail drawer */
 .drawer-backdrop {
   position: fixed; inset: 0; background: var(--scrim);
-  backdrop-filter: blur(2px); z-index: 1040; animation: fadeIn .2s ease;
+  backdrop-filter: blur(2px); z-index: 1040;
 }
 .drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%);
   background: var(--surface); z-index: 1050; padding: var(--space-6);
-  box-shadow: var(--shadow-xl); overflow-y: auto; animation: slideIn .25s ease;
+  box-shadow: var(--shadow-xl); overflow-y: auto;
 }
 .drawer-head {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6);
-  h2 { font-size: var(--fs-h5); font-weight: 700; color: var(--text); margin: 0; }
+  h2 { font-size: var(--fs-h5); font-weight: var(--fw-bold); color: var(--text); margin: 0; }
 }
 
 .detail-hero {
   display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-6);
   .avatar.lg { width: 56px; height: 56px; font-size: var(--fs-h6); }
   .hero-who { min-width: 0; }
-  h3 { font-size: var(--fs-h6); font-weight: 700; color: var(--text); margin: 0 0 var(--space-2); }
+  h3 { font-size: var(--fs-h6); font-weight: var(--fw-bold); color: var(--text); margin: 0 0 var(--space-2); }
   .hero-badges { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 }
 
@@ -131,14 +131,14 @@
 
   dt {
     display: inline-flex; align-items: center; gap: var(--space-2); flex-shrink: 0;
-    color: var(--text-muted); font-size: var(--fs-body-sm); font-weight: 600; margin: 0;
+    color: var(--text-muted); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); margin: 0;
   }
   dd {
-    color: var(--text); font-weight: 600; font-size: var(--fs-body-sm); margin: 0; text-align: right;
+    color: var(--text); font-weight: var(--fw-semibold); font-size: var(--fs-body-sm); margin: 0; text-align: right;
     min-width: 0; overflow-wrap: anywhere;
 
-    &.muted { color: var(--text-subtle); font-weight: 500; }
-    &.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-subtle); }
+    &.muted { color: var(--text-subtle); font-weight: var(--fw-medium); }
+    &.mono { font-family: var(--font-mono); color: var(--text-subtle); }
   }
 }
 
@@ -157,6 +157,3 @@
   .user-row .badge:not(.type) { grid-area: status; justify-self: start; }
   .user-ref { grid-area: ref; justify-self: end; }
 }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }

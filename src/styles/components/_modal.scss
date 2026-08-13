@@ -13,6 +13,56 @@
   border-top: 1px solid var(--border);
 }
 
+// Shared physicality for every app drawer. Feature styles own dimensions and surfaces only.
+.drawer-backdrop {
+  animation: tf-backdrop-in var(--dur-2) var(--ease-out) both;
+}
+
+.drawer {
+  animation: tf-drawer-in var(--dur-3) var(--ease-drawer) both;
+}
+
+@keyframes tf-backdrop-in {
+  from { opacity: 0; }
+}
+
+@keyframes tf-drawer-in {
+  from { transform: translateX(100%); }
+}
+
+// SweetAlert lives at document root, so these classes intentionally remain global.
+.tf-dialog-popup {
+  transform-origin: center;
+}
+
+.tf-dialog-enter {
+  animation: tf-dialog-in 240ms var(--ease-out) both;
+}
+
+.tf-dialog-exit {
+  animation: tf-dialog-out 160ms var(--ease-out) both;
+}
+
+.tf-dialog-backdrop-enter {
+  animation: tf-backdrop-in var(--dur-2) var(--ease-out) both;
+}
+
+.tf-dialog-backdrop-exit {
+  animation: tf-backdrop-out var(--dur-1) var(--ease-out) both;
+}
+
+@keyframes tf-dialog-in {
+  from { opacity: 0; transform: scale(0.96); }
+}
+
+@keyframes tf-dialog-out {
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes tf-backdrop-out {
+  to { opacity: 0; }
+}
+
 // ======================================
 // Drawer backdrop.
 //
@@ -28,4 +78,17 @@ button.drawer-backdrop {
   font: inherit;
   cursor: pointer;
   appearance: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer,
+  .tf-dialog-enter,
+  .tf-dialog-exit {
+    transform: none;
+    animation-name: tf-overlay-fade !important;
+  }
+
+  @keyframes tf-overlay-fade {
+    from { opacity: 0; }
+  }
 }

@@ -82,7 +82,7 @@
     padding: 0;
     color: var(--primary);
     font: inherit;
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
     cursor: pointer;
 
     &:hover {

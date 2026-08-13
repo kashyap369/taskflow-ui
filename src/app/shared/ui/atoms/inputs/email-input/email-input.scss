@@ -17,7 +17,9 @@
   border: 1.5px solid var(--border-input);
   border-radius: var(--radius-xl);
 
-  transition: all 0.25s ease;
+  transition:
+    border-color var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-standard);
 }
 
 .input-wrapper:focus-within {

@@ -1,8 +1,11 @@
-.public-header {
+:host {
   position: sticky;
   top: 0;
   z-index: 1000;
+  display: block;
+}
 
+.public-header {
   background: var(--glass-bg);
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
@@ -19,7 +22,7 @@
   gap: var(--space-3);
   font-family: var(--font-display);
   font-size: var(--fs-h5);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
   color: var(--text);
   text-decoration: none;
   letter-spacing: -0.02em;
@@ -32,10 +35,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--gradient-brand);
-  color: var(--on-accent);
-  box-shadow: var(--shadow-brand);
-  transition: transform var(--dur-2) var(--ease-spring);
+  transition: transform var(--dur-2) var(--ease-out);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 
   .navbar-brand:hover & {
     transform: rotate(-8deg) scale(1.06);
@@ -50,7 +56,7 @@
   position: relative;
   font-family: var(--font-display);
   font-size: var(--fs-body-md);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text-muted);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-full);
@@ -99,7 +105,7 @@
   transition:
     color var(--dur-2) var(--ease-standard),
     border-color var(--dur-2) var(--ease-standard),
-    transform var(--dur-2) var(--ease-spring);
+    transform var(--dur-2) var(--ease-out);
 
   &:hover {
     color: var(--primary);
@@ -114,7 +120,7 @@
 
 .signin {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   color: var(--text);
   text-decoration: none;
   padding: var(--space-2) var(--space-2);
@@ -132,7 +138,7 @@
   border-radius: var(--radius-full);
   padding: var(--space-3) var(--space-5);
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   font-size: var(--fs-body-md);
   color: var(--on-primary);
   background: var(--gradient-brand);

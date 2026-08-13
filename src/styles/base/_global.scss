@@ -9,14 +9,23 @@ html {
   scroll-behavior: smooth;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   font-family: var(--font-body);
+  font-size: var(--fs-body-md);
   color: var(--text);
   background-color: var(--bg);
   line-height: $lh-normal;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-kerning: normal;
+  font-synthesis: none;
   transition:
     background-color var(--dur-2) var(--ease-standard),
     color var(--dur-2) var(--ease-standard);
@@ -27,6 +36,21 @@ h1, h2, h3, h4, h5, h6,
 .font-display {
   font-family: var(--font-display);
   color: var(--text);
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+p, li, dd {
+  text-wrap: pretty;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 h1, h2, h3 {
@@ -48,24 +72,24 @@ h1, h2, h3 {
 
 // Layout helpers
 .container-fluid {
-  padding-inline: 1rem;
+  padding-inline: var(--space-4);
 }
 
 .section {
-  padding: 6rem 0;
+  padding-block: var(--section-padding);
 }
 
 .section-sm {
-  padding: 4rem 0;
+  padding-block: var(--section-padding-compact);
 }
 
 .section-lg {
-  padding: 8rem 0;
+  padding-block: var(--space-32);
 }
 
 @media (max-width: 767px) {
-  .section { padding: 4rem 0; }
-  .section-lg { padding: 5rem 0; }
+  .section { padding-block: var(--section-padding-compact); }
+  .section-lg { padding-block: var(--space-20); }
 }
 
 // Utilities

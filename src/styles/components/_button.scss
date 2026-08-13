@@ -49,7 +49,7 @@ $btn-loading: '.btn.is-loading, .btn-primary-cta.is-loading, .btn-ghost.is-loadi
     border-color var(--dur-2) var(--ease-standard),
     color var(--dur-2) var(--ease-standard),
     box-shadow var(--dur-2) var(--ease-standard),
-    transform var(--dur-1) var(--ease-standard);
+    transform var(--dur-1) var(--ease-out);
 
   &:focus-visible {
     outline: none;
@@ -90,7 +90,6 @@ $btn-loading: '.btn.is-loading, .btn-primary-cta.is-loading, .btn-ghost.is-loadi
   box-shadow: var(--shadow-brand);
 
   &:hover:not(:disabled):not(.is-loading) {
-    transform: translateY(-2px);
     box-shadow: var(--shadow-lg), var(--shadow-brand);
   }
 }
@@ -128,7 +127,6 @@ $btn-loading: '.btn.is-loading, .btn-primary-cta.is-loading, .btn-ghost.is-loadi
 
   &:hover:not(:disabled):not(.is-loading) {
     filter: brightness(1.08);
-    transform: translateY(-2px);
   }
 
   &:focus-visible {
@@ -241,7 +239,12 @@ $btn-loading: '.btn.is-loading, .btn-primary-cta.is-loading, .btn-ghost.is-loadi
   transition:
     background var(--dur-2) var(--ease-standard),
     color var(--dur-2) var(--ease-standard),
-    border-color var(--dur-2) var(--ease-standard);
+    border-color var(--dur-2) var(--ease-standard),
+    transform var(--dur-1) var(--ease-out);
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 
   &:hover:not(:disabled) {
     background: var(--surface-inset);
@@ -271,6 +274,17 @@ $btn-loading: '.btn.is-loading, .btn-primary-cta.is-loading, .btn-ghost.is-loadi
   width: 40px;
   height: 40px;
   border-radius: var(--radius-full);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn--primary:hover:not(:disabled):not(.is-loading),
+  .btn-primary-cta:hover:not(:disabled):not(.is-loading),
+  .sign-in-btn:hover:not(:disabled):not(.is-loading),
+  .sign-up-btn:hover:not(:disabled):not(.is-loading),
+  .btn--danger:hover:not(:disabled):not(.is-loading),
+  .btn-danger:hover:not(:disabled):not(.is-loading) {
+    transform: translateY(-2px);
+  }
 }
 
 // ======================================

@@ -8,7 +8,7 @@
   .eyebrow {
     display: inline-block;
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     font-size: var(--fs-body-xs);
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -18,8 +18,8 @@
 
   h1 {
     font-family: var(--font-display);
-    font-weight: 800;
-    font-size: var(--fs-fluid-h2);
+    font-weight: var(--fw-extrabold);
+    font-size: var(--fs-page-title);
     letter-spacing: -0.03em;
     color: var(--text);
     margin-bottom: var(--space-2);
@@ -76,7 +76,7 @@
   .stat-value {
     display: block;
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: var(--fw-extrabold);
     font-size: var(--fs-h3);
     color: var(--text);
     font-variant-numeric: tabular-nums;
@@ -129,7 +129,7 @@
 
     h3 {
       font-family: var(--font-display);
-      font-weight: 700;
+      font-weight: var(--fw-bold);
       color: var(--text);
       margin: 0 0 var(--space-1);
     }

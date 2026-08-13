@@ -31,10 +31,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient-brand);
-  color: var(--on-accent);
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
   box-shadow: var(--shadow-brand);
-  transition: transform var(--dur-2) var(--ease-spring);
+  transition: transform var(--dur-2) var(--ease-out);
 
   .brand:hover & {
     transform: rotate(-8deg) scale(1.06);
@@ -43,7 +46,7 @@
 
 .brand-name {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
   font-size: var(--fs-h6);
   letter-spacing: -0.02em;
   color: var(--text);
@@ -65,14 +68,14 @@
   color: var(--primary);
   font-family: var(--font-display);
   font-size: var(--fs-body-xs);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.02em;
 }
 
 .title {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--fs-h2);
+  font-weight: var(--fw-extrabold);
+  font-size: var(--fs-auth-title);
   letter-spacing: -0.03em;
   color: var(--text);
   margin-bottom: var(--space-2);
@@ -80,6 +83,7 @@
 
 .subtitle {
   color: var(--text-muted);
+  max-width: var(--measure-compact);
   margin-bottom: var(--space-6);
 }
 
@@ -91,7 +95,7 @@
   color: var(--danger);
   border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
   font-size: var(--fs-body-sm);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .field-row {
@@ -122,7 +126,7 @@
   transition:
     border-color var(--dur-2) var(--ease-standard),
     background var(--dur-2) var(--ease-standard),
-    transform var(--dur-2) var(--ease-spring),
+    transform var(--dur-2) var(--ease-out),
     box-shadow var(--dur-2) var(--ease-standard);
 
   lucide-angular {
@@ -132,7 +136,7 @@
 
   .opt-title {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     font-size: var(--fs-body-md);
     color: var(--text);
   }
@@ -193,12 +197,16 @@
     align-items: center;
     justify-content: center;
     color: var(--on-accent);
-    transition: all var(--dur-2) var(--ease-spring);
+    transition:
+      background var(--dur-2) var(--ease-out),
+      border-color var(--dur-2) var(--ease-out);
 
     lucide-angular {
       opacity: 0;
-      transform: scale(0.4);
-      transition: all var(--dur-2) var(--ease-spring);
+      transform: scale(0.8);
+      transition:
+        opacity var(--dur-1) var(--ease-out),
+        transform var(--dur-2) var(--ease-out);
     }
   }
 
@@ -219,7 +227,7 @@
 
     a {
       color: var(--primary);
-      font-weight: 600;
+      font-weight: var(--fw-semibold);
       text-decoration: none;
 
       &:hover {
@@ -236,7 +244,7 @@
 
   a {
     color: var(--primary);
-    font-weight: 700;
+    font-weight: var(--fw-bold);
     text-decoration: none;
 
     &:hover {
@@ -318,7 +326,7 @@
 .eyebrow {
   font-family: var(--font-display);
   font-size: var(--fs-label);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--on-accent-muted);
@@ -326,7 +334,7 @@
 
 .showcase-headline {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
   font-size: var(--fs-fluid-h2);
   letter-spacing: -0.03em;
   margin: var(--space-3) 0 0;
@@ -353,7 +361,7 @@
   align-items: center;
   gap: var(--space-3);
   font-size: var(--fs-body-md);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   color: var(--on-accent-muted);
 
   .perk-check {
@@ -392,7 +400,7 @@
 
 .stat-value {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--fw-extrabold);
   font-size: var(--fs-h5);
 }
 

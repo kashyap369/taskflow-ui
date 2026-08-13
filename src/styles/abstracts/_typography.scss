@@ -20,17 +20,17 @@ $font-family-display:
   -apple-system,
   sans-serif;
 
-// Body / long-form — Geist: neutral, hyper-legible at 13–14px.
-// Loaded from Google Fonts in src/index.html.
+// Body / long-form — Switzer: neutral, hyper-legible at 13–14px.
+// Loaded from Fontshare in src/index.html.
 $font-family-base:
-  'Geist',
+  'Switzer',
   system-ui,
   -apple-system,
   sans-serif;
 
-// Numeric / metrics / code — Geist Mono, for true tabular figures.
+// Numeric / metrics / code — IBM Plex Mono, for true tabular figures.
 $font-family-mono:
-  'Geist Mono',
+  'IBM Plex Mono',
   ui-monospace,
   SFMono-Regular,
   Menlo,
@@ -98,6 +98,11 @@ $fs-fluid-h1: clamp(2rem, 4vw, 3rem);          // page headline
 $fs-fluid-h2: clamp(1.75rem, 3vw, 2.4rem);     // section headline
 $fs-fluid-h4: clamp(1.1rem, 1.5vw, 1.35rem);   // sub-headline
 
+// Product roles. These keep equivalent screens aligned without forcing marketing scale into
+// dense operational UI.
+$fs-page-title: clamp(1.75rem, 1.25rem + 1vw, 2rem); // 28–32px app-page heading
+$fs-auth-title: clamp(2rem, 1.75rem + 1vw, 2.25rem); // 32–36px auth heading
+
 // ======================================
 // Line Heights
 // ======================================
@@ -158,6 +163,12 @@ $tracking-eyebrow: 0.12em;   // uppercase kicker labels
   --fs-fluid-h1: #{$fs-fluid-h1};
   --fs-fluid-h2: #{$fs-fluid-h2};
   --fs-fluid-h4: #{$fs-fluid-h4};
+  --fs-page-title: #{$fs-page-title};
+  --fs-auth-title: #{$fs-auth-title};
+
+  // Readable measures
+  --measure-copy: 68ch;
+  --measure-compact: 54ch;
 
   // Weights
   --fw-regular: #{$fw-regular};

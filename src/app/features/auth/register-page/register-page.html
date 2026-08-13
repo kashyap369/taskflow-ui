@@ -5,7 +5,7 @@
       <div class="form-side-inner d-flex flex-column">
         <a routerLink="/" class="brand d-flex align-items-center text-decoration-none" appReveal>
           <div class="brand-logo">
-            <lucide-angular name="Sparkles" [size]="18"></lucide-angular>
+            <img src="taskflow-mark.svg" alt="" width="40" height="40" />
           </div>
           <span class="brand-name">TaskFlow</span>
         </a>
@@ -195,10 +195,11 @@
               <span class="terms-box">
                 <lucide-angular name="Check" [size]="12"></lucide-angular>
               </span>
-              <!-- No Terms/Privacy pages exist yet, so these are emphasised text rather than
-                   links that go nowhere. Make them routerLinks once the pages are written. -->
               <span class="terms-text">
-                I agree to the <strong>Terms of Service</strong> and <strong>Privacy Policy</strong>.
+                I agree to the
+                <a routerLink="/terms" (click)="$event.stopPropagation()">Terms of Service</a>
+                and
+                <a routerLink="/privacy" (click)="$event.stopPropagation()">Privacy Policy</a>.
               </span>
             </label>
             @if (fieldError('acceptTerms'); as msg) {

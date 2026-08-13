@@ -13,5 +13,7 @@
 
   width: 100%;
 
-  overflow-x: hidden;
+  // `hidden` creates a scroll container and breaks sticky descendants such as the legal-page
+  // contents index. `clip` still contains horizontal decoration without capturing vertical scroll.
+  overflow-x: clip;
 }

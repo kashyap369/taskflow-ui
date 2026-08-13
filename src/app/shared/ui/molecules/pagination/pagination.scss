@@ -20,7 +20,7 @@
 
   strong {
     color: var(--text);
-    font-weight: 600;
+    font-weight: var(--fw-semibold);
   }
 }
 
@@ -81,7 +81,7 @@
   color: var(--text-muted);
   font-family: inherit;
   font-size: var(--fs-label);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition:
     background 0.15s ease,

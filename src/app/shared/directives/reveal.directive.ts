@@ -38,7 +38,8 @@ export class RevealDirective implements AfterViewInit, OnDestroy {
 
     el.setAttribute('data-reveal', this.appReveal() || 'up');
 
-    const delay = this.revealDelay();
+    // Keep a group entrance authored without making later siblings wait to become readable.
+    const delay = Math.min(this.revealDelay(), 240);
     if (delay > 0) {
       el.style.setProperty('--reveal-delay', `${delay}ms`);
     }

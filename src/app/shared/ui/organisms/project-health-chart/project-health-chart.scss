@@ -9,7 +9,7 @@
 
 .health-card h5 {
   margin: 0;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: var(--text);
 }
 
@@ -36,7 +36,7 @@
   align-items: center;
   gap: var(--space-3);
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .legend-color {

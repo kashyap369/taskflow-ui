@@ -1,0 +1,128 @@
+<article class="legal-page">
+  <header class="legal-hero">
+    <div class="container legal-hero__inner">
+      <div class="legal-mark" aria-hidden="true">
+        <lucide-angular [name]="document.icon" [size]="26"></lucide-angular>
+      </div>
+
+      <h1>{{ document.title }}</h1>
+      <p class="legal-summary">{{ document.description }}</p>
+      <p class="legal-updated">Last updated {{ document.updated }}</p>
+
+      <nav class="document-switcher" aria-label="Legal documents">
+        @for (item of documents; track item.key) {
+          <a
+            [routerLink]="'/' + item.key"
+            routerLinkActive="is-active"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            {{ item.shortTitle }}
+          </a>
+        }
+      </nav>
+    </div>
+  </header>
+
+  <div class="container legal-layout">
+    <aside class="legal-toc" aria-label="On this page">
+      <p>On this page</p>
+      <nav>
+        @for (section of document.sections; track section.id) {
+          <a
+            [attr.href]="'#' + section.id"
+            [class.is-active]="activeSection() === section.id"
+            [attr.aria-current]="activeSection() === section.id ? 'location' : null"
+            (click)="scrollToSection($event, section.id)"
+          >
+            {{ section.title }}
+          </a>
+        }
+      </nav>
+    </aside>
+
+    <details class="legal-mobile-toc">
+      <summary>
+        Jump to a section
+        <lucide-angular name="ChevronDown" [size]="18" aria-hidden="true"></lucide-angular>
+      </summary>
+      <nav aria-label="On this page">
+        @for (section of document.sections; track section.id) {
+          <a
+            [attr.href]="'#' + section.id"
+            [class.is-active]="activeSection() === section.id"
+            [attr.aria-current]="activeSection() === section.id ? 'location' : null"
+            (click)="scrollToSection($event, section.id)"
+          >
+            {{ section.title }}
+          </a>
+        }
+      </nav>
+    </details>
+
+    <div class="legal-content">
+      @for (section of document.sections; track section.id) {
+        <section class="legal-section" [id]="section.id">
+          <h2>{{ section.title }}</h2>
+
+          @for (paragraph of section.paragraphs; track paragraph) {
+            <p>{{ paragraph }}</p>
+          }
+
+          @if (section.items) {
+            <ul>
+              @for (item of section.items; track item) {
+                <li>
+                  <span class="list-check" aria-hidden="true">
+                    <lucide-angular name="Check" [size]="14"></lucide-angular>
+                  </span>
+                  <span>{{ item }}</span>
+                </li>
+              }
+            </ul>
+          }
+
+          @if (section.table) {
+            <div class="storage-table-wrap">
+              <table class="storage-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Category</th>
+                    <th scope="col">Purpose</th>
+                    <th scope="col">Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of section.table; track row.name) {
+                    <tr>
+                      <th scope="row">{{ row.name }}</th>
+                      <td>{{ row.purpose }}</td>
+                      <td>{{ row.duration }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (section.note) {
+            <div class="legal-note">
+              <lucide-angular name="FileLock2" [size]="19" aria-hidden="true"></lucide-angular>
+              <p>{{ section.note }}</p>
+            </div>
+          }
+        </section>
+      }
+
+      <footer class="legal-contact">
+        <div>
+          <h2>Still have a question?</h2>
+          <p>We’re here to help you understand how these policies apply to TaskFlow.</p>
+        </div>
+        <a routerLink="/auth/login">
+          Sign in for support
+          <lucide-angular name="ArrowUpRight" [size]="17"></lucide-angular>
+        </a>
+      </footer>
+    </div>
+  </div>
+</article>

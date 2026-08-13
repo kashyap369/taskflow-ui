@@ -127,11 +127,20 @@ export class DialogService {
     return result.isConfirmed;
   }
 
-  /** Surface + text tokens so the dialog card matches the active theme. */
-  private themed(): { background: string; color: string } {
+  /** Surface, text, and motion classes so every dialog matches the active design language. */
+  private themed() {
     return {
       background: this.cssVar('--surface', '#ffffff'),
       color: this.cssVar('--text', '#111827'),
+      customClass: { popup: 'tf-dialog-popup' },
+      showClass: {
+        popup: 'tf-dialog-enter',
+        backdrop: 'tf-dialog-backdrop-enter',
+      },
+      hideClass: {
+        popup: 'tf-dialog-exit',
+        backdrop: 'tf-dialog-backdrop-exit',
+      },
     };
   }
 

@@ -20,15 +20,32 @@
     0 12px 40px rgba(15, 23, 42, 0.12),
     0 4px 12px rgba(15, 23, 42, 0.08);
 
-  transition: 0.25s ease;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transition:
+    opacity var(--dur-2) ease,
+    transform var(--dur-2) var(--ease-out);
 
   background-position: 18px center;
   background-size: 24px;
   background-repeat: no-repeat;
 }
 
-.toast-container .ngx-toastr:hover {
-  transform: translateY(-2px);
+.toast-container .ngx-toastr.toast-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast-container .ngx-toastr.toast-remove {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.98);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toast-container .ngx-toastr.toast-active:hover {
+    transform: translateY(-2px) scale(1);
+  }
 }
 
 .toast-title {
@@ -36,7 +53,7 @@
 
   font-size: var(--fs-body-md);
 
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 
   line-height: 1.2;
 
@@ -81,4 +98,12 @@
   height: 4px;
 
   opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-container .ngx-toastr,
+  .toast-container .ngx-toastr.toast-remove {
+    transform: none;
+    transition: opacity var(--dur-1) ease !important;
+  }
 }

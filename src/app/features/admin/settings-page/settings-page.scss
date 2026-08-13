@@ -1,9 +1,9 @@
-.page { padding: var(--space-6); }
+.page { padding: var(--page-padding); }
 
 .page-head {
   margin-bottom: var(--space-6);
 
-  h1 { font-size: var(--fs-h3); font-weight: 700; color: var(--text); margin: 0 0 var(--space-1); }
+  h1 { font-size: var(--fs-page-title); font-weight: var(--fw-bold); color: var(--text); margin: 0 0 var(--space-1); }
   p { color: var(--text-muted); margin: 0; }
   code {
     background: var(--surface-inset); padding: var(--space-0) var(--space-2); border-radius: var(--radius-sm);
@@ -33,7 +33,7 @@
 
   h2 {
     display: flex; align-items: center; gap: var(--space-2);
-    font-size: var(--fs-h6); font-weight: 700; color: var(--text); margin: 0 0 var(--space-1);
+    font-size: var(--fs-h6); font-weight: var(--fw-bold); color: var(--text); margin: 0 0 var(--space-1);
   }
   p { color: var(--text-muted); font-size: var(--fs-body-sm); margin: 0; }
 }
@@ -61,7 +61,7 @@
 
   .toggle-title {
     display: inline-flex; align-items: center; gap: var(--space-2);
-    font-weight: 700; font-size: var(--fs-body-md); color: var(--text);
+    font-weight: var(--fw-bold); font-size: var(--fs-body-md); color: var(--text);
   }
   .toggle-desc {
     color: var(--text-muted); font-size: var(--fs-label); line-height: 1.55;
@@ -78,7 +78,7 @@
   display: flex; align-items: flex-start; gap: var(--space-2);
   background: var(--info-soft); color: var(--info);
   border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4); margin: -var(--space-1) 0 var(--space-4);
-  font-size: var(--fs-body-sm); font-weight: 600; line-height: 1.5;
+  font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); line-height: 1.5;
 
   &.danger { background: var(--danger-soft); color: var(--danger); }
   lucide-angular { flex-shrink: 0; margin-top: var(--space-0); }
@@ -94,12 +94,12 @@
 
   dt {
     display: inline-flex; align-items: center; gap: var(--space-2);
-    color: var(--text-muted); font-size: var(--fs-body-sm); font-weight: 600; margin: 0;
+    color: var(--text-muted); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); margin: 0;
   }
   dd {
-    color: var(--text); font-weight: 600; font-size: var(--fs-body-sm); margin: 0; text-align: right;
+    color: var(--text); font-weight: var(--fw-semibold); font-size: var(--fs-body-sm); margin: 0; text-align: right;
 
-    &.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-subtle); }
+    &.mono { font-family: var(--font-mono); color: var(--text-subtle); }
   }
 }
 

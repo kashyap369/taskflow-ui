@@ -14,7 +14,7 @@
   color: $primary-700;
 
   font-size: var(--fs-body-sm);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 /**
@@ -32,7 +32,7 @@
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-full);
   font-size: var(--fs-body-xs);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   white-space: nowrap;
 
   &[data-tone="neutral"] { background: var(--surface-inset); color: var(--text-muted); }

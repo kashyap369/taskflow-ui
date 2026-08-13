@@ -43,10 +43,11 @@ generic).
 | Role | Family | Weights loaded | Notes |
 |---|---|---|---|
 | **Display / Headings / UI** | `Satoshi` | 500, 600, 700, 800, 900 | Geometric grotesque with real character — closed apertures, distinctive `a`/`g`/`R`. Headings, buttons, labels, nav. |
-| **Body / Long-form** | `Geist` | 400, 500, 600, 700 | Neutral, hyper-legible at 13–14px. Paragraphs, descriptions, table cells. |
-| **Numeric / metrics / code** | `Geist Mono` | 400, 500, 600 | True tabular figures. Dashboard stats, table numerals, durations, `<code>`. |
+| **Body / Long-form** | `Switzer` | 400, 500, 600, 700 | Precise, contemporary, and highly legible. Paragraphs, descriptions, table cells. |
+| **Numeric / metrics / code** | `IBM Plex Mono` | 400, 500, 600 | Distinct data voice with true tabular figures. Dashboard stats, table numerals, durations, `<code>`. |
 
-Satoshi loads from **Fontshare**, Geist + Geist Mono from **Google Fonts**, both in `src/index.html`
+Satoshi + Switzer load from **Fontshare**, while IBM Plex Mono loads from **Google Fonts**; both
+stylesheets are declared in `src/index.html`
 (with `preconnect` + `display=swap`). Self-hosting Satoshi's woff2 under `assets/fonts/satoshi/` is
 the eventual goal — it removes a third-party render-blocking request — but is deferred.
 
@@ -55,8 +56,8 @@ Exposed as SCSS tokens **and CSS vars** in `styles/abstracts/_typography.scss` (
 
 ```
 --font-display: 'Satoshi', system-ui, sans-serif;      /* $font-family-display */
---font-body:    'Geist', system-ui, sans-serif;        /* $font-family-base    */
---font-mono:    'Geist Mono', ui-monospace, monospace; /* $font-family-mono    */
+--font-body:    'Switzer', system-ui, sans-serif;         /* $font-family-base */
+--font-mono:    'IBM Plex Mono', ui-monospace, monospace; /* $font-family-mono */
 ```
 
 > Replaced Plus Jakarta Sans + Inter in Phase 1. Inter is the default-looking choice a product like
@@ -76,6 +77,11 @@ to land on.
 responsive ramp, and the alternative is hand-rolled `clamp()` drift:
 `--fs-fluid-hero` · `--fs-fluid-h1` · `--fs-fluid-h2` · `--fs-fluid-h4`.
 
+**Product-role tokens** keep equivalent screens aligned: `--fs-page-title` is the 28–32px responsive
+heading used by admin, organization, and member pages; `--fs-auth-title` is the 32–36px sign-in and
+registration heading. Readable-width utilities use `--measure-copy` (68ch) and
+`--measure-compact` (54ch).
+
 **A component never writes a raw `font-size`.** `npm run design:lint` fails the build on one. The
 single sanctioned exception is `em` on `<code>`/`<kbd>`/`<pre>`, which is context-relative on purpose
 because a mono face runs optically larger at the same px.
@@ -94,7 +100,7 @@ because a mono face runs optically larger at the same px.
 For dashboard numbers and metrics use display weight 700–800 with `font-variant-numeric: tabular-nums`
 so columns of numbers align. Implemented in Phase 1 via `styles/base/_typography.scss`:
 `.stat-value` / `.metric-value` / `.tabular` get tabular figures automatically; `.metric-mono` adds
-Geist Mono for the big readouts; `.cell-numeric` right-aligns table figures.
+IBM Plex Mono for the big readouts; `.cell-numeric` right-aligns table figures.
 
 ---
 
@@ -206,6 +212,8 @@ Soft, colored-neutral shadows; in dark mode shadows are deeper and near-black.
   `11`=44px) so snapping never forces a visible reflow. Composed rhythm tokens: `--card-padding`,
   `--page-header-gap`, `--toolbar-gap`, `--stack-gap`. Section vertical rhythm `--space-24` (6rem)
   desktop, `--space-16` (4rem) mobile.
+- Page shells use `--page-padding` (24px desktop, 16px mobile). Marketing sections use
+  `--section-padding` and `--section-padding-compact`, so rhythm adapts without per-page values.
 - **Radius** (`_radius.scss`, mirrored as `--radius-*`): xs 4 · sm 6 · md 8 · lg 12 · xl 16 · 2xl 20 ·
   3xl 24 · full. Cards use **xl–2xl**, chips use **full**, inputs use **lg**. Consistent, generous
   rounding is a big part of the "designed" feel — avoid mixing 6px and 20px randomly.
@@ -231,9 +239,10 @@ Defined in `styles/abstracts/_motion.scss` (SCSS tokens + CSS vars + keyframes).
 --dur-3: 320ms;   /* entrances, expanding panels          */
 --dur-4: 560ms;   /* hero / large reveals                 */
 
---ease-standard: cubic-bezier(.4, 0, .2, 1);    /* general UI            */
---ease-out:      cubic-bezier(.16, 1, .3, 1);   /* entrances (expo-out)  */
---ease-spring:   cubic-bezier(.34, 1.56, .64, 1);/* pops, playful accents */
+--ease-standard: cubic-bezier(.4, 0, .2, 1);       /* color / hover state    */
+--ease-out:      cubic-bezier(.23, 1, .32, 1);     /* entrances / feedback   */
+--ease-in-out:   cubic-bezier(.77, 0, .175, 1);    /* on-screen movement      */
+--ease-drawer:   cubic-bezier(.32, .72, 0, 1);     /* drawers and sheets      */
 ```
 
 ### The core patterns (use these, don't invent new ones per component)

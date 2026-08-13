@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { DOCUMENT } from '@angular/common';
+import { AfterViewInit, Component, inject } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { LandingFeatureCard } from '@shared/ui/molecules/landing-feature-card/landing-feature-card';
 import { PricingCard } from '@shared/ui/molecules/pricing-card/pricing-card';
@@ -79,8 +80,23 @@ interface BoardColumn {
     },
   ],
 })
-export class LandingPage {
+export class LandingPage implements AfterViewInit {
+  private readonly document = inject(DOCUMENT);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+
+  ngAfterViewInit(): void {
+    const fragment = this.route.snapshot.fragment;
+    const view = this.document.defaultView;
+
+    if (!fragment || !view) return;
+
+    // The landing route is lazy-loaded, so the router may look for an anchor before its sections
+    // exist. Retry after the router's deferred scroll; normal in-page links use native anchors.
+    view.setTimeout(() => {
+      this.document.getElementById(fragment)?.scrollIntoView({ block: 'start' });
+    }, 100);
+  }
 
   // ======================================================
   // Hero

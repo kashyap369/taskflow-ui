@@ -9,7 +9,6 @@ import {
   LogOut,
   Mail,
   Moon,
-  Sparkles,
   Sun,
 } from 'lucide-angular';
 
@@ -30,7 +29,6 @@ import { MemberFacade } from '@features/member/member.facade';
       provide: LUCIDE_ICONS,
       multi: true,
       useValue: new LucideIconProvider({
-        Sparkles,
         Sun,
         Moon,
         LogOut,

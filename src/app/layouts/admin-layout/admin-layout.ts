@@ -9,7 +9,6 @@ import {
   LogOut,
   Moon,
   Settings,
-  ShieldCheck,
   Sun,
   Users,
 } from 'lucide-angular';
@@ -30,7 +29,6 @@ import { AuthFacade } from '@features/auth/auth.facade';
       provide: LUCIDE_ICONS,
       multi: true,
       useValue: new LucideIconProvider({
-        ShieldCheck,
         Sun,
         Moon,
         LogOut,

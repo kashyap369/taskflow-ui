@@ -5,7 +5,11 @@ import {
   provideZoneChangeDetection,
 } from '@angular/core';
 
-import { provideRouter } from '@angular/router';
+import {
+  provideRouter,
+  withInMemoryScrolling,
+  withViewTransitions,
+} from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 
@@ -49,7 +53,14 @@ export const appConfig: ApplicationConfig = {
       eventCoalescing: true,
     }),
 
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withViewTransitions(),
+      withInMemoryScrolling({
+        anchorScrolling: 'enabled',
+        scrollPositionRestoration: 'enabled',
+      }),
+    ),
 
     provideAnimations(),
     provideEchartsCore({ echarts }),

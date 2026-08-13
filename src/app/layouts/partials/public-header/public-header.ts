@@ -6,7 +6,6 @@ import {
   LucideAngularModule,
   LucideIconProvider,
   Moon,
-  Sparkles,
   Sun,
 } from 'lucide-angular';
 
@@ -22,7 +21,7 @@ import { ThemeService } from '@core/services/theme.service';
     {
       provide: LUCIDE_ICONS,
       multi: true,
-      useValue: new LucideIconProvider({ Sparkles, ArrowRight, Sun, Moon }),
+      useValue: new LucideIconProvider({ ArrowRight, Sun, Moon }),
     },
   ],
 })

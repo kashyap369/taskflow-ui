@@ -12,7 +12,8 @@
     "lint": "ng lint && node scripts/design-lint.mjs",
     "a11y:contrast": "node scripts/a11y-contrast.mjs",
     "design:lint": "node scripts/design-lint.mjs",
-    "design:report": "node scripts/design-lint.mjs --all"
+    "design:report": "node scripts/design-lint.mjs --all",
+    "assets:favicon": "node scripts/generate-favicon.cjs"
   },
   "prettier": {
     "printWidth": 100,

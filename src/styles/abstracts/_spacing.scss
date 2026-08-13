@@ -29,6 +29,7 @@ $space-14: 3.5rem; //  56px
 $space-16: 4rem; //  64px  <- section rhythm, mobile
 $space-20: 5rem; //  80px
 $space-24: 6rem; //  96px  <- section rhythm, desktop
+$space-32: 8rem; // 128px  <- large marketing section
 
 // ======================================
 // Composed rhythm — the repeating layout measurements. Pulling these from one place is what makes
@@ -40,6 +41,8 @@ $card-padding-x: $space-6;
 $page-header-gap: $space-6;
 $toolbar-gap: $space-3;
 $stack-gap: $space-4;
+$page-padding: $space-6;
+$page-padding-compact: $space-4;
 
 :root {
   --space-0: #{$space-0};
@@ -59,10 +62,21 @@ $stack-gap: $space-4;
   --space-16: #{$space-16};
   --space-20: #{$space-20};
   --space-24: #{$space-24};
+  --space-32: #{$space-32};
 
   // Composed rhythm
   --card-padding: #{$card-padding-y} #{$card-padding-x};
   --page-header-gap: #{$page-header-gap};
   --toolbar-gap: #{$toolbar-gap};
   --stack-gap: #{$stack-gap};
+  --page-padding: #{$page-padding};
+  --page-padding-compact: #{$page-padding-compact};
+  --section-padding: #{$space-24};
+  --section-padding-compact: #{$space-16};
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --page-padding: var(--page-padding-compact);
+  }
 }

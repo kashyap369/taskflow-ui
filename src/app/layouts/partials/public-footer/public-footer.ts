@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Globe, LUCIDE_ICONS,LucideAngularModule,LucideIconProvider, Stars } from 'lucide-angular';
+import { Globe, LUCIDE_ICONS,LucideAngularModule,LucideIconProvider } from 'lucide-angular';
 
 /**
  * A footer entry. `fragment` is set only where the destination actually exists on the landing page —
@@ -21,7 +21,7 @@ interface FooterLink {
     {
       provide:LUCIDE_ICONS,
       multi:true,
-      useValue: new LucideIconProvider({Stars,Globe})
+      useValue: new LucideIconProvider({Globe})
     }
   ]
 })

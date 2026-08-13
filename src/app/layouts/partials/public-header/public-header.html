@@ -4,7 +4,7 @@
       <!-- Logo -->
       <a class="navbar-brand" routerLink="/">
         <span class="logo">
-          <lucide-angular name="Sparkles" [size]="18"></lucide-angular>
+          <img src="taskflow-mark.svg" alt="" width="40" height="40" />
         </span>
         <span class="brand-name">TaskFlow</span>
       </a>
@@ -54,8 +54,7 @@
             <li class="nav-item">
               <a
                 class="nav-link"
-                [routerLink]="['/']"
-                [fragment]="link.fragment"
+                [attr.href]="'/#' + link.fragment"
                 (click)="closeMenu()"
               >
                 {{ link.label }}

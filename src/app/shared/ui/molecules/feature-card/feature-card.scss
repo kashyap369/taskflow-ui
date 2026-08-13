@@ -4,7 +4,9 @@
     padding: var(--space-7);
     height: 100%;
 
-    transition: all .25s ease;
+    transition:
+      transform var(--dur-2) var(--ease-out),
+      box-shadow var(--dur-2) var(--ease-standard);
 
 }
 
@@ -39,7 +41,7 @@
 
     font-size: var(--fs-h4);
 
-    font-weight: 700;
+    font-weight: var(--fw-bold);
 
     color: var(--text);
 

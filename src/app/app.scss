@@ -15,7 +15,7 @@
   color: var(--text);
 
   .maintenance-title {
-    font-weight: 800;
+    font-weight: var(--fw-extrabold);
     font-size: var(--fs-body-sm);
     letter-spacing: 0.02em;
     text-transform: uppercase;

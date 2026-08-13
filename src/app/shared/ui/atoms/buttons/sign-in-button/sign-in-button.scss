@@ -4,9 +4,16 @@
   border: none;
   background: var(--primary-soft);
   color: var(--text);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition:
+    background var(--dur-2) var(--ease-standard),
+    color var(--dur-2) var(--ease-standard),
+    transform var(--dur-1) var(--ease-out);
+
+  &:active {
+    transform: scale(0.97);
+  }
 }
 
 .sign-in-btn:hover {

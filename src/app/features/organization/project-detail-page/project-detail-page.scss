@@ -1,8 +1,8 @@
-.page { padding: var(--space-6); }
+.page { padding: var(--page-padding); }
 
 .back-link {
   display: inline-flex; align-items: center; gap: var(--space-1);
-  color: var(--text-muted); font-weight: 600; font-size: var(--fs-body-sm); text-decoration: none; margin-bottom: var(--space-4);
+  color: var(--text-muted); font-weight: var(--fw-semibold); font-size: var(--fs-body-sm); text-decoration: none; margin-bottom: var(--space-4);
   &:hover { color: var(--primary); }
 }
 
@@ -17,7 +17,7 @@
 }
 .head-main { min-width: 0; flex: 1; }
 .head-top { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-.head-top h1 { font-size: var(--fs-h4); font-weight: 700; color: var(--text); margin: 0; }
+.head-top h1 { font-size: var(--fs-page-title); font-weight: var(--fw-bold); color: var(--text); margin: 0; }
 .head-desc { color: var(--text-muted); margin: var(--space-2) 0 var(--space-3); }
 .head-dates {
   display: flex; gap: var(--space-2); flex-wrap: wrap; color: var(--text-subtle); font-size: var(--fs-label);
@@ -30,10 +30,10 @@
 }
 .progress-track {
   width: 100%; height: 8px; border-radius: var(--radius-full); background: var(--surface-inset); overflow: hidden;
-  .progress-fill { display: block; height: 100%; border-radius: var(--radius-full); background: var(--gradient-brand); transition: width .4s ease; }
+  .progress-fill { display: block; height: 100%; border-radius: var(--radius-full); background: var(--gradient-brand); }
 }
 
-.tasks-head { margin-bottom: var(--space-4); h2 { font-size: var(--fs-h5); font-weight: 700; color: var(--text); margin: 0; } }
+.tasks-head { margin-bottom: var(--space-4); h2 { font-size: var(--fs-h5); font-weight: var(--fw-bold); color: var(--text); margin: 0; } }
 
 .lottie-state { text-align: center; padding: var(--space-8) 0; p { color: var(--text-muted); margin: var(--space-2) 0 var(--space-4); } }
 
@@ -52,10 +52,10 @@
 .pager-bar { margin-top: var(--space-6); }
 
 .task-row--head {
-  background: var(--surface-2); font-size: var(--fs-body-xs); font-weight: 700; letter-spacing: .04em;
+  background: var(--surface-2); font-size: var(--fs-body-xs); font-weight: var(--fw-bold); letter-spacing: .04em;
   text-transform: uppercase; color: var(--text-subtle);
 }
-.task-title { font-weight: 600; color: var(--text); }
+.task-title { font-weight: var(--fw-semibold); color: var(--text); }
 .task-meta { margin-top: var(--space-1); display: inline-flex; align-items: center; gap: var(--space-1); }
 .assignee-ico { color: var(--text-subtle); flex-shrink: 0; }
 .assignee-select {
@@ -71,7 +71,7 @@
 
 .badge {
   display: inline-flex; align-items: center; padding: var(--space-1) var(--space-2); border-radius: var(--radius-full);
-  font-size: var(--fs-body-xs); font-weight: 700; white-space: nowrap;
+  font-size: var(--fs-body-xs); font-weight: var(--fw-bold); white-space: nowrap;
   &[data-tone="neutral"] { background: var(--surface-inset); color: var(--text-muted); }
   &[data-tone="info"]    { background: var(--info-soft); color: var(--info); }
   &[data-tone="success"] { background: var(--success-soft); color: var(--success); }
@@ -81,13 +81,13 @@
 }
 
 /* Drawer */
-.drawer-backdrop { position: fixed; inset: 0; background: var(--scrim); backdrop-filter: blur(2px); z-index: 1040; animation: fadeIn .2s ease; }
+.drawer-backdrop { position: fixed; inset: 0; background: var(--scrim); backdrop-filter: blur(2px); z-index: 1040; }
 .drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100%); background: var(--surface); z-index: 1050;
-  padding: var(--space-6); box-shadow: var(--shadow-xl); overflow-y: auto; animation: slideIn .25s ease;
+  padding: var(--space-6); box-shadow: var(--shadow-xl); overflow-y: auto;
 }
 .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6);
-  h2 { font-size: var(--fs-h5); font-weight: 700; color: var(--text); margin: 0; } }
+  h2 { font-size: var(--fs-h5); font-weight: var(--fw-bold); color: var(--text); margin: 0; } }
 
 .drawer-form .field { margin-bottom: var(--space-4); }
 .drawer-form .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
@@ -96,8 +96,6 @@
 
 .drawer-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6); }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 @media (max-width: 767.98px) {
   .task-row--head { display: none; }
