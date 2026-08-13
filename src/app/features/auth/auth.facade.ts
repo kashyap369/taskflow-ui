@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import { AuthService } from '@core/auth/auth.service';
+import { DialogService } from '@core/services/dialog.service';
 import { NotificationService } from '@core/services/notification.service';
 import { ApiResponse } from '@core/api/api-response';
 
@@ -29,7 +30,10 @@ export class AuthFacade {
   private readonly repository = inject(AuthRepository);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(DialogService);
   private readonly notification = inject(NotificationService);
+
+  private logoutInProgress = false;
 
   private readonly _loading = signal(false);
   readonly loading = this._loading.asReadonly();
@@ -206,7 +210,26 @@ export class AuthFacade {
     });
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    if (this.logoutInProgress) {
+      return;
+    }
+
+    this.logoutInProgress = true;
+
+    let confirmed = false;
+    try {
+      confirmed = await this.dialog.confirmSignOut();
+    } catch {
+      this.logoutInProgress = false;
+      return;
+    }
+
+    if (!confirmed) {
+      this.logoutInProgress = false;
+      return;
+    }
+
     const refreshToken = this.auth.refreshToken();
 
     // Fire-and-forget the server call; clear the local session regardless of its outcome.
@@ -217,6 +240,7 @@ export class AuthFacade {
   }
 
   private finishLogout(): void {
+    this.logoutInProgress = false;
     this.auth.endSession();
     void this.router.navigate(['/auth/login']);
   }

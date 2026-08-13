@@ -69,6 +69,28 @@ export class DialogService {
   }
 
   /**
+   * Session-ending confirmation shared by every portal shell. Logging out is reversible, so the
+   * primary action stays on-brand while focus starts on the safer "stay signed in" choice.
+   */
+  async confirmSignOut(): Promise<boolean> {
+    const result = await Swal.fire({
+      ...this.themed(),
+      icon: 'question',
+      title: 'Sign out of TaskFlow?',
+      text: 'You will need to sign in again to access your workspace.',
+      showCancelButton: true,
+      confirmButtonText: 'Sign out',
+      cancelButtonText: 'Stay signed in',
+      confirmButtonColor: this.cssVar('--primary', '#6366F1'),
+      cancelButtonColor: this.cssVar('--text-subtle', '#6B7280'),
+      reverseButtons: true,
+      focusCancel: true,
+    });
+
+    return result.isConfirmed;
+  }
+
+  /**
    * Danger confirmation for destructive/irreversible actions (delete, remove). Red confirm button,
    * warning icon. Returns `true` when the user confirms.
    */
