@@ -27,9 +27,15 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@excalidraw/excalidraw/dist/prod/fonts",
+                "output": "/fonts"
               }
             ],
             "styles": [
+              "node_modules/@excalidraw/excalidraw/dist/prod/index.css",
               "src/styles.scss"
             ]
           },
@@ -122,10 +128,16 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/@excalidraw/excalidraw/dist/prod/fonts",
+                "output": "/fonts"
               }
             ],
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "node_modules/@excalidraw/excalidraw/dist/prod/index.css",
               "src/styles.scss"
             ],
             "scripts": [

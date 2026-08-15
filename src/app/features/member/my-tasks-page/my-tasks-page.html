@@ -2,8 +2,14 @@
   <div class="container-fluid">
     <div class="page-head d-flex align-items-center justify-content-between flex-wrap gap-3">
       <div>
-        <h1>My tasks</h1>
-        <p>Your personal workspace — only you can see these.</p>
+        <h1>{{ selectedProject()?.title ?? 'My tasks' }}</h1>
+        <p>
+          @if (selectedProject()) {
+            Tasks in this private project. <a routerLink="/member/my-tasks">View all personal tasks</a>
+          } @else {
+            Your personal workspace — only you can see these.
+          }
+        </p>
       </div>
       <button type="button" class="btn-primary-cta" (click)="openCreate()">
         <lucide-angular name="Plus" size="18"></lucide-angular>
@@ -30,7 +36,13 @@
       <div class="empty-state">
         <span class="empty-icon"><lucide-angular name="ListChecks" size="24"></lucide-angular></span>
         <h3>Nothing here yet</h3>
-        <p>Create your first personal task — a to-do, an errand, anything you want to track.</p>
+        <p>
+          @if (selectedProject()) {
+            Add the first task for this project, then break it into subtasks.
+          } @else {
+            Create your first personal task — a to-do, an errand, anything you want to track.
+          }
+        </p>
         <button type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="16"></lucide-angular> New task
         </button>

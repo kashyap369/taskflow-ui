@@ -1,0 +1,26 @@
+<section class="planner-page">
+  <header class="planner-head">
+    <div>
+      <h1>Planner</h1>
+      <p>Sketch ideas, map project flows, and keep visual notes beside your private work.</p>
+    </div>
+    <div class="planner-status" [attr.data-state]="saveState()">
+      @if (saveState() === 'error') {
+        <lucide-angular name="CloudOff" [size]="16"></lucide-angular>
+      } @else if (saveState() === 'saved') {
+        <lucide-angular name="ShieldCheck" [size]="16"></lucide-angular>
+      } @else {
+        <lucide-angular name="Save" [size]="16"></lucide-angular>
+      }
+      <span>{{ saveLabel() }}</span>
+    </div>
+  </header>
+
+  <div class="privacy-strip">
+    This canvas is private to your signed-in account on this browser. Organization members cannot access it.
+  </div>
+
+  <div class="canvas-frame" aria-label="Personal Planner canvas">
+    <div #canvasHost class="canvas-host"></div>
+  </div>
+</section>

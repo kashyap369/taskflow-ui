@@ -47,10 +47,12 @@ export const API = {
 
   Project: {
     Create: '/project',
+    CreatePersonal: '/project/personal',
     Update: '/project',
     GetById: (id: number) => `/project/${id}`,
     Delete: (id: number) => `/project/${id}`,
     ByOrganization: (organizationId: number) => `/project/organization/${organizationId}`,
+    MinePersonal: '/project/mine/personal',
   },
 
   Task: {

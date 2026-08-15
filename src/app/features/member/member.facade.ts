@@ -5,11 +5,14 @@ import { NotificationService } from '@core/services/notification.service';
 import { OrganizationInvitation, isExpired } from '@shared/models/invitation.model';
 
 import {
+  CreatePersonalProjectPayload,
   CreatePersonalTaskPayload,
   OrganizationListItem,
   PersonalTaskReport,
+  Project,
   SubTask,
   TaskListItem,
+  UpdatePersonalProjectPayload,
   UpdatePersonalTaskPayload,
   WorkLog,
 } from './member.models';
@@ -73,6 +76,9 @@ export class MemberFacade {
     this._tasks.set([]);
     this._tasksLoaded.set(false);
     this._tasksLoading.set(false);
+    this._projects.set([]);
+    this._projectsLoaded.set(false);
+    this._projectsLoading.set(false);
     this._report.set(null);
     this._reportLoading.set(false);
     this._openSubTaskTaskId.set(null);
@@ -176,6 +182,9 @@ export class MemberFacade {
   private readonly _tasks = signal<TaskListItem[]>([]);
   private readonly _tasksLoading = signal(false);
   private readonly _tasksLoaded = signal(false);
+  private readonly _projects = signal<Project[]>([]);
+  private readonly _projectsLoading = signal(false);
+  private readonly _projectsLoaded = signal(false);
   private readonly _report = signal<PersonalTaskReport | null>(null);
   private readonly _reportLoading = signal(false);
 
@@ -189,6 +198,8 @@ export class MemberFacade {
 
   readonly tasks = this._tasks.asReadonly();
   readonly tasksLoading = this._tasksLoading.asReadonly();
+  readonly projects = this._projects.asReadonly();
+  readonly projectsLoading = this._projectsLoading.asReadonly();
   readonly report = this._report.asReadonly();
   readonly reportLoading = this._reportLoading.asReadonly();
   readonly openSubTaskTaskId = this._openSubTaskTaskId.asReadonly();
@@ -198,6 +209,7 @@ export class MemberFacade {
 
   /** Derived counts for the dashboard, so it never shows invented numbers. */
   readonly totalTasks = computed(() => this._tasks().length);
+  readonly totalProjects = computed(() => this._projects().length);
   readonly todoCount = computed(() => this._tasks().filter((t) => t.status === 1).length);
   readonly inProgressCount = computed(() => this._tasks().filter((t) => t.status === 2).length);
   readonly completedCount = computed(() => this._tasks().filter((t) => t.status === 3).length);
@@ -219,6 +231,60 @@ export class MemberFacade {
   readonly totalTrackedMinutes = computed(() =>
     this._workLogs().reduce((sum, l) => sum + l.durationMinutes, 0),
   );
+
+  /** Load the signed-in user's private projects once. */
+  initProjects(): void {
+    if (this._projectsLoaded() || this._projectsLoading()) {
+      return;
+    }
+    this.loadProjects();
+  }
+
+  loadProjects(): void {
+    this._projectsLoading.set(true);
+    this.repository.getMyPersonalProjects().subscribe({
+      next: (projects) => {
+        this._projects.set(projects);
+        this._projectsLoaded.set(true);
+        this._projectsLoading.set(false);
+      },
+      error: () => this._projectsLoading.set(false),
+    });
+  }
+
+  createProject(payload: CreatePersonalProjectPayload): void {
+    this._saving.set(true);
+    this.repository.createPersonalProject(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Project created.');
+        this.loadProjects();
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  updateProject(payload: UpdatePersonalProjectPayload): void {
+    this._saving.set(true);
+    this.repository.updatePersonalProject(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Project updated.');
+        this.loadProjects();
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  deleteProject(projectId: number): void {
+    this.repository.deletePersonalProject(projectId).subscribe({
+      next: () => {
+        this.notification.success('Project deleted.');
+        this.loadProjects();
+        this.loadTasks();
+      },
+    });
+  }
 
   /** Load the personal task list once. */
   initTasks(): void {
@@ -246,7 +312,7 @@ export class MemberFacade {
       next: () => {
         this._saving.set(false);
         this.notification.success('Task created.');
-        this.loadTasks();
+        this.reloadTaskAndProjectLists();
       },
       error: () => this._saving.set(false),
     });
@@ -268,7 +334,7 @@ export class MemberFacade {
       next: () => {
         this._saving.set(false);
         this.notification.success('Task updated.');
-        this.loadTasks();
+        this.reloadTaskAndProjectLists();
       },
       error: () => this._saving.set(false),
     });
@@ -278,17 +344,21 @@ export class MemberFacade {
     this.repository.deleteTask(taskId).subscribe({
       next: () => {
         this.notification.success('Task deleted.');
-        this.loadTasks();
+        this.reloadTaskAndProjectLists();
       },
     });
   }
 
   startTask(taskId: number): void {
-    this.repository.startTask(taskId).subscribe({ next: () => this.loadTasks() });
+    this.repository.startTask(taskId).subscribe({
+      next: () => this.reloadTaskAndProjectLists(),
+    });
   }
 
   completeTask(taskId: number): void {
-    this.repository.completeTask(taskId).subscribe({ next: () => this.loadTasks() });
+    this.repository.completeTask(taskId).subscribe({
+      next: () => this.reloadTaskAndProjectLists(),
+    });
   }
 
   /** Backend Phase 9 (§4.6) — a completed task can go back to To do. */
@@ -296,7 +366,7 @@ export class MemberFacade {
     this.repository.reopenTask(taskId).subscribe({
       next: () => {
         this.notification.success('Task reopened.');
-        this.loadTasks();
+        this.reloadTaskAndProjectLists();
       },
     });
   }
@@ -326,7 +396,12 @@ export class MemberFacade {
     if (taskId !== null) {
       this.loadSubTasks(taskId);
     }
+    this.reloadTaskAndProjectLists();
+  }
+
+  private reloadTaskAndProjectLists(): void {
     this.loadTasks();
+    this.loadProjects();
   }
 
   addSubTask(title: string): void {

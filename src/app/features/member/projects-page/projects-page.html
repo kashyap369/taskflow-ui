@@ -1,0 +1,152 @@
+<section class="page">
+  <header class="page-head">
+    <div>
+      <h1>Personal projects</h1>
+      <p>Organize your private work without teams, assignments, or organization access.</p>
+    </div>
+    <button type="button" class="btn-primary-cta" (click)="openCreate()">
+      <lucide-angular name="Plus" [size]="16"></lucide-angular>
+      New project
+    </button>
+  </header>
+
+  <div class="privacy-note">
+    <lucide-angular name="ShieldCheck" [size]="18"></lucide-angular>
+    <span>Only you can view these projects—even when you belong to organization workspaces.</span>
+  </div>
+
+  @if (loading()) {
+    <div class="project-list" aria-busy="true" aria-label="Loading personal projects">
+      @for (row of loadingRows; track row) {
+        <div class="project-row project-row--loading">
+          <app-skeleton width="42%" height="18px" />
+          <app-skeleton width="28%" height="14px" />
+        </div>
+      }
+    </div>
+  } @else if (projects().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon"><lucide-angular name="FolderKanban" [size]="28"></lucide-angular></div>
+      <h2>Plan your first project</h2>
+      <p>Create a private project, then add tasks and break them into manageable subtasks.</p>
+      <button type="button" class="btn-primary-cta" (click)="openCreate()">
+        <lucide-angular name="Plus" [size]="16"></lucide-angular>
+        Create project
+      </button>
+    </div>
+  } @else {
+    <div class="toolbar">
+      <label class="search-field">
+        <lucide-angular name="Search" [size]="16"></lucide-angular>
+        <span class="visually-hidden">Search projects</span>
+        <input
+          type="search"
+          class="form-control"
+          placeholder="Search personal projects…"
+          [value]="search()"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </label>
+    </div>
+
+    @if (filteredProjects().length === 0) {
+      <div class="filter-empty">No personal projects match that search.</div>
+    } @else {
+      <div class="project-list">
+        @for (project of filteredProjects(); track project.id) {
+          <article class="project-row">
+            <div class="project-main">
+              <div class="project-title-line">
+                <h2>{{ project.title }}</h2>
+                <span class="badge" [attr.data-tone]="projectStatusMeta(project.status).tone">
+                  {{ projectStatusMeta(project.status).label }}
+                </span>
+              </div>
+              @if (project.description) {
+                <p>{{ project.description }}</p>
+              }
+              <div class="project-meta">
+                <span>
+                  <lucide-angular name="CalendarDays" [size]="14"></lucide-angular>
+                  Started {{ project.startDate | date: 'mediumDate' }}
+                </span>
+                <span>{{ project.completedTaskCount }}/{{ project.taskCount }} tasks complete</span>
+                <span>{{ project.completionPercentage | number: '1.0-0' }}%</span>
+              </div>
+            </div>
+
+            <div class="project-actions">
+              <a
+                class="manage-link"
+                routerLink="/member/my-tasks"
+                [queryParams]="{ projectId: project.id }"
+              >
+                Manage tasks
+                <lucide-angular name="ArrowRight" [size]="15"></lucide-angular>
+              </a>
+              <button type="button" class="icon-btn" (click)="openEdit(project)" [attr.aria-label]="'Edit ' + project.title">
+                <lucide-angular name="Pencil" [size]="16"></lucide-angular>
+              </button>
+              <button type="button" class="icon-btn icon-btn--danger" (click)="remove(project)" [attr.aria-label]="'Delete ' + project.title">
+                <lucide-angular name="Trash2" [size]="16"></lucide-angular>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  }
+
+  @if (showDrawer()) {
+    <button type="button" class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close project form"></button>
+    <aside class="drawer" appDialog (dismiss)="closeDrawer()">
+      <div class="drawer-head">
+        <div>
+          <h2>{{ isEditing() ? 'Edit personal project' : 'New personal project' }}</h2>
+          <p>Private to your account</p>
+        </div>
+        <button type="button" class="icon-btn" (click)="closeDrawer()" aria-label="Close">
+          <lucide-angular name="X" [size]="18"></lucide-angular>
+        </button>
+      </div>
+
+      <form class="drawer-form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field">
+          <label for="personal-project-title" class="form-label">Project name</label>
+          <input id="personal-project-title" type="text" class="form-control" placeholder="Launch portfolio" formControlName="title" />
+          @if (fieldError('title'); as message) {
+            <small class="field-msg">{{ message }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="personal-project-description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="personal-project-description" rows="4" class="form-control" placeholder="What outcome are you working toward?" formControlName="description"></textarea>
+          @if (fieldError('description'); as message) {
+            <small class="field-msg">{{ message }}</small>
+          }
+        </div>
+
+        <div class="field-row">
+          @if (!isEditing()) {
+            <div class="field">
+              <label for="personal-project-start" class="form-label">Start date</label>
+              <input id="personal-project-start" type="date" class="form-control" formControlName="startDate" />
+            </div>
+          }
+          <div class="field">
+            <label for="personal-project-target" class="form-label">Target date <span>(optional)</span></label>
+            <input id="personal-project-target" type="date" class="form-control" formControlName="expectedCompletionDate" />
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeDrawer()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : isEditing() ? 'Save changes' : 'Create project' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

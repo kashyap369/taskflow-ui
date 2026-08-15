@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   Building2,
+  FolderKanban,
   LayoutDashboard,
   ListChecks,
   LUCIDE_ICONS,
@@ -10,6 +11,7 @@ import {
   LogOut,
   Mail,
   Moon,
+  PenTool,
   Sun,
 } from 'lucide-angular';
 
@@ -37,6 +39,8 @@ import { MemberFacade } from '@features/member/member.facade';
         Mail,
         ListChecks,
         Building2,
+        FolderKanban,
+        PenTool,
       }),
     },
   ],

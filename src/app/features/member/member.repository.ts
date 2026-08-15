@@ -5,12 +5,15 @@ import { ApiService } from '@core/api/api.service';
 import { API } from '@core/api/api-endpoints';
 import { OrganizationInvitation } from '@shared/models/invitation.model';
 import {
+  CreatePersonalProjectPayload,
   CreatePersonalTaskPayload,
   OrganizationListItem,
   PersonalTaskReport,
+  Project,
   SubTask,
   TaskDetail,
   TaskListItem,
+  UpdatePersonalProjectPayload,
   UpdatePersonalTaskPayload,
   WorkLog,
 } from './member.models';
@@ -44,6 +47,30 @@ export class MemberRepository {
   /** `POST /organizationinvitation/reject` (204). */
   rejectInvitation(invitationId: number): Observable<void> {
     return this.api.post<void>(API.Invitation.Reject, { invitationId });
+  }
+
+  getMyPersonalProjects(): Observable<Project[]> {
+    return this.api.get<Project[]>(API.Project.MinePersonal);
+  }
+
+  getProject(projectId: number): Observable<Project> {
+    return this.api.get<Project>(API.Project.GetById(projectId));
+  }
+
+  createPersonalProject(payload: CreatePersonalProjectPayload): Observable<number> {
+    return this.api.post<number>(API.Project.CreatePersonal, payload);
+  }
+
+  updatePersonalProject(payload: UpdatePersonalProjectPayload): Observable<void> {
+    return this.api.put<void>(API.Project.Update, payload);
+  }
+
+  deletePersonalProject(projectId: number): Observable<void> {
+    return this.api.delete<void>(API.Project.Delete(projectId));
+  }
+
+  getProjectTasks(projectId: number): Observable<TaskListItem[]> {
+    return this.api.get<TaskListItem[]>(API.Task.ByProject(projectId));
   }
 
   // ── Personal tasks ──

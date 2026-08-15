@@ -16,6 +16,15 @@ export const MEMBER_ROUTES: Routes = [
     loadComponent: () => import('./my-tasks-page/my-tasks-page').then((m) => m.MyTasksPage),
   },
   {
+    path: 'projects',
+    loadComponent: () =>
+      import('./projects-page/projects-page').then((m) => m.MemberProjectsPage),
+  },
+  {
+    path: 'planner',
+    loadComponent: () => import('./planner-page/planner-page').then((m) => m.PlannerPage),
+  },
+  {
     path: 'invitations',
     loadComponent: () =>
       import('./invitations-page/invitations-page').then((m) => m.MemberInvitationsPage),

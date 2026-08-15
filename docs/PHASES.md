@@ -5,6 +5,17 @@
 > consumes it and is at the start of feature build-out. Phase order roughly follows the backend so
 > each frontend phase has a working API behind it.
 
+## ✅ Phase 32 — Private personal projects + Planner (2026-08-15)
+
+- Individual accounts can create, edit, delete, and search personal projects, then create normal tasks
+  and subtasks inside them. The UI intentionally has no team, assignee, member, or organization controls.
+- Added **Projects** and **Planner** to the personal workspace header. Planner embeds Excalidraw 0.18.1
+  as a lazy route and autosaves per signed-in user in that browser for this first integration phase.
+- Privacy is structural rather than cosmetic: personal projects use `organizationId: null`, ownership is
+  taken from the JWT, and joining an organization never changes or exposes personal data.
+- Verified production build + lint. Live API checks covered project → task → subtask linkage, anonymous
+  denial, creator-only listings, and bidirectional cross-user reads returning 403.
+
 ## ✅ Phase 31 — Joined organization workspaces for Individual accounts (2026-08-15)
 
 - Individual accounts still land in the personal portal, but may now enter the organization portal
@@ -1101,14 +1112,14 @@ maintenance **off**) with `supportEmail` now set to `support@taskflow.com` by th
 - ✅ Org portal is feature- and theme-complete. Next work moves to other portals/polish (see START HERE).
 - ⬜ Sidebar is inline in the layout (fine); a dedicated sidebar organism is optional.
 
-## Phase 5 — Member (Individual) Portal 🟡 (invitations done)
+## Phase 5 — Member (Individual) Portal ✅
 - ✅ `MemberLayout` shell + Dashboard/Invitations nav (with a pending-invitation badge); `/member` branch
   guarded with `portalGuard('member')`.
 - ✅ **My invitations** page (Phase 18) — accept/decline invitations addressed to your email. Also mounted
   at `/organization/invitations`, because invitations are user-scoped, not portal-scoped.
 - ✅ Dashboard shows real invitation data instead of the old hardcoded task stats.
-- ⬜ Personal task pages (create/subtasks/lifecycle), personal tracking/reports (weekly/monthly/yearly)
-  — **backend-blocked**: `CreateTask` requires an `OrganizationId`, so there is no personal-task endpoint.
+- ✅ Personal tasks, subtasks, lifecycle, time tracking, reports, and private projects are complete.
+  Personal creation uses `/task/personal`; private projects use `/project/personal` and are creator-only.
 
 ## Phase 6 — Admin Portal 🟡 (Users done)
 - ✅ `AdminLayout` shell (now with Dashboard/Users nav); `/admin` branch guarded with `roleGuard('Admin')`.

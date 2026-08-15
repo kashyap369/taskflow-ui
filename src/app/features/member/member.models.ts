@@ -14,23 +14,44 @@ export {
 
 export type {
   OrganizationListItem,
+  Project,
   SubTask,
   TaskDetail,
   TaskListItem,
   WorkLog,
 } from '../organization/organization.models';
 
+export {
+  ProjectStatus,
+  projectStatusMeta,
+} from '../organization/organization.models';
+
 export type { Tone } from '@shared/models/tone.model';
 
 /**
- * `POST /task/personal`. Deliberately carries no organizationId or projectId — the API rejects
- * both on this route, and the creator comes from the JWT.
+ * `POST /task/personal`. Deliberately carries no organizationId. A project id is optional and must
+ * refer to a private project owned by the signed-in user; the creator comes from the JWT.
  */
 export interface CreatePersonalTaskPayload {
   title: string;
   description: string;
   startDate: string;
   priority: number;
+  expectedCompletionDate: string | null;
+  projectId?: number | null;
+}
+
+export interface CreatePersonalProjectPayload {
+  title: string;
+  description: string;
+  startDate: string;
+  expectedCompletionDate: string | null;
+}
+
+export interface UpdatePersonalProjectPayload {
+  projectId: number;
+  title: string;
+  description: string;
   expectedCompletionDate: string | null;
 }
 

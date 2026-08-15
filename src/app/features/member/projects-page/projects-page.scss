@@ -1,0 +1,63 @@
+.page { padding: var(--page-padding); }
+
+.page-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-5);
+  margin-bottom: var(--space-5);
+  h1 { margin: 0 0 var(--space-1); color: var(--text); font-size: var(--fs-page-title); font-weight: var(--fw-bold); }
+  p { margin: 0; color: var(--text-muted); }
+}
+
+.privacy-note {
+  display: flex; align-items: center; gap: var(--space-2); max-width: var(--measure-copy);
+  margin-bottom: var(--space-6); color: var(--success); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold);
+}
+
+.toolbar { display: flex; justify-content: flex-end; margin-bottom: var(--space-4); }
+.search-field {
+  position: relative; width: min(360px, 100%);
+  lucide-angular { position: absolute; left: var(--space-3); top: 50%; transform: translateY(-50%); color: var(--text-subtle); pointer-events: none; }
+  input { padding-left: var(--space-10); }
+}
+
+.project-list {
+  overflow: hidden; background: var(--surface); border-radius: var(--radius-2xl); box-shadow: var(--shadow-md);
+}
+.project-row {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  & + & { border-top: 1px solid var(--border); }
+}
+.project-row--loading { min-height: 118px; flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--space-3); }
+.project-main { min-width: 0; flex: 1; }
+.project-title-line { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+.project-title-line h2 { margin: 0; color: var(--text); font-size: var(--fs-h6); font-weight: var(--fw-bold); }
+.project-main > p { max-width: var(--measure-copy); margin: 0 0 var(--space-3); color: var(--text-muted); }
+.project-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-4); color: var(--text-subtle); font-size: var(--fs-label); }
+.project-meta span { display: inline-flex; align-items: center; gap: var(--space-1); }
+.project-actions { display: flex; align-items: center; gap: var(--space-2); }
+.manage-link { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--primary); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold); text-decoration: none; }
+.manage-link:hover { color: var(--primary-strong); }
+.icon-btn--danger:hover { color: var(--danger); background: var(--danger-soft); }
+
+.empty-state { max-width: 520px; margin: var(--space-16) auto; text-align: center; }
+.empty-icon { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto var(--space-4); border-radius: var(--radius-2xl); background: var(--primary-soft); color: var(--primary); }
+.empty-state h2 { margin: 0 0 var(--space-2); color: var(--text); font-size: var(--fs-h4); }
+.empty-state p { margin: 0 auto var(--space-5); color: var(--text-muted); max-width: var(--measure-compact); }
+.filter-empty { padding: var(--space-12); text-align: center; color: var(--text-muted); background: var(--surface); border-radius: var(--radius-2xl); }
+
+.drawer-backdrop { position: fixed; inset: 0; z-index: 1040; background: var(--scrim); backdrop-filter: blur(2px); }
+.drawer { position: fixed; inset: 0 0 0 auto; z-index: 1050; width: min(480px, 100%); overflow-y: auto; padding: var(--space-6); background: var(--surface); box-shadow: var(--shadow-xl); }
+.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-6); }
+.drawer-head h2 { margin: 0 0 var(--space-1); color: var(--text); font-size: var(--fs-h5); }
+.drawer-head p { margin: 0; color: var(--text-subtle); font-size: var(--fs-body-sm); }
+.drawer-form .field { margin-bottom: var(--space-4); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.drawer-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-6); }
+
+@media (max-width: 760px) {
+  .page-head, .project-row { align-items: stretch; flex-direction: column; }
+  .page-head .btn-primary-cta { align-self: flex-start; }
+  .toolbar, .search-field { width: 100%; }
+  .project-actions { justify-content: space-between; }
+  .field-row { grid-template-columns: 1fr; }
+}

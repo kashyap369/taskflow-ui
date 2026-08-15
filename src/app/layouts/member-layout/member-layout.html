@@ -17,6 +17,14 @@
         <lucide-angular name="ListChecks" [size]="16"></lucide-angular>
         <span>My tasks</span>
       </a>
+      <a routerLink="/member/projects" routerLinkActive="active">
+        <lucide-angular name="FolderKanban" [size]="16"></lucide-angular>
+        <span>Projects</span>
+      </a>
+      <a routerLink="/member/planner" routerLinkActive="active">
+        <lucide-angular name="PenTool" [size]="16"></lucide-angular>
+        <span>Planner</span>
+      </a>
       @if (hasOrganizations()) {
         <a routerLink="/organization/dashboard">
           <lucide-angular name="Building2" [size]="16"></lucide-angular>

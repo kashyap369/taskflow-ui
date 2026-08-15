@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   CircleCheckBig,
   Clock,
@@ -46,8 +47,8 @@ interface Option {
 
 /**
  * The Individual account's personal workspace: tasks with no organization, their subtasks and
- * their time logs. Mirrors the organization tasks page, minus everything an org owns — there is no
- * project, no assignee and no status filter on "unassigned", because a personal task has none.
+ * their time logs. Mirrors the organization tasks page, but personal projects are creator-owned and
+ * there are no assignees, teams, or organization settings.
  */
 @Component({
   selector: 'app-my-tasks-page',
@@ -55,6 +56,7 @@ interface Option {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    RouterLink,
     LucideAngularModule,
     DialogDirective,
     Skeleton,
@@ -85,16 +87,25 @@ export class MyTasksPage {
   private readonly facade = inject(MemberFacade);
   private readonly fb = inject(FormBuilder);
   private readonly dialog = inject(DialogService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly loading = this.facade.tasksLoading;
   readonly saving = this.facade.saving;
   readonly tasks = this.facade.tasks;
+  readonly projects = this.facade.projects;
+  readonly selectedProjectId = signal<number | null>(this.readProjectId());
+  readonly selectedProject = computed(
+    () => this.projects().find((project) => project.id === this.selectedProjectId()) ?? null,
+  );
 
   readonly taskStatusMeta = taskStatusMeta;
   readonly taskPriorityMeta = taskPriorityMeta;
   readonly TaskStatus = TaskStatus;
 
-  readonly hasTasks = computed(() => this.tasks().length > 0);
+  readonly hasTasks = computed(() => {
+    const projectId = this.selectedProjectId();
+    return this.tasks().some((task) => projectId === null || task.projectId === projectId);
+  });
   readonly loadingRows = [0, 1, 2, 3, 4];
 
   // ── Create / edit drawer ──
@@ -126,11 +137,13 @@ export class MyTasksPage {
     const term = this.search().trim().toLowerCase();
     const status = this.statusFilter();
     const priority = this.priorityFilter();
+    const projectId = this.selectedProjectId();
     return this.tasks().filter((t) => {
+      const matchesProject = projectId === null || t.projectId === projectId;
       const matchesTerm = !term || t.title.toLowerCase().includes(term);
       const matchesStatus = status === '' || t.status === status;
       const matchesPriority = priority === '' || t.priority === priority;
-      return matchesTerm && matchesStatus && matchesPriority;
+      return matchesProject && matchesTerm && matchesStatus && matchesPriority;
     });
   });
 
@@ -182,6 +195,23 @@ export class MyTasksPage {
 
   constructor() {
     this.facade.initTasks();
+    this.facade.initProjects();
+
+    effect(() => {
+      const selectedId = this.selectedProjectId();
+      if (
+        !this.facade.projectsLoading() &&
+        selectedId !== null &&
+        !this.projects().some((project) => project.id === selectedId)
+      ) {
+        this.selectedProjectId.set(null);
+      }
+    });
+
+    this.route.queryParamMap.subscribe(() => {
+      this.selectedProjectId.set(this.readProjectId());
+      this.clearFilters();
+    });
   }
 
   fieldError(property: string): string | null {
@@ -272,6 +302,7 @@ export class MyTasksPage {
         priority: Number(v.priority),
         startDate: this.toIso(v.startDate),
         expectedCompletionDate: target,
+        projectId: this.selectedProjectId(),
       });
     }
     this.closeDrawer();
@@ -442,5 +473,11 @@ export class MyTasksPage {
   private toDateTimeLocal(date: Date): string {
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  }
+
+  private readProjectId(): number | null {
+    const raw = this.route.snapshot.queryParamMap.get('projectId');
+    const value = raw === null ? Number.NaN : Number(raw);
+    return Number.isInteger(value) && value > 0 ? value : null;
   }
 }

@@ -113,9 +113,43 @@
   line-height: 1;
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 1100px) {
+  .brand .portal-tag,
+  .user-chip .user-name {
+    display: none;
+  }
+
+  .portal-nav {
+    margin-left: var(--space-2);
+
+    a {
+      padding-inline: var(--space-2);
+    }
+  }
+}
+
+@media (max-width: 920px) {
   .portal-nav a span:not(.nav-badge) {
     display: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .portal-topbar {
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
+  }
+
+  .brand .brand-name {
+    display: none;
+  }
+
+  .portal-nav {
+    margin-left: 0;
+  }
+
+  .topbar-actions {
+    gap: var(--space-2);
   }
 }
 

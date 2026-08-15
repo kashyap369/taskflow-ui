@@ -97,7 +97,7 @@ export interface DashboardSummary {
 /** `GET /project/organization/{organizationId}` → ProjectDto[] */
 export interface Project {
   id: number;
-  organizationId: number;
+  organizationId: number | null;
   title: string;
   description: string | null;
   status: ProjectStatus;

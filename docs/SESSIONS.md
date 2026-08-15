@@ -788,3 +788,17 @@
   `eslint-plugin-boundaries` element patterns still match the flat paths (they may reference old layer folders).
 - Dev API base URL is `https://localhost:7086/api`; keep `ng serve` on **port 4200** (the API's CORS
   allows only `http://localhost:4200`).
+
+## 2026-08-15 (Private personal projects + Excalidraw Planner)
+
+- Added the Individual **Projects** workflow end to end: creator-scoped repository/facade state, project
+  CRUD UI, and optional project selection when creating personal tasks. Organization assignment/team
+  controls remain absent by design.
+- Added `/member/planner` and the header link. Excalidraw is mounted as a React island inside Angular,
+  lazy-loaded, with fonts/CSS packaged locally and a per-user browser autosave key. Cloud persistence is
+  deliberately deferred until the Planner data model is designed.
+- Local development now runs the Angular and .NET servers directly. The API uses development-only local
+  filesystem object storage, while production keeps the existing S3-compatible provider.
+- `npm run build`, `npm run lint`, and backend build passed. Karma compiled the suite, but this Windows
+  host's ChromeHeadless GPU process crashed before test execution; live browser/API checks were used for
+  functional verification.
