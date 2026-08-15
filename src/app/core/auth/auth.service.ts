@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 
 import { User } from '../models/user.model';
 import { AuthStore } from './auth.store';
-import { PORTAL_HOME, Portal, SystemRole } from './roles.enum';
+import { PORTAL_HOME, Portal, SystemRole, canAccessPortal } from './roles.enum';
 import { TokenService } from './token.service';
 
 /**
@@ -65,6 +65,7 @@ export class AuthService {
 
   /** Whether the current user is allowed into the given portal. */
   canAccessPortal(portal: Portal): boolean {
-    return this.store.portal() === portal;
+    const primaryPortal = this.store.portal();
+    return primaryPortal !== null && canAccessPortal(primaryPortal, portal);
   }
 }

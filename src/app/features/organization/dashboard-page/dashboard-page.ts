@@ -18,6 +18,7 @@ import {
   Users,
 } from 'lucide-angular';
 
+import { AccountType } from '@core/auth/roles.enum';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { controlValidators, messageFor } from '@shared/validations';
 import {
@@ -71,6 +72,9 @@ export class DashboardPage {
   readonly summary = this.facade.summary;
   readonly projects = this.facade.projects;
   readonly user = this.facade.user;
+  readonly isIndividualAccount = computed(
+    () => this.user()?.accountType === AccountType.Individual,
+  );
 
   readonly projectStatusMeta = projectStatusMeta;
 

@@ -15,7 +15,7 @@
 
       <div>
         <h5>TaskFlow</h5>
-        <small>Premium workspace</small>
+        <small>{{ isPersonalAccount() ? 'Shared workspace' : 'Premium workspace' }}</small>
       </div>
     </div>
 
@@ -39,7 +39,7 @@
           <div class="workspace-avatar">?</div>
           <div class="workspace-content">
             <h6>No organization</h6>
-            <small>Create one to start</small>
+            <small>{{ isPersonalAccount() ? 'No membership yet' : 'Create one to start' }}</small>
           </div>
         }
 
@@ -71,6 +71,14 @@
     <!-- Navigation -->
 
     <nav class="sidebar-nav">
+      @if (isPersonalAccount()) {
+        <a routerLink="/member/dashboard">
+          <lucide-angular name="UserRound"></lucide-angular>
+
+          Personal workspace
+        </a>
+      }
+
       <a routerLink="/organization/dashboard" routerLinkActive="active">
         <lucide-angular name="LayoutDashboard"></lucide-angular>
 

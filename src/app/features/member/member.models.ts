@@ -13,6 +13,7 @@ export {
 } from '../organization/organization.models';
 
 export type {
+  OrganizationListItem,
   SubTask,
   TaskDetail,
   TaskListItem,

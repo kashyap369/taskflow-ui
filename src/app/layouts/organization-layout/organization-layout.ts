@@ -23,11 +23,13 @@ import {
   Settings,
   SlidersHorizontal,
   Sun,
+  UserRound,
   Users,
   X,
 } from 'lucide-angular';
 
 import { AuthService } from '@core/auth/auth.service';
+import { AccountType } from '@core/auth/roles.enum';
 import { ThemeService } from '@core/services/theme.service';
 import { AuthFacade } from '@features/auth/auth.facade';
 import { MemberFacade } from '@features/member/member.facade';
@@ -64,6 +66,7 @@ import { OrganizationListItem } from '@features/organization/organization.models
         Check,
         Mail,
         SlidersHorizontal,
+        UserRound,
         X, // mobile sidebar toggle swaps Menu -> X while open
       }),
     },
@@ -79,6 +82,9 @@ export class OrganizationLayout {
 
   readonly isDark = this.themeService.isDark;
   readonly user = this.authService.user;
+  readonly isPersonalAccount = computed(
+    () => this.user()?.accountType === AccountType.Individual,
+  );
   readonly pendingInvitations = this.memberFacade.pendingCount;
 
   readonly organizations = this.orgFacade.organizations;

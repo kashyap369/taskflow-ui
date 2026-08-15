@@ -6,6 +6,7 @@ import { API } from '@core/api/api-endpoints';
 import { OrganizationInvitation } from '@shared/models/invitation.model';
 import {
   CreatePersonalTaskPayload,
+  OrganizationListItem,
   PersonalTaskReport,
   SubTask,
   TaskDetail,
@@ -28,6 +29,11 @@ export class MemberRepository {
    */
   getMyInvitations(): Observable<OrganizationInvitation[]> {
     return this.api.get<OrganizationInvitation[]>(API.Invitation.Mine);
+  }
+
+  /** Organization workspaces this user owns or has joined. */
+  getMyOrganizations(): Observable<OrganizationListItem[]> {
+    return this.api.get<OrganizationListItem[]>(API.Organization.Mine);
   }
 
   /** `POST /organizationinvitation/accept` (204). Creates the membership server-side. */

@@ -49,3 +49,17 @@ export function resolvePortal(roles: SystemRole[], accountType: AccountType): Po
 
   return 'member';
 }
+
+/**
+ * Portal access is intentionally broader than the default landing portal. Individual accounts
+ * keep the personal portal as home, but may also enter organization workspaces they have joined.
+ * Organization accounts do not get a separate personal-task workspace, and admins stay isolated
+ * in the administration portal.
+ */
+export function canAccessPortal(primaryPortal: Portal, requestedPortal: Portal): boolean {
+  if (primaryPortal === 'member') {
+    return requestedPortal === 'member' || requestedPortal === 'organization';
+  }
+
+  return primaryPortal === requestedPortal;
+}

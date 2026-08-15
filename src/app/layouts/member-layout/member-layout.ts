@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
+  Building2,
   LayoutDashboard,
   ListChecks,
   LUCIDE_ICONS,
@@ -35,6 +36,7 @@ import { MemberFacade } from '@features/member/member.facade';
         LayoutDashboard,
         Mail,
         ListChecks,
+        Building2,
       }),
     },
   ],
@@ -49,6 +51,8 @@ export class MemberLayout {
   readonly user = this.authService.user;
   /** Badge on the Invitations nav item — invitations this user can still act on. */
   readonly pendingInvitations = this.memberFacade.pendingCount;
+  /** Organization workspace switch appears once this Individual owns or joins one. */
+  readonly hasOrganizations = this.memberFacade.hasOrganizations;
 
   constructor() {
     // Loaded here (not just on the page) so the badge is right wherever the user lands.

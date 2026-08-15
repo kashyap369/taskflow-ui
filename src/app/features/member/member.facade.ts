@@ -6,6 +6,7 @@ import { OrganizationInvitation, isExpired } from '@shared/models/invitation.mod
 
 import {
   CreatePersonalTaskPayload,
+  OrganizationListItem,
   PersonalTaskReport,
   SubTask,
   TaskListItem,
@@ -34,11 +35,15 @@ export class MemberFacade {
   private readonly _loaded = signal(false);
   private readonly _saving = signal(false);
   private readonly _error = signal<string | null>(null);
+  private readonly _organizations = signal<OrganizationListItem[]>([]);
+  private readonly _organizationsLoading = signal(false);
+  private readonly _organizationsLoaded = signal(false);
 
   readonly invitations = this._invitations.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly saving = this._saving.asReadonly();
   readonly error = this._error.asReadonly();
+  readonly organizations = this._organizations.asReadonly();
 
   /** Everything `GET /mine` returns is pending, but some may have run past their expiry date. */
   readonly actionable = computed(() => this._invitations().filter((i) => !isExpired(i)));
@@ -47,6 +52,7 @@ export class MemberFacade {
   /** Drives the nav badge — only invitations the user can actually act on. */
   readonly pendingCount = computed(() => this.actionable().length);
   readonly hasInvitations = computed(() => this._invitations().length > 0);
+  readonly hasOrganizations = computed(() => this._organizations().length > 0);
 
   constructor() {
     // Invitations are addressed to a person and personal tasks belong to one — neither may survive
@@ -61,6 +67,9 @@ export class MemberFacade {
     this._loading.set(false);
     this._saving.set(false);
     this._error.set(null);
+    this._organizations.set([]);
+    this._organizationsLoading.set(false);
+    this._organizationsLoaded.set(false);
     this._tasks.set([]);
     this._tasksLoaded.set(false);
     this._tasksLoading.set(false);
@@ -74,10 +83,32 @@ export class MemberFacade {
 
   /** Load the invitation list once. Call from member pages' constructors. */
   init(): void {
-    if (this._loaded() || this._loading()) {
+    if (!this._loaded() && !this._loading()) {
+      this.loadInvitations();
+    }
+    this.loadOrganizations();
+  }
+
+  private loadOrganizations(): void {
+    if (this._organizationsLoaded() || this._organizationsLoading()) {
       return;
     }
-    this.loadInvitations();
+
+    this._organizationsLoading.set(true);
+    this.repository.getMyOrganizations().subscribe({
+      next: (organizations) => {
+        this._organizations.set(organizations);
+        this._organizationsLoaded.set(true);
+        this._organizationsLoading.set(false);
+      },
+      error: () => this._organizationsLoading.set(false),
+    });
+  }
+
+  /** Re-read memberships after accepting an invitation. */
+  refreshOrganizations(): void {
+    this._organizationsLoaded.set(false);
+    this.loadOrganizations();
   }
 
   loadInvitations(): void {
@@ -114,6 +145,7 @@ export class MemberFacade {
         this._saving.set(false);
         this.notification.success(`You've joined ${invitation.organizationName}.`);
         this.refresh();
+        this.refreshOrganizations();
       },
       error: () => {
         this._saving.set(false);

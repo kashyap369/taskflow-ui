@@ -6,46 +6,58 @@
         <div class="onboarding-icon">
           <lucide-angular name="Building2" size="26"></lucide-angular>
         </div>
-        <h1>Create your organization</h1>
-        <p>
-          You're all set up as an organization account. Create your workspace to start adding
-          projects, tasks and teammates.
-        </p>
-
-        <form class="onboarding-form" [formGroup]="createOrgForm" (ngSubmit)="createOrganization()">
-          <div class="field">
-            <label for="orgName" class="form-label">Organization name</label>
-            <input
-              id="orgName"
-              type="text"
-              class="form-control"
-              placeholder="Acme Inc."
-              formControlName="name"
-            />
-            @if (fieldError('name'); as msg) {
-              <small class="field-msg">{{ msg }}</small>
-            }
+        @if (isIndividualAccount()) {
+          <h1>No organization workspaces yet</h1>
+          <p>
+            Accept an invitation to work with a team. Your personal tasks remain separate and
+            private.
+          </p>
+          <div class="onboarding-form">
+            <a class="btn-primary-cta" routerLink="/member/invitations">View invitations</a>
+            <a class="btn-ghost" routerLink="/member/dashboard">Return to personal workspace</a>
           </div>
+        } @else {
+          <h1>Create your organization</h1>
+          <p>
+            You're all set up as an organization account. Create your workspace to start adding
+            projects, tasks and teammates.
+          </p>
 
-          <div class="field">
-            <label for="orgDesc" class="form-label">Description <span>(optional)</span></label>
-            <textarea
-              id="orgDesc"
-              rows="3"
-              class="form-control"
-              placeholder="What does your team do?"
-              formControlName="description"
-            ></textarea>
-            @if (fieldError('description'); as msg) {
-              <small class="field-msg">{{ msg }}</small>
-            }
-          </div>
+          <form class="onboarding-form" [formGroup]="createOrgForm" (ngSubmit)="createOrganization()">
+            <div class="field">
+              <label for="orgName" class="form-label">Organization name</label>
+              <input
+                id="orgName"
+                type="text"
+                class="form-control"
+                placeholder="Acme Inc."
+                formControlName="name"
+              />
+              @if (fieldError('name'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
+              }
+            </div>
 
-          <button type="submit" class="btn-primary-cta" [disabled]="saving()">
-            <lucide-angular name="Plus" size="18"></lucide-angular>
-            {{ saving() ? 'Creating…' : 'Create organization' }}
-          </button>
-        </form>
+            <div class="field">
+              <label for="orgDesc" class="form-label">Description <span>(optional)</span></label>
+              <textarea
+                id="orgDesc"
+                rows="3"
+                class="form-control"
+                placeholder="What does your team do?"
+                formControlName="description"
+              ></textarea>
+              @if (fieldError('description'); as msg) {
+                <small class="field-msg">{{ msg }}</small>
+              }
+            </div>
+
+            <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+              <lucide-angular name="Plus" size="18"></lucide-angular>
+              {{ saving() ? 'Creating…' : 'Create organization' }}
+            </button>
+          </form>
+        }
       </div>
     } @else {
       <!-- ============ Real dashboard ============ -->

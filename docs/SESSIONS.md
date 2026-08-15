@@ -21,6 +21,17 @@
 > **forgot-password**, which blocks no built screen. Remaining work is §3 (v1.x): CSV/PDF report
 > export, the calendar page, per-member trend charts, E2E tests.
 
+## 2026-08-15 (Individual ↔ organization workspace switching)
+- Account type remains the default landing choice, no longer an exclusive portal lock: Individual
+  users can use both their private `/member` workspace and organizations they have joined. Admin and
+  Organization-account boundaries remain unchanged and have pure policy tests.
+- The member facade now loads `GET /organization/mine`, refreshes it after invitation acceptance, and
+  reveals a Workspaces switch only when relevant. The organization layout provides the return path;
+  an Individual with no memberships gets a recovery state rather than misleading org onboarding.
+- Lint/design lint and production build pass. All 16 changed-area specs pass in ChromeHeadless, and
+  a broader run passed 215/215 specs after excluding the four-test public-header spec whose real
+  navigation deliberately triggers Karma's existing full-page-reload disconnect.
+
 ## 2026-08-14 (Forgot password + OTP login, end to end)
 - Added a password/email-code method switch to the shared login page, so personal, organization, and
   admin variants inherit the same passwordless flow and continue through the existing session/profile

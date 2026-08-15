@@ -32,10 +32,16 @@ const INVITATIONS: OrganizationInvitation[] = [
 ];
 
 const getMyInvitations = jasmine.createSpy('getMyInvitations').and.returnValue(of(INVITATIONS));
+const getMyOrganizations = jasmine.createSpy('getMyOrganizations').and.returnValue(of([]));
 const acceptInvitation = jasmine.createSpy('acceptInvitation').and.returnValue(of(void 0));
 const rejectInvitation = jasmine.createSpy('rejectInvitation').and.returnValue(of(void 0));
 
-const repositoryStub = { getMyInvitations, acceptInvitation, rejectInvitation };
+const repositoryStub = {
+  getMyInvitations,
+  getMyOrganizations,
+  acceptInvitation,
+  rejectInvitation,
+};
 
 describe('MemberInvitationsPage', () => {
   let component: MemberInvitationsPage;
@@ -44,6 +50,8 @@ describe('MemberInvitationsPage', () => {
   beforeEach(async () => {
     getMyInvitations.calls.reset();
     getMyInvitations.and.returnValue(of(INVITATIONS));
+    getMyOrganizations.calls.reset();
+    getMyOrganizations.and.returnValue(of([]));
     acceptInvitation.calls.reset();
     acceptInvitation.and.returnValue(of(void 0));
     rejectInvitation.calls.reset();
@@ -86,6 +94,7 @@ describe('MemberInvitationsPage', () => {
 
     expect(acceptInvitation).toHaveBeenCalledWith(1);
     expect(getMyInvitations).toHaveBeenCalledTimes(2);
+    expect(getMyOrganizations).toHaveBeenCalledTimes(2);
   });
 
   it('still reloads when accepting fails (e.g. 409 already a member)', () => {

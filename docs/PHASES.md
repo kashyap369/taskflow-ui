@@ -5,6 +5,19 @@
 > consumes it and is at the start of feature build-out. Phase order roughly follows the backend so
 > each frontend phase has a working API behind it.
 
+## ✅ Phase 31 — Joined organization workspaces for Individual accounts (2026-08-15)
+
+- Individual accounts still land in the personal portal, but may now enter the organization portal
+  for workspaces they own or joined through an invitation.
+- The personal header exposes **Workspaces** when memberships exist; the organization sidebar exposes
+  **Personal workspace** for Individual accounts. Accepting an invitation refreshes membership state
+  immediately without changing account type or mixing personal tasks into organization data.
+- Direct organization navigation with no membership shows an honest invitations/personal-workspace
+  recovery state instead of the Organization-account creation form.
+- Added portal-policy regression coverage. Lint, design lint, production build, and all 16 focused
+  browser specs pass. A broader run passed 215/215 specs after excluding the four-test public-header
+  spec whose real navigation deliberately triggers Karma's existing full-page-reload disconnect.
+
 ## ✅ Phase 30 — Account recovery & email-code sign-in (2026-08-14)
 
 - Personal, organization, and admin login variants now switch between password and email-code
