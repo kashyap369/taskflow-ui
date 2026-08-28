@@ -424,17 +424,30 @@
 
 @keyframes planner-spin { to { transform: rotate(1turn); } }
 
-@media (max-width: 1180px) {
+@media (max-width: 1480px) {
   .project-dock { max-width: min(420px, calc(58vw - var(--space-12))); }
+  .workspace-tools .tool-button {
+    justify-content: center;
+    width: 40px;
+    padding-inline: 0;
+  }
   .workspace-tools .tool-button span { display: none; }
+}
+
+@media (max-width: 1080px) {
+  .workspace-tools {
+    top: auto;
+    right: 50%;
+    bottom: var(--space-3);
+    transform: translateX(50%);
+  }
+  .privacy-chip { display: none; }
+  .sync-notice { bottom: var(--space-16); }
 }
 
 @media (max-width: 820px) {
   .project-dock { right: var(--space-3); left: var(--space-3); max-width: none; }
   .project-progress { display: none; }
-  .workspace-tools { top: auto; right: 50%; bottom: var(--space-3); transform: translateX(50%); }
-  .privacy-chip { display: none; }
-  .sync-notice { bottom: var(--space-16); }
 
   :host ::ng-deep .excalidraw .App-menu_top { margin-top: var(--space-16); }
 }
