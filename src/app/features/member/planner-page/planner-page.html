@@ -1,26 +1,514 @@
-<section class="planner-page">
-  <header class="planner-head">
-    <div>
-      <h1>Planner</h1>
-      <p>Sketch ideas, map project flows, and keep visual notes beside your private work.</p>
+<section class="planner-workspace" [class.has-project]="selectedProject() !== null">
+  <div #canvasHost class="canvas-host" aria-label="Personal project Planner canvas"></div>
+
+  @if (loading() && projects().length === 0) {
+    <div class="workspace-state" aria-live="polite" aria-busy="true">
+      <lucide-angular class="state-spinner" name="LoaderCircle" [size]="24"></lucide-angular>
+      <h1>Opening your workspace</h1>
+      <p>Loading personal projects…</p>
     </div>
-    <div class="planner-status" [attr.data-state]="saveState()">
-      @if (saveState() === 'error') {
-        <lucide-angular name="CloudOff" [size]="16"></lucide-angular>
-      } @else if (saveState() === 'saved') {
-        <lucide-angular name="ShieldCheck" [size]="16"></lucide-angular>
+  } @else if (loadError() && projects().length === 0) {
+    <div class="workspace-state workspace-state--error" role="alert">
+      <lucide-angular name="CloudOff" [size]="24"></lucide-angular>
+      <h1>Projects could not be loaded</h1>
+      <p>{{ loadError() }}</p>
+      <button type="button" class="btn-ghost btn--sm" (click)="retryProjects()">
+        <lucide-angular name="RefreshCw" [size]="15"></lucide-angular>
+        Try again
+      </button>
+    </div>
+  } @else if (projects().length === 0) {
+    <div class="workspace-state workspace-state--empty">
+      <span class="state-icon"><lucide-angular name="FolderKanban" [size]="26"></lucide-angular></span>
+      <h1>Start with a project</h1>
+      <p>Your canvas is organized by project, keeping each plan and its tasks in one focused space.</p>
+      <button type="button" class="btn-primary-cta" (click)="openCreateProject()">
+        <lucide-angular name="Plus" [size]="16"></lucide-angular>
+        Create your first project
+      </button>
+      <a class="state-back" routerLink="/member/dashboard">Return to TaskFlow</a>
+    </div>
+  } @else if (selectedProject(); as project) {
+    <header class="project-dock" aria-label="Planner project controls">
+      <a class="dock-icon" routerLink="/member/dashboard" aria-label="Return to TaskFlow" title="Return to TaskFlow">
+        <lucide-angular name="ArrowLeft" [size]="18"></lucide-angular>
+      </a>
+
+      <label class="project-picker">
+        <span class="visually-hidden">Current project</span>
+        <select
+          class="project-select"
+          [value]="project.id"
+          (change)="selectProject($any($event.target).value)"
+        >
+          @for (option of projects(); track option.id) {
+            <option [value]="option.id">{{ option.title }}</option>
+          }
+        </select>
+      </label>
+
+      <button type="button" class="dock-icon" (click)="openCreateProject()" aria-label="Create project" title="Create project">
+        <lucide-angular name="Plus" [size]="18"></lucide-angular>
+      </button>
+
+      <div class="project-progress" [attr.aria-label]="project.completionPercentage + '% complete'">
+        <span class="progress-copy">{{ project.completedTaskCount }}/{{ project.taskCount }} tasks</span>
+        <span class="progress-track" aria-hidden="true">
+          <span class="progress-value" [style.width.%]="project.completionPercentage"></span>
+        </span>
+        <span class="progress-percent">{{ project.completionPercentage | number: '1.0-0' }}%</span>
+      </div>
+    </header>
+
+    <aside class="workspace-tools" aria-label="Planner workspace status and upcoming tools">
+      <div class="save-status" [attr.data-state]="syncState()" aria-live="polite">
+        @if (syncState() === 'loading' || syncState() === 'saving') {
+          <lucide-angular class="status-spinner" name="LoaderCircle" [size]="16"></lucide-angular>
+        } @else if (syncState() === 'error' || syncState() === 'offline') {
+          <lucide-angular name="CloudOff" [size]="16"></lucide-angular>
+        } @else if (syncState() === 'conflict') {
+          <lucide-angular name="TriangleAlert" [size]="16"></lucide-angular>
+        } @else if (syncState() === 'saved') {
+          <lucide-angular name="Cloud" [size]="16"></lucide-angular>
+        } @else {
+          <lucide-angular name="Save" [size]="16"></lucide-angular>
+        }
+        <span>{{ saveLabel() }}</span>
+      </div>
+
+      <div class="tool-divider" aria-hidden="true"></div>
+
+      <button type="button" class="tool-button" (click)="openNodeCreator(2)" title="Add linked work item">
+        <lucide-angular name="ListPlus" [size]="17"></lucide-angular>
+        <span>Add work</span>
+      </button>
+      <button type="button" class="tool-button" (click)="openResourceCreator('note')" title="Add note, link, or document">
+        <lucide-angular name="FileText" [size]="17"></lucide-angular>
+        <span>Add resource</span>
+      </button>
+      <button type="button" class="tool-button" (click)="openDetails()" title="Inspect linked work items">
+        <lucide-angular name="PanelRight" [size]="17"></lucide-angular>
+        <span>Details</span>
+      </button>
+      <button type="button" class="tool-button" (click)="openLibrary()" title="Open template library">
+        <lucide-angular name="LibraryBig" [size]="17"></lucide-angular>
+        <span>Library</span>
+      </button>
+      <button type="button" class="tool-button" (click)="openRequirements()" title="Finalize and compare requirements">
+        <lucide-angular name="History" [size]="17"></lucide-angular>
+        <span>Requirements</span>
+      </button>
+    </aside>
+
+    <div class="privacy-chip">
+      <lucide-angular name="ShieldCheck" [size]="14"></lucide-angular>
+      Private · project cloud
+    </div>
+  }
+
+  @if (legacySceneAvailable() && syncState() !== 'conflict' && syncState() !== 'offline' && syncState() !== 'error' && selectedProject(); as project) {
+    <section class="sync-notice sync-notice--migration" role="status" aria-labelledby="legacy-import-title">
+      <span class="sync-notice-icon">
+        <lucide-angular name="History" [size]="19"></lucide-angular>
+      </span>
+      <div class="sync-notice-copy">
+        <strong id="legacy-import-title">Import your earlier browser drawing?</strong>
+        @if (legacyImportError()) {
+          <span>{{ legacyImportError() }}</span>
+        } @else if (legacyEmbeddedFileCount() > 0) {
+          <span>
+            Move the drawing into {{ project.title }}. {{ legacyEmbeddedFileCount() }} embedded
+            image{{ legacyEmbeddedFileCount() === 1 ? '' : 's' }} cannot enter cloud scene data and
+            will stay in the preserved legacy copy.
+          </span>
+        } @else {
+          <span>Move the drawing saved by the prototype into {{ project.title }}. The original copy stays available during the rollback window.</span>
+        }
+      </div>
+      <div class="sync-notice-actions">
+        <button type="button" class="btn-ghost btn--sm" (click)="dismissLegacyImport()">Keep for later</button>
+        <button
+          type="button"
+          class="btn-primary-cta btn--sm"
+          (click)="importLegacyScene()"
+          [disabled]="legacyImporting() || legacyImportError()"
+        >
+          {{ legacyImporting() ? 'Importing…' : legacyEmbeddedFileCount() > 0 ? 'Import drawings only' : 'Import to cloud' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (showResourceCreator()) {
+    <button type="button" class="drawer-backdrop" (click)="closeResourceCreator()" aria-label="Close resource form"></button>
+    <aside class="project-drawer" appDialog (dismiss)="closeResourceCreator()" aria-labelledby="resource-create-title">
+      <div class="drawer-head"><div><h2 id="resource-create-title">Add project material</h2><p>Files stay in private object storage and never enter the canvas scene.</p></div><button type="button" class="icon-btn" (click)="closeResourceCreator()" aria-label="Close"><lucide-angular name="X" [size]="18" /></button></div>
+      @if (selectedTemplateVersion(); as template) { <div class="template-applied"><lucide-angular name="LibraryBig" [size]="16" /><span>Using {{ template.name }} · v{{ template.versionNumber }}</span></div> }
+      <div class="node-type-picker" aria-label="Resource type">
+        <button type="button" [class.is-active]="resourceKind() === 'note'" (click)="openResourceCreator('note')">Note</button>
+        <button type="button" [class.is-active]="resourceKind() === 'link'" (click)="openResourceCreator('link')">Link</button>
+        <button type="button" [class.is-active]="resourceKind() === 'document'" (click)="openResourceCreator('document')">File</button>
+      </div>
+      <form [formGroup]="resourceForm" (ngSubmit)="createResource()">
+        <div class="field"><label for="resource-title" class="form-label">Title</label><input id="resource-title" type="text" maxlength="200" class="form-control" formControlName="title" /></div>
+        @if (resourceKind() === 'note') {
+          <div class="field"><label for="resource-content" class="form-label">Note</label><textarea id="resource-content" rows="8" maxlength="20000" class="form-control" formControlName="content" placeholder="Write planning context, decisions, or instructions…"></textarea></div>
+        } @else if (resourceKind() === 'link') {
+          <div class="field"><label for="resource-url" class="form-label">HTTP or HTTPS link</label><input id="resource-url" type="url" maxlength="2048" class="form-control" formControlName="url" placeholder="https://…" /></div>
+        } @else {
+          <label class="upload-drop" for="resource-file"><lucide-angular name="Upload" [size]="22" /><strong>{{ selectedFile()?.name || 'Choose a file' }}</strong><span>PDF, image, audio, video, Office, text, JSON, CSV, or ZIP · maximum 25 MB</span></label>
+          <input id="resource-file" class="visually-hidden" type="file" (change)="chooseFile($event)" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp3,.wav,.ogg,.m4a,.mp4,.webm,.mov,.txt,.md,.csv,.json,.zip,.doc,.docx,.xls,.xlsx,.ppt,.pptx" />
+        }
+        <div class="drawer-actions"><button type="button" class="btn-ghost" (click)="closeResourceCreator()">Cancel</button><button type="submit" class="btn-primary-cta" [disabled]="nodeSaving()">{{ nodeSaving() ? 'Saving…' : 'Add to canvas' }}</button></div>
+      </form>
+    </aside>
+  }
+
+  @if (selectedProject() && syncState() === 'loading' && !canvasMounted()) {
+    <div class="board-loading" aria-live="polite" aria-busy="true">
+      <lucide-angular class="state-spinner" name="LoaderCircle" [size]="20"></lucide-angular>
+      Loading this project’s board…
+    </div>
+  }
+
+  @if (conflict(); as currentConflict) {
+    <section class="sync-notice sync-notice--conflict" role="alert" aria-labelledby="planner-conflict-title">
+      <span class="sync-notice-icon">
+        <lucide-angular name="TriangleAlert" [size]="19"></lucide-angular>
+      </span>
+      <div class="sync-notice-copy">
+        <strong id="planner-conflict-title">This board changed elsewhere</strong>
+        <span>Your recovery copy is still safe. The cloud is on revision {{ currentConflict.remote.revision }}.</span>
+      </div>
+      <div class="sync-notice-actions">
+        <button type="button" class="btn-ghost btn--sm" (click)="useServerVersion()">Use cloud version</button>
+        <button type="button" class="btn-primary-cta btn--sm" (click)="keepLocalVersion()">Keep my version</button>
+      </div>
+    </section>
+  } @else if (syncState() === 'offline' || syncState() === 'error') {
+    <section class="sync-notice" [class.sync-notice--error]="syncState() === 'error'" role="status">
+      <span class="sync-notice-icon">
+        <lucide-angular name="CloudOff" [size]="19"></lucide-angular>
+      </span>
+      <div class="sync-notice-copy">
+        <strong>{{ syncState() === 'offline' ? 'Working from recovery' : 'Cloud sync paused' }}</strong>
+        <span>{{ syncError() }}</span>
+      </div>
+      @if (syncState() === 'offline') {
+        <button type="button" class="btn-ghost btn--sm" (click)="retrySave()">Retry sync</button>
+      } @else if (canvasMounted()) {
+        <button type="button" class="btn-ghost btn--sm" (click)="retrySave()">Retry save</button>
       } @else {
-        <lucide-angular name="Save" [size]="16"></lucide-angular>
+        <button type="button" class="btn-ghost btn--sm" (click)="retryBoard()">Reload board</button>
       }
-      <span>{{ saveLabel() }}</span>
-    </div>
-  </header>
+    </section>
+  }
 
-  <div class="privacy-strip">
-    This canvas is private to your signed-in account on this browser. Organization members cannot access it.
-  </div>
+  @if (nodeError()) {
+    <section class="node-notice" role="status">
+      <lucide-angular name="TriangleAlert" [size]="17"></lucide-angular>
+      <span>{{ nodeError() }}</span>
+      <button type="button" class="btn-ghost btn--sm" (click)="refreshLinkedWork()">Refresh</button>
+    </section>
+  }
 
-  <div class="canvas-frame" aria-label="Personal Planner canvas">
-    <div #canvasHost class="canvas-host"></div>
-  </div>
+  @if (showCreateProject()) {
+    <button type="button" class="drawer-backdrop" (click)="closeCreateProject()" aria-label="Close project form"></button>
+    <aside class="project-drawer" appDialog (dismiss)="closeCreateProject()">
+      <div class="drawer-head">
+        <div>
+          <h2>Create a project</h2>
+          <p>It will open as a separate private canvas.</p>
+        </div>
+        <button type="button" class="icon-btn" (click)="closeCreateProject()" aria-label="Close">
+          <lucide-angular name="X" [size]="18"></lucide-angular>
+        </button>
+      </div>
+
+      <form [formGroup]="projectForm" (ngSubmit)="createProject()">
+        <div class="field">
+          <label for="planner-project-title" class="form-label">Project name</label>
+          <input id="planner-project-title" type="text" class="form-control" placeholder="Launch portfolio" formControlName="title" />
+          @if (projectFieldError('title'); as message) {
+            <small class="field-msg">{{ message }}</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="planner-project-description" class="form-label">Description <span>(optional)</span></label>
+          <textarea id="planner-project-description" rows="4" class="form-control" placeholder="What outcome are you working toward?" formControlName="description"></textarea>
+          @if (projectFieldError('description'); as message) {
+            <small class="field-msg">{{ message }}</small>
+          }
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="planner-project-start" class="form-label">Start date</label>
+            <input id="planner-project-start" type="date" class="form-control" formControlName="startDate" />
+          </div>
+          <div class="field">
+            <label for="planner-project-target" class="form-label">Target date <span>(optional)</span></label>
+            <input id="planner-project-target" type="date" class="form-control" formControlName="expectedCompletionDate" />
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeCreateProject()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="savingProject()">
+            {{ savingProject() ? 'Creating…' : 'Create project' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+
+  @if (showNodeCreator()) {
+    <button type="button" class="drawer-backdrop" (click)="closeNodeCreator()" aria-label="Close work item form"></button>
+    <aside class="project-drawer" appDialog (dismiss)="closeNodeCreator()" aria-labelledby="node-create-title">
+      <div class="drawer-head">
+        <div>
+          <h2 id="node-create-title">Add linked work</h2>
+          <p>The TaskFlow record stays authoritative; this card stores only its canvas position.</p>
+        </div>
+        <button type="button" class="icon-btn" (click)="closeNodeCreator()" aria-label="Close">
+          <lucide-angular name="X" [size]="18"></lucide-angular>
+        </button>
+      </div>
+      @if (selectedTemplateVersion(); as template) { <div class="template-applied"><lucide-angular name="LibraryBig" [size]="16" /><span>Using {{ template.name }} · v{{ template.versionNumber }}</span></div> }
+
+      <div class="node-type-picker" aria-label="Work item type">
+        <button type="button" [class.is-active]="createNodeType() === 1" (click)="openNodeCreator(1)" [disabled]="projectLinked()">Project</button>
+        <button type="button" [class.is-active]="createNodeType() === 2" (click)="openNodeCreator(2)">Task</button>
+        <button type="button" [class.is-active]="createNodeType() === 3" (click)="openNodeCreator(3)" [disabled]="taskNodes().length === 0">Subtask</button>
+      </div>
+
+      @if (createNodeType() === 1 && workspace()?.nodes?.length) {
+        <p class="drawer-guidance">A project card can be added once. If it is already linked, select it and use Details.</p>
+      }
+
+      <form [formGroup]="nodeForm" (ngSubmit)="createNode()">
+        @if (createNodeType() === 3) {
+          <div class="field">
+            <label for="planner-parent-task" class="form-label">Parent task</label>
+            <select id="planner-parent-task" class="form-control" formControlName="taskId">
+              @for (task of taskNodes(); track task.nodeId) {
+                <option [value]="task.entityId">{{ task.title }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        @if (createNodeType() !== 1) {
+          <div class="field">
+            <label for="planner-node-title" class="form-label">{{ createNodeType() === 2 ? 'Task' : 'Subtask' }} title</label>
+            <input id="planner-node-title" type="text" maxlength="200" class="form-control" formControlName="title" />
+          </div>
+        }
+
+        @if (createNodeType() === 2) {
+          <div class="field">
+            <label for="planner-node-description" class="form-label">Description <span>(optional)</span></label>
+            <textarea id="planner-node-description" rows="3" maxlength="2000" class="form-control" formControlName="description"></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="planner-node-start" class="form-label">Start date</label><input id="planner-node-start" type="date" class="form-control" formControlName="startDate" /></div>
+            <div class="field"><label for="planner-node-target" class="form-label">Target date</label><input id="planner-node-target" type="date" class="form-control" formControlName="expectedCompletionDate" /></div>
+          </div>
+          <div class="field">
+            <label for="planner-node-priority" class="form-label">Priority</label>
+            <select id="planner-node-priority" class="form-control" formControlName="priority"><option [value]="1">Low</option><option [value]="2">Medium</option><option [value]="3">High</option></select>
+          </div>
+        }
+
+        @if (hasBaseline() && createNodeType() !== 1) {
+          <div class="field">
+            <label for="planner-change-reason" class="form-label">Change reason <span>(optional)</span></label>
+            <textarea id="planner-change-reason" rows="2" maxlength="500" class="form-control" formControlName="changeReason" placeholder="Why is this requirement being added?"></textarea>
+          </div>
+        }
+
+        <div class="drawer-actions">
+          <button type="button" class="btn-ghost" (click)="closeNodeCreator()">Cancel</button>
+          <button type="submit" class="btn-primary-cta" [disabled]="nodeSaving()">
+            {{ nodeSaving() ? 'Adding…' : 'Add to canvas' }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+
+  @if (showLibrary()) {
+    <button type="button" class="drawer-backdrop" (click)="closeLibrary()" aria-label="Close template library"></button>
+    <aside class="project-drawer library-drawer" appDialog (dismiss)="closeLibrary()" aria-labelledby="planner-library-title">
+      <div class="drawer-head"><div><h2 id="planner-library-title">Template library</h2><p>Published building blocks from your TaskFlow administrator.</p></div><button type="button" class="icon-btn" (click)="closeLibrary()" aria-label="Close"><lucide-angular name="X" [size]="18" /></button></div>
+      @if (templatesLoading()) { <div class="drawer-guidance">Loading published templates…</div> }
+      @else if (templates().length === 0) { <div class="library-empty"><lucide-angular name="LibraryBig" [size]="24" /><strong>No published templates</strong><span>Your administrator has not published a Planner template yet.</span></div> }
+      @else { <div class="member-template-list">@for (template of templates(); track template.id) { <button type="button" class="member-template" (click)="useTemplate(template)"><span class="member-template-swatch" [style.background]="template.backgroundColor" [style.border-color]="template.strokeColor"><lucide-angular name="LibraryBig" [size]="18" /></span><span class="member-template-copy"><strong>{{ template.name }}</strong><small>{{ objectLabels[template.objectType] }} · v{{ template.currentVersionNumber }} · {{ template.defaultWidth }}×{{ template.defaultHeight }}</small></span></button> }</div> }
+      <div class="library-section"><h3>Saved resources</h3><p>Unlinked resources remain private to this project and can be returned to the canvas.</p>
+        @if (resourcesLoading()) { <div class="drawer-guidance">Loading resources…</div> }
+        @else if (unlinkedResources().length === 0) { <div class="drawer-guidance">No unlinked resources.</div> }
+        @else { <div class="member-template-list">@for (resource of unlinkedResources(); track resource.id) { <button type="button" class="member-template" (click)="linkSavedResource(resource.id)"><span class="member-template-swatch"><lucide-angular [name]="resource.kind === 1 ? 'StickyNote' : resource.kind === 2 ? 'Link' : 'FileText'" [size]="18" /></span><span class="member-template-copy"><strong>{{ resource.title }}</strong><small>{{ resource.kind === 1 ? 'Note' : resource.kind === 2 ? 'Link' : resource.asset?.fileName }}</small></span><span class="resource-note">Add to canvas</span></button> }</div> }
+      </div>
+    </aside>
+  }
+
+  @if (showInspector()) {
+    <button type="button" class="drawer-backdrop" (click)="closeInspector()" aria-label="Close details"></button>
+    <aside class="project-drawer inspector-drawer" appDialog (dismiss)="closeInspector()" aria-labelledby="node-details-title">
+      <div class="drawer-head">
+        <div><h2 id="node-details-title">Linked work details</h2><p>Business fields and progress refresh from TaskFlow.</p></div>
+        <button type="button" class="icon-btn" (click)="closeInspector()" aria-label="Close"><lucide-angular name="X" [size]="18"></lucide-angular></button>
+      </div>
+
+      @if (workspace()?.nodes?.length) {
+        <label class="field">
+          <span class="form-label">Canvas item</span>
+          <select class="form-control" [value]="selectedNodeId()" (change)="chooseInspectorNode($any($event.target).value)">
+            @for (node of workspace()!.nodes; track node.nodeId) {
+              <option [value]="node.nodeId">{{ nodeTypeLabel(node.nodeType) }} · {{ node.title }}</option>
+            }
+          </select>
+        </label>
+      }
+
+      @if (selectedNode(); as node) {
+        @if (node.nodeType <= 3) { <div class="node-summary">
+          <span>{{ nodeTypeLabel(node.nodeType) }}</span>
+          <strong>{{ statusLabel(node.status) }}</strong>
+          <div><span>{{ node.completedChildCount }}/{{ node.childCount }} complete</span><span>{{ node.completionPercentage | number:'1.0-0' }}%</span></div>
+          <span class="progress-track"><span class="progress-value" [style.width.%]="node.completionPercentage"></span></span>
+        </div> }
+
+        @if (node.nodeType <= 3) { <form [formGroup]="nodeForm" (ngSubmit)="updateSelectedNode()">
+          <div class="field"><label for="inspector-title" class="form-label">Title</label><input id="inspector-title" type="text" maxlength="200" class="form-control" formControlName="title" /></div>
+          @if (node.nodeType !== 3) {
+            <div class="field"><label for="inspector-description" class="form-label">Description</label><textarea id="inspector-description" rows="3" maxlength="2000" class="form-control" formControlName="description"></textarea></div>
+            <div class="field"><label for="inspector-target" class="form-label">Target date</label><input id="inspector-target" type="date" class="form-control" formControlName="expectedCompletionDate" /></div>
+          }
+          @if (node.nodeType === 2) {
+            <div class="field"><label for="inspector-priority" class="form-label">Priority</label><select id="inspector-priority" class="form-control" formControlName="priority"><option [value]="1">Low</option><option [value]="2">Medium</option><option [value]="3">High</option></select></div>
+          }
+          @if (node.nodeType === 1) {
+            <div class="field"><label for="inspector-problem" class="form-label">Problem statement</label><textarea id="inspector-problem" rows="4" maxlength="4000" class="form-control" formControlName="problemStatement"></textarea></div>
+            <div class="field-row">
+              <div class="field"><label for="inspector-budget" class="form-label">Budget</label><input id="inspector-budget" type="number" min="0" step="0.01" class="form-control" formControlName="budgetAmount" /></div>
+              <div class="field"><label for="inspector-currency" class="form-label">Currency</label><input id="inspector-currency" type="text" maxlength="3" class="form-control" formControlName="budgetCurrency" /></div>
+            </div>
+            <div class="field"><label for="inspector-weeks" class="form-label">Approximate duration (weeks)</label><input id="inspector-weeks" type="number" min="1" max="520" class="form-control" formControlName="approximateDurationWeeks" /></div>
+          }
+
+          @if (hasBaseline()) {
+            <div class="field">
+              <label for="inspector-change-reason" class="form-label">Change reason <span>(optional)</span></label>
+              <textarea id="inspector-change-reason" rows="2" maxlength="500" class="form-control" formControlName="changeReason" placeholder="Why is this requirement changing?"></textarea>
+            </div>
+          }
+
+          <div class="drawer-actions"><button type="submit" class="btn-primary-cta" [disabled]="nodeSaving()">{{ nodeSaving() ? 'Saving…' : 'Save details' }}</button></div>
+        </form> } @else {
+          <form [formGroup]="resourceForm" (ngSubmit)="updateSelectedResource()">
+            <div class="field"><label for="resource-detail-title" class="form-label">Title</label><input id="resource-detail-title" type="text" maxlength="200" class="form-control" formControlName="title" /></div>
+            @if (node.resourceKind === 1) { <div class="field"><label for="resource-detail-content" class="form-label">Note</label><textarea id="resource-detail-content" rows="9" maxlength="20000" class="form-control" formControlName="content"></textarea></div> }
+            @if (node.resourceKind === 2) { <div class="field"><label for="resource-detail-url" class="form-label">Link</label><input id="resource-detail-url" type="url" maxlength="2048" class="form-control" formControlName="url" /></div> }
+            @if (node.asset) { <div class="resource-file-meta"><lucide-angular name="FileText" [size]="19" /><div><strong>{{ node.asset.fileName }}</strong><span>{{ node.asset.contentType }} · {{ formatBytes(node.asset.size) }}</span></div></div><div class="field"><label for="resource-detail-file" class="form-label">Download filename</label><input id="resource-detail-file" type="text" maxlength="255" class="form-control" formControlName="fileName" /></div> }
+            <div class="resource-actions">@if (node.resourceKind === 2) { <button type="button" class="btn-ghost btn--sm" (click)="openResource(node, false)"><lucide-angular name="ExternalLink" [size]="15" /> Open link</button> } @if (node.asset) { <button type="button" class="btn-ghost btn--sm" (click)="openResource(node, false)"><lucide-angular name="ExternalLink" [size]="15" /> Preview</button><button type="button" class="btn-ghost btn--sm" (click)="openResource(node, true)"><lucide-angular name="Download" [size]="15" /> Download</button> }</div>
+            <div class="drawer-actions"><button type="submit" class="btn-primary-cta" [disabled]="nodeSaving()">{{ nodeSaving() ? 'Saving…' : 'Save resource' }}</button></div>
+          </form>
+        }
+
+        <div class="unlink-zone">
+          <h3>Canvas relationship</h3>
+          <p>Unlink removes only the canvas card. Delete removes the {{ nodeTypeLabel(node.nodeType).toLowerCase() }}{{ node.asset ? ' and its stored file' : '' }}.</p>
+          <div>
+            <button type="button" class="btn-ghost btn--sm" (click)="removeSelectedNode(false)"><lucide-angular name="Unlink" [size]="15"></lucide-angular> Unlink card</button>
+            @if (node.nodeType !== 1) {
+              <button type="button" class="btn-danger btn--sm" (click)="removeSelectedNode(true)"><lucide-angular name="Trash2" [size]="15"></lucide-angular> Delete item</button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="drawer-empty"><lucide-angular name="Workflow" [size]="24"></lucide-angular><p>No linked items yet. Add work or project material to begin.</p></div>
+      }
+    </aside>
+  }
+
+  @if (showRequirements()) {
+    <button type="button" class="drawer-backdrop" (click)="closeRequirements()" aria-label="Close requirement history"></button>
+    <aside class="project-drawer requirements-drawer" appDialog (dismiss)="closeRequirements()" aria-labelledby="requirements-title">
+      <div class="drawer-head">
+        <div><h2 id="requirements-title">Primary requirements</h2><p>Baseline scope stays immutable while later changes remain traceable.</p></div>
+        <button type="button" class="icon-btn" (click)="closeRequirements()" aria-label="Close"><lucide-angular name="X" [size]="18" /></button>
+      </div>
+
+      @if (requirementsLoading() && !selectedBaseline()) {
+        <div class="drawer-guidance" aria-busy="true">Loading requirement history…</div>
+      } @else if (requirementsError()) {
+        <div class="requirement-state is-error"><lucide-angular name="TriangleAlert" [size]="20" /><p>{{ requirementsError() }}</p><button type="button" class="btn-ghost btn--sm" (click)="openRequirements()">Retry</button></div>
+      } @else if (!hasBaseline()) {
+        <div class="requirement-state">
+          <span class="requirement-state-icon"><lucide-angular name="ShieldCheck" [size]="24" /></span>
+          <h3>Finalize Baseline 1</h3>
+          <p>Capture the current project, tasks, subtasks, requirement fields, and order. This checkpoint cannot be overwritten.</p>
+          <div class="baseline-preview"><strong>{{ workspace()?.project?.title }}</strong><span>{{ workspace()?.project?.totalTaskCount ?? 0 }} tasks · {{ workspace()?.project?.totalSubTaskCount ?? 0 }} subtasks</span></div>
+          <button type="button" class="btn-primary-cta" [disabled]="requirementsSaving()" (click)="finalizeRequirements()">{{ requirementsSaving() ? 'Finalizing…' : 'Finalize primary requirements' }}</button>
+        </div>
+      } @else if (selectedBaseline(); as baseline) {
+        <div class="baseline-banner">
+          <span><lucide-angular name="ShieldCheck" [size]="17" /> Baseline {{ baseline.baselineNumber }}</span>
+          <strong>{{ baseline.snapshots.length }} requirements</strong>
+          <small>Finalized {{ baseline.finalizedAt | date:'medium' }}</small>
+        </div>
+
+        <div class="requirement-toolbar">
+          <label for="requirement-filter">Working changes</label>
+          <select id="requirement-filter" class="form-control" [value]="requirementFilter()" (change)="filterRequirementChanges($any($event.target).value)">
+            <option value="">All changes</option><option value="1">New</option><option value="2">Changed</option><option value="3">Removed</option>
+          </select>
+        </div>
+
+        @if (requirementsLoading()) {
+          <div class="drawer-guidance" aria-busy="true">Comparing current requirements…</div>
+        } @else if ((requirementComparison()?.items?.length ?? 0) === 0) {
+          <div class="requirement-state compact"><lucide-angular name="ShieldCheck" [size]="21" /><h3>No scope changes</h3><p>Execution progress does not alter the primary requirement baseline.</p></div>
+        } @else {
+          <div class="requirement-list">
+            @for (item of requirementComparison()!.items; track item.entityType + '-' + item.entityId) {
+              <article class="requirement-change" [attr.data-change]="item.changeType">
+                <header><span class="change-badge">{{ requirementChangeLabel(item.changeType) }}</span><small>{{ requirementTypeLabel(item.entityType) }} · User #{{ item.actorUserId }}</small><time>{{ item.changedAt | date:'short' }}</time></header>
+                <h3>{{ item.title }}</h3>
+                @if (item.reason) { <p class="change-reason">{{ item.reason }}</p> }
+                @if (item.differences.length) {
+                  <div class="field-diffs">
+                    @for (diff of item.differences; track diff.field) {
+                      <div><strong>{{ fieldLabel(diff.field) }}</strong><span class="before">{{ diff.baselineValue ?? '—' }}</span><span aria-hidden="true">→</span><span class="after">{{ diff.currentValue ?? '—' }}</span></div>
+                    }
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        }
+
+        <details class="requirement-history">
+          <summary>View complete change history ({{ requirementChanges().length }})</summary>
+          @if (requirementChanges().length === 0) {
+            <p>No requirement changes have been recorded after this baseline.</p>
+          } @else {
+            <ol>
+              @for (change of requirementChanges(); track change.id) {
+                <li>
+                  <span class="change-badge">{{ requirementChangeLabel(change.changeType) }}</span>
+                  <div><strong>{{ change.title }}</strong><small>{{ requirementTypeLabel(change.entityType) }} · User #{{ change.actorUserId }} · {{ change.changedAt | date:'short' }}</small></div>
+                  @if (change.reason) { <p>{{ change.reason }}</p> }
+                </li>
+              }
+            </ol>
+          }
+        </details>
+
+        <details class="baseline-snapshots"><summary>View immutable baseline ({{ baseline.snapshots.length }})</summary><div>@for (snapshot of baseline.snapshots; track snapshot.id) { <span><small>{{ requirementTypeLabel(snapshot.entityType) }}</small>{{ snapshot.title }}</span> }</div></details>
+      }
+    </aside>
+  }
 </section>

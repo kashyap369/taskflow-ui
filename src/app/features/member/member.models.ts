@@ -46,6 +46,10 @@ export interface CreatePersonalProjectPayload {
   description: string;
   startDate: string;
   expectedCompletionDate: string | null;
+  problemStatement?: string | null;
+  budgetAmount?: number | null;
+  budgetCurrency?: string | null;
+  approximateDurationWeeks?: number | null;
 }
 
 export interface UpdatePersonalProjectPayload {
@@ -53,6 +57,10 @@ export interface UpdatePersonalProjectPayload {
   title: string;
   description: string;
   expectedCompletionDate: string | null;
+  problemStatement?: string | null;
+  budgetAmount?: number | null;
+  budgetCurrency?: string | null;
+  approximateDurationWeeks?: number | null;
 }
 
 /** `PUT /task` — the update command is shared with org tasks (partial: no status/startDate). */

@@ -4,4 +4,7 @@ export const environment = {
   api: {
     baseUrl: 'https://api.inksphere.space/api',
   },
+  features: {
+    planner: true,
+  },
 } as const;

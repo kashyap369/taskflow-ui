@@ -13,6 +13,8 @@ import {
   PlatformSettings,
   UpdatePlatformSettingsPayload,
   UserStatus,
+  PlannerTemplate,
+  PlannerTemplateDefinition,
 } from './admin.models';
 
 /**
@@ -42,6 +44,9 @@ export class AdminFacade {
   private readonly _settings = signal<PlatformSettings | null>(null);
   private readonly _settingsLoading = signal(false);
   private readonly _settingsSaving = signal(false);
+  private readonly _plannerTemplates = signal<PlannerTemplate[]>([]);
+  private readonly _templatesLoading = signal(false);
+  private readonly _templateSaving = signal(false);
 
   readonly users = this._users.asReadonly();
   readonly selectedUser = this._selectedUser.asReadonly();
@@ -56,6 +61,9 @@ export class AdminFacade {
   readonly settings = this._settings.asReadonly();
   readonly settingsLoading = this._settingsLoading.asReadonly();
   readonly settingsSaving = this._settingsSaving.asReadonly();
+  readonly plannerTemplates = this._plannerTemplates.asReadonly();
+  readonly templatesLoading = this._templatesLoading.asReadonly();
+  readonly templateSaving = this._templateSaving.asReadonly();
 
   /** The detail request is in flight — the id is known and the DTO isn't back yet. */
   readonly detailLoading = computed(
@@ -105,6 +113,7 @@ export class AdminFacade {
     this._settings.set(null);
     this._settingsLoading.set(false);
     this._settingsSaving.set(false);
+    this._plannerTemplates.set([]); this._templatesLoading.set(false); this._templateSaving.set(false);
   }
 
   /** Load the user list once. Call from admin pages' constructors. */
@@ -227,5 +236,26 @@ export class AdminFacade {
       },
       error: () => this._settingsSaving.set(false),
     });
+  }
+
+  loadPlannerTemplates(): void {
+    this._templatesLoading.set(true);
+    this.repository.getPlannerTemplates().subscribe({ next: (items) => { this._plannerTemplates.set(items); this._templatesLoading.set(false); }, error: () => this._templatesLoading.set(false) });
+  }
+
+  savePlannerTemplate(id: string | null, payload: PlannerTemplateDefinition, done: () => void): void {
+    this._templateSaving.set(true);
+    const request = id ? this.repository.updatePlannerTemplate(id, payload) : this.repository.createPlannerTemplate(payload);
+    request.subscribe({ next: () => { this._templateSaving.set(false); this.notification.success(id ? 'Template updated.' : 'Draft template created.'); this.loadPlannerTemplates(); done(); }, error: () => this._templateSaving.set(false) });
+  }
+
+  publishPlannerTemplate(id: string): void {
+    this._templateSaving.set(true);
+    this.repository.publishPlannerTemplate(id).subscribe({ next: () => { this._templateSaving.set(false); this.notification.success('Template published.'); this.loadPlannerTemplates(); }, error: () => this._templateSaving.set(false) });
+  }
+
+  archivePlannerTemplate(id: string): void {
+    this._templateSaving.set(true);
+    this.repository.archivePlannerTemplate(id).subscribe({ next: () => { this._templateSaving.set(false); this.notification.success('Template archived.'); this.loadPlannerTemplates(); }, error: () => this._templateSaving.set(false) });
   }
 }

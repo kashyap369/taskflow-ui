@@ -16,6 +16,7 @@ import {
 } from 'lucide-angular';
 
 import { AuthService } from '@core/auth/auth.service';
+import { APP_SETTINGS } from '@core/config/app.tokens';
 import { ThemeService } from '@core/services/theme.service';
 import { AuthFacade } from '@features/auth/auth.facade';
 import { MemberFacade } from '@features/member/member.facade';
@@ -50,6 +51,7 @@ export class MemberLayout {
   private readonly authService = inject(AuthService);
   private readonly authFacade = inject(AuthFacade);
   private readonly memberFacade = inject(MemberFacade);
+  private readonly settings = inject(APP_SETTINGS);
 
   readonly isDark = this.themeService.isDark;
   readonly user = this.authService.user;
@@ -57,6 +59,7 @@ export class MemberLayout {
   readonly pendingInvitations = this.memberFacade.pendingCount;
   /** Organization workspace switch appears once this Individual owns or joins one. */
   readonly hasOrganizations = this.memberFacade.hasOrganizations;
+  readonly plannerEnabled = this.settings.features.planner;
 
   constructor() {
     // Loaded here (not just on the page) so the badge is right wherever the user lands.

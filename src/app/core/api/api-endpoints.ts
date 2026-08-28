@@ -26,6 +26,10 @@ export const API = {
   Admin: {
     Organizations: '/admin/organizations',
     Settings: '/admin/settings',
+    PlannerTemplates: '/admin/planner/templates',
+    PlannerTemplate: (id: string) => `/admin/planner/templates/${id}`,
+    PublishPlannerTemplate: (id: string) => `/admin/planner/templates/${id}/publish`,
+    ArchivePlannerTemplate: (id: string) => `/admin/planner/templates/${id}/archive`,
   },
 
   Organization: {
@@ -53,6 +57,41 @@ export const API = {
     Delete: (id: number) => `/project/${id}`,
     ByOrganization: (organizationId: number) => `/project/organization/${organizationId}`,
     MinePersonal: '/project/mine/personal',
+  },
+
+  Planner: {
+    Templates: '/planner/templates',
+    Board: (projectId: number) => `/planner/projects/${projectId}/board`,
+    Scene: (projectId: number) => `/planner/projects/${projectId}/board/scene`,
+    Revisions: (projectId: number) => `/planner/projects/${projectId}/board/revisions`,
+    Revision: (projectId: number, revision: number) =>
+      `/planner/projects/${projectId}/board/revisions/${revision}`,
+    Workspace: (projectId: number) => `/planner/projects/${projectId}/board/workspace`,
+    ProjectNode: (projectId: number) => `/planner/projects/${projectId}/board/nodes/project`,
+    TaskNodes: (projectId: number) => `/planner/projects/${projectId}/board/nodes/tasks`,
+    SubTaskNodes: (projectId: number) => `/planner/projects/${projectId}/board/nodes/subtasks`,
+    Node: (projectId: number, nodeId: string) =>
+      `/planner/projects/${projectId}/board/nodes/${nodeId}`,
+    Resources: (projectId: number) => `/planner/projects/${projectId}/board/resources`,
+    NoteResources: (projectId: number) => `/planner/projects/${projectId}/board/resources/notes`,
+    LinkResources: (projectId: number) => `/planner/projects/${projectId}/board/resources/links`,
+    DocumentResources: (projectId: number) => `/planner/projects/${projectId}/board/resources/documents`,
+    Resource: (projectId: number, resourceId: string) =>
+      `/planner/projects/${projectId}/board/resources/${resourceId}`,
+    LinkResource: (projectId: number, resourceId: string) =>
+      `/planner/projects/${projectId}/board/resources/${resourceId}/link`,
+    ResourceContent: (projectId: number, resourceId: string) =>
+      `/planner/projects/${projectId}/board/resources/${resourceId}/content`,
+    FinalizeRequirements: (projectId: number) =>
+      `/planner/projects/${projectId}/board/requirements/finalize`,
+    RequirementBaselines: (projectId: number) =>
+      `/planner/projects/${projectId}/board/requirements/baselines`,
+    RequirementBaseline: (projectId: number, baselineId: string) =>
+      `/planner/projects/${projectId}/board/requirements/baselines/${baselineId}`,
+    RequirementChanges: (projectId: number) =>
+      `/planner/projects/${projectId}/board/requirements/changes`,
+    RequirementComparison: (projectId: number) =>
+      `/planner/projects/${projectId}/board/requirements/compare`,
   },
 
   Task: {

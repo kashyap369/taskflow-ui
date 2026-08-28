@@ -79,6 +79,7 @@ export class MemberFacade {
     this._projects.set([]);
     this._projectsLoaded.set(false);
     this._projectsLoading.set(false);
+    this._projectsError.set(null);
     this._report.set(null);
     this._reportLoading.set(false);
     this._openSubTaskTaskId.set(null);
@@ -185,6 +186,7 @@ export class MemberFacade {
   private readonly _projects = signal<Project[]>([]);
   private readonly _projectsLoading = signal(false);
   private readonly _projectsLoaded = signal(false);
+  private readonly _projectsError = signal<string | null>(null);
   private readonly _report = signal<PersonalTaskReport | null>(null);
   private readonly _reportLoading = signal(false);
 
@@ -200,6 +202,7 @@ export class MemberFacade {
   readonly tasksLoading = this._tasksLoading.asReadonly();
   readonly projects = this._projects.asReadonly();
   readonly projectsLoading = this._projectsLoading.asReadonly();
+  readonly projectsError = this._projectsError.asReadonly();
   readonly report = this._report.asReadonly();
   readonly reportLoading = this._reportLoading.asReadonly();
   readonly openSubTaskTaskId = this._openSubTaskTaskId.asReadonly();
@@ -240,25 +243,33 @@ export class MemberFacade {
     this.loadProjects();
   }
 
-  loadProjects(): void {
+  loadProjects(onLoaded?: () => void): void {
     this._projectsLoading.set(true);
+    this._projectsError.set(null);
     this.repository.getMyPersonalProjects().subscribe({
       next: (projects) => {
         this._projects.set(projects);
         this._projectsLoaded.set(true);
         this._projectsLoading.set(false);
+        onLoaded?.();
       },
-      error: () => this._projectsLoading.set(false),
+      error: () => {
+        this._projectsLoading.set(false);
+        this._projectsError.set('Could not load your projects. Check your connection and try again.');
+      },
     });
   }
 
-  createProject(payload: CreatePersonalProjectPayload): void {
+  createProject(
+    payload: CreatePersonalProjectPayload,
+    onCreated?: (projectId: number) => void,
+  ): void {
     this._saving.set(true);
     this.repository.createPersonalProject(payload).subscribe({
-      next: () => {
+      next: (projectId) => {
         this._saving.set(false);
         this.notification.success('Project created.');
-        this.loadProjects();
+        this.loadProjects(() => onCreated?.(projectId));
       },
       error: () => this._saving.set(false),
     });

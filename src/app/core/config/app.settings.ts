@@ -11,4 +11,8 @@ export const AppSettings = {
   api: {
     baseUrl: environment.api.baseUrl,
   },
+
+  features: {
+    planner: Boolean(environment.features.planner),
+  },
 } as const;

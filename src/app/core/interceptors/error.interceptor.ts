@@ -5,6 +5,7 @@ import { throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
 import { ApiErrorResponse } from '../api/api-error-response';
+import { SILENT_API_ERROR } from '../api/api-context';
 import { FailureReason } from '../constants/failure-reasons';
 import { MaintenanceService } from '../services/maintenance.service';
 import { NotificationService } from '../services/notification.service';
@@ -24,6 +25,10 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
       }
     }),
     catchError((error: HttpErrorResponse) => {
+      if (request.context.get(SILENT_API_ERROR)) {
+        return throwError(() => error);
+      }
+
       // Network/CORS/API Offline
       if (error.status === 0) {
         notification.error('Unable to connect to the server.');

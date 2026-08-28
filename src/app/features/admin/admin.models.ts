@@ -6,6 +6,7 @@
 
 import { Tone } from '@shared/models/tone.model';
 import { OrganizationStatus } from '@shared/models/organization-status.model';
+export type { PlannerTemplate, PlannerTemplateDefinition } from '@core/models/planner-template.model';
 
 // Organization status is the same enum the organization portal renders, so it lives in
 // `shared/models`. Re-exported so `admin.models` stays the one import for admin pages.

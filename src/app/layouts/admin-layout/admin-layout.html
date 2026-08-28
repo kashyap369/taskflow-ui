@@ -25,6 +25,12 @@
         <lucide-angular name="Settings" [size]="16"></lucide-angular>
         <span>Settings</span>
       </a>
+      @if (plannerEnabled) {
+        <a routerLink="/admin/planner-templates" routerLinkActive="active">
+          <lucide-angular name="LibraryBig" [size]="16"></lucide-angular>
+          <span>Planner library</span>
+        </a>
+      }
     </nav>
 
     <div class="topbar-actions">

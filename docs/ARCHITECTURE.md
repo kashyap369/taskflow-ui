@@ -413,6 +413,43 @@ npx ng lint               # ESLint + boundary + a11y checks
 
 ---
 
+### Planner template boundary
+
+Phase 20 shares template DTOs through `core/models/planner-template.model.ts` because both the Admin
+and Member feature slices consume them without importing each other. Admin pages mutate templates only
+through `AdminFacade`; Planner reads published templates through `PlannerFacade`. Excalidraw elements
+cache only the node id: the workspace DTO supplies the immutable template-version snapshot used for
+card dimensions and colors, so archived or superseded definitions never restyle an existing plan.
+
+### Planner resource boundary
+
+Phase 21 keeps resource orchestration in `PlannerFacade` and HTTP/FormData details in
+`PlannerRepository`. The workspace DTO hydrates Note/Document cards from canonical resource metadata;
+the separate resource list retains unlinked items for later relinking. Files are retrieved as authorized
+Blobs only for a user action, preview object URLs are revoked, and no Blob/base64 data enters Excalidraw
+serialization or Angular state. Direct Excalidraw image embedding stays blocked and points users to
+Add resource instead.
+
+### Planner requirement-history boundary
+
+Phase 22 keeps baseline/history HTTP details in `PlannerRepository` and all async state in
+`PlannerFacade`. The page only opens finalization and comparison workflows through that facade.
+Angular never infers New/Changed/Removed from canvas or workspace DTOs: the API owns immutable
+snapshots, actor/time/reason audit history, effective change state, and field differences. The facade
+refreshes comparison after canonical node mutations, while status/completion changes remain ordinary
+workspace progress and do not appear as requirement changes.
+
+### Planner rollout and recovery boundary (Phase 23)
+
+The Planner build flag controls route matching and both member/admin navigation surfaces; the server has
+an independent runtime flag so rollback does not require deleting data. Canvas changes update immediate
+selection state but coalesce JSON serialization, and the newest snapshot is flushed before context
+switches. The shared 5,000-element ceiling is surfaced through the Planner facade.
+
+Legacy `taskflow-planner:{user}` scenes are never silently promoted to cloud authority. The UI offers an
+explicit import into the selected project, sanitizes embedded image/file payloads, saves the server scene,
+and only then records migration metadata. The original browser value remains intact for rollback.
+
 ## 14. Adding a new feature (checklist)
 
 1. Create `features/<layout>/<page-name>/` with the 4 page files (`.ts/.html/.scss/.spec.ts`).

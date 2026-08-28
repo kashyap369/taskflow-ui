@@ -1,12 +1,45 @@
 # TaskFlow UI — Session Log
 
+## 2026-08-28 (Planner Phase 23 — hardening and production rollout)
+
+- Coalesced large-canvas serialization without delaying selection UI and flushes the newest scene before
+  project switches or teardown; a shared 5,000-element limit now fails visibly.
+- Added Planner build flags/route guards/navigation gating plus explicit legacy browser-scene import,
+  embedded-data sanitization, and preservation of the original rollback copy.
+- Browser specs pass 240/240; production build, lint/design lint, and Storybook pass. Frontend and API
+  were released through Dokploy and live health checks are recorded in the shared completion ledger.
+
+## 2026-08-28 (Planner Phase 22 — primary requirements and comparison)
+
+- Enabled Requirements with immutable Baseline 1 finalization, ordered snapshot inspection, and an
+  explicit warning that the primary checkpoint cannot be overwritten.
+- Added New/Changed/Removed filters, optional reasons, actor/time history, and field-level diffs using
+  five owner-authorized APIs; Angular never infers audit state from Excalidraw.
+- Frontend passes 236/236 specs, production build, and lint/design lint; backend passes 22/22 plus EF drift.
+  Phase 23 hardening, performance, observability, E2E, and rollout is next.
+
+## 2026-08-28 (Planner Phase 21 — secure project resources)
+
+- Enabled Note/Document templates and added direct Note, Link, and File creation with backend-backed cards.
+- Added resource inspector editing, authorized preview/download, safe filename changes, unlink/relink
+  retention through the Library, and explicit deletion of stored assets.
+- Full Angular suite passes 234/234 and production build/lint pass; backend passes 21/21 with no EF drift.
+  Phase 22 primary requirements and comparison is next.
+
+## 2026-08-28 (Planner Phase 20 — admin templates and member library)
+
+- Added `/admin/planner-templates` with draft/edit/publish/archive flows and immutable version visibility.
+- Replaced the disabled Planner Library control with published-active template selection, safe defaults,
+  and snapshotted colors/dimensions; Note/Document entries wait for Phase 21 resources.
+- Full suite is 232/232; production build, lint/design lint, Storybook, detector, backend tests, and EF
+  model-drift checks pass. Next is Phase 21 notes, documents, and secure media.
+
 > Append-only. 3–5 lines per session. Focus on gotchas, dead ends, and decisions — things git
 > history doesn't capture.
 >
-> **▶ Next session: ALL THREE portals are complete (Phases 26–29).** **80 of 82** API endpoints
-> consumed — the 2 left are the standing deliberate skips (`GET /task/mine`, `GET /worklog/mine`).
-> `ng lint` **0 errors**, `ng build` passes, **204/204** unit tests green, AA contrast enforced by
-> `npm run a11y:contrast`.
+> **Planner roadmap complete:** Phases 17–23 are delivered. The current baseline is **115 of 117**
+> API endpoints consumed and **240/240** browser specs green, with production build, lint/design lint,
+> Storybook, hardened API coverage, and the Dokploy rollout passing.
 >
 > ⚠️ **Two tabs share one `localStorage`.** Signing into a second portal in another tab re-points the
 > first tab's token, and every org-scoped call then 403s ("You do not have access to this resource")
@@ -802,3 +835,24 @@
 - `npm run build`, `npm run lint`, and backend build passed. Karma compiled the suite, but this Windows
   host's ChromeHeadless GPU process crashed before test execution; live browser/API checks were used for
   functional verification.
+
+## 2026-08-28 (Planner Phase 18 — cloud persistence and recovery)
+
+- Connected the Planner to the authorized board/scene/history API with debounced revisioned saves;
+  cloud state is authoritative and IndexedDB is now only an ordered per-user/project recovery cache.
+- Added truthful saving/saved/offline/failed/conflict states, local-vs-server conflict resolution,
+  recovery-unavailable messaging, and protection against serializing embedded binary files.
+- Added a stable Karma launcher for this Windows host and repaired pre-existing specs exposed by the
+  first complete browser run. All 230 specs pass; production build, lint/design lint, and Storybook
+  build pass. Phase 19's linked canonical work objects are next.
+
+## 2026-08-28 (Planner Phase 19 — linked work objects and inspector)
+
+- Added stable project/task/subtask canvas cards whose layout stays in Excalidraw while business
+  fields, status, dates, counts, and completion remain authoritative in TaskFlow.
+- Added Add work and Details flows with responsive drawers, canonical create/edit commands, live
+  progress labels, automatic linked-card rehydration, and explicit unlink-versus-delete controls.
+- Extended project typing for problem statement, budget/currency, and approximate duration while
+  keeping old personal and organization project screens compatible.
+- All 231 browser specs, production build, lint/design lint, Storybook, and UI detector pass; backend
+  integration covers ownership, exact-once creation, external completion refresh, and removal semantics.

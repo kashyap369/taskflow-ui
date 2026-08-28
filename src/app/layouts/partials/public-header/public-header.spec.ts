@@ -47,7 +47,9 @@ describe('PublicHeader', () => {
       component.toggleMenu();
       fixture.detectChanges();
 
-      fixture.nativeElement.querySelector('.nav-link').click();
+      const link: HTMLAnchorElement = fixture.nativeElement.querySelector('.nav-link');
+      link.addEventListener('click', (event) => event.preventDefault(), { once: true });
+      link.click();
       fixture.detectChanges();
 
       expect(component.menuOpen()).toBeFalse();

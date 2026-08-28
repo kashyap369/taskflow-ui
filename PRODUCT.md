@@ -35,8 +35,9 @@ members, teams, assignment, and organization reporting; personal work does not.
 - Personal projects support ordinary project/task/subtask lifecycle features but have no teams,
   assignees, members, organization roles, or organization settings.
 - Organization projects retain their existing organization-scoped permission model.
-- Planner initially embeds the open-source Excalidraw editor for Individual accounts. Its first phase
-  is a private per-user browser autosave; backend/cloud canvas persistence is deliberately deferred.
+- Planner embeds the open-source Excalidraw editor for Individual accounts with authorized cloud
+  scenes, recovery caching, and stable links to canonical personal projects, tasks, and subtasks.
+  Excalidraw owns layout while TaskFlow owns business fields, status, dates, and progress.
 - Authentication supports password and one-time email code flows. Secrets stay in deployment or
   developer secret configuration and are not copied into client code.
 

@@ -10,6 +10,7 @@ import { authGuard } from '@core/guards/auth.guard';
 import { guestGuard } from '@core/guards/guest.guard';
 import { roleGuard } from '@core/guards/role.guard';
 import { portalGuard } from '@core/guards/portal.guard';
+import { plannerFeatureGuard } from '@core/guards/planner-feature.guard';
 
 export const routes: Routes = [
   // ── Public marketing site ──────────────────────────────
@@ -34,6 +35,16 @@ export const routes: Routes = [
   },
   // Legacy /login → canonical auth route
   { path: 'login', redirectTo: 'auth/login', pathMatch: 'full' },
+
+  // Planner is an immersive workspace, so it deliberately bypasses MemberLayout's top bar,
+  // max-width and page padding while keeping the canonical /member/planner URL and member guards.
+  {
+    path: 'member/planner',
+    canMatch: [plannerFeatureGuard('/member/dashboard')],
+    canActivate: [authGuard, portalGuard('member')],
+    loadComponent: () =>
+      import('@features/member/planner-page/planner-page').then((m) => m.PlannerPage),
+  },
 
   // ── Organization portal (AccountType.Organization) ──────
   {

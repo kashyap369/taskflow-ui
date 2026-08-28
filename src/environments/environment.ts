@@ -9,4 +9,7 @@ export const environment = {
   api: {
     baseUrl: 'https://localhost:7086/api',
   },
+  features: {
+    planner: true,
+  },
 } as const;

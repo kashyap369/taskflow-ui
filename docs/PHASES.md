@@ -1,9 +1,70 @@
 # TaskFlow UI — Phases & Status
 
 > Keep the Current Status section up to date at the end of every session.
-> The backend (`D:\Projects\TMS\TaskFlow`) is fully implemented across its 8 phases; the frontend
-> consumes it and is at the start of feature build-out. Phase order roughly follows the backend so
-> each frontend phase has a working API behind it.
+> The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
+> complete end to end, including the hardened production rollout.
+
+## ✅ Planner Phase 23 — Hardening, scale, and production rollout (2026-08-28)
+
+- Coalesces expensive Excalidraw serialization while keeping selection feedback immediate, flushes the
+  latest snapshot before project switches/destruction, and reports the shared 5,000-element limit.
+- Gates member/admin Planner routes and navigation with the build-time Planner feature flag.
+- Detects legacy per-user browser scenes, requires explicit import into a selected cloud project,
+  sanitizes embedded binary data, and preserves the original local copy during rollback.
+- Adds browser specs for feature routing, scene limits, migration/recovery, and existing autosave,
+  conflict, resource, baseline, and comparison flows.
+
+**Delivered evidence:** 240/240 browser specs, production build, lint/design lint, and Storybook build
+pass. Backend integration/performance/security evidence and Dokploy rollout are recorded in the shared
+ProjectCompletion ledger.
+
+## ✅ Planner Phase 22 — Primary requirements and change comparison (2026-08-28)
+
+- Enabled the Planner Requirements control with irreversible Baseline 1 finalization, immutable
+  ordered snapshot inspection, and clear separation between requirement scope and execution progress.
+- Added New/Changed/Removed working-change filters, optional reasons, actor/time metadata, and
+  field-level baseline/current differences backed entirely by server-authored history.
+- Added repository/facade signals for all five baseline/history/comparison APIs and refreshed the
+  comparison automatically after Planner-aware work mutations.
+- Verified 236/236 frontend specs, production build, lint/design lint, 22/22 backend tests, and EF drift.
+
+## ✅ Planner Phase 21 — Notes, documents, and secure media (2026-08-28)
+
+- Added Note, Link, and Document cards backed by owner-authorized resource records rather than scene JSON.
+- Added upload, preview/download, rename, unlink/relink retention, and permanent delete flows with a
+  25 MB allowlist, safe names, SHA-256, private object storage, and scan-status hook in the API.
+- Enabled Phase 20 Note/Document templates and preserved their immutable presentation snapshots.
+- Verified 234/234 frontend specs, production build, lint/design lint, 21/21 backend tests, and EF drift.
+
+## ✅ Planner Phase 20 — Admin-managed template library (2026-08-28)
+
+- Added Admin template management for the five fixed Planner object types with draft, publish,
+  published-edit versioning, archive, active state, ordering, fields/defaults, and visual configuration.
+- Added a member Planner library that lists published active versions, applies safe defaults, and
+  renders linked cards with their snapshotted colors and dimensions. Old cards survive later edits/archive.
+- Note and Document templates are visible but disabled until Phase 21 supplies resource records.
+- Verified all 232 frontend specs, production build, lint/design lint, Storybook, detector, plus the
+  backend's 18 tests and EF model-drift check. Phase 21's secure resources are next.
+
+## ✅ Planner Phase 19 — Linked work objects and live progress (2026-08-28)
+
+- Added stable Project/Task/Subtask cards backed by canonical TaskFlow records rather than scene JSON.
+- Added an Add work flow, project/task/subtask forms, a compact inspector, backend-derived status,
+  counts and progress, and explicit unlink-card versus delete-record actions.
+- Canvas load refreshes business data and restores missing linked cards while preserving Excalidraw
+  position, dimensions, connectors, and presentation ownership.
+- Verified all 231 frontend specs, production build, lint/design lint, Storybook build, and the
+  Impeccable UI detector. The template-library follow-up was delivered in Phase 20.
+
+## ✅ Planner Phase 18 — Cloud persistence and conflict-safe autosave (2026-08-28)
+
+- Replaced the temporary browser-authoritative scene with the owner-authorized Planner board API;
+  scene loads, debounced saves, ETags/revisions, and immutable revision history are now wired.
+- IndexedDB is retained only as an ordered recovery cache. Offline, failed, unavailable-recovery,
+  embedded-file, and stale-revision conflict states have explicit, truthful UI and recovery actions.
+- Planner serialization excludes binary files and blocks cloud saves while embedded images remain.
+- Verified the complete 230-spec frontend suite, production build, lint/design lint, and Storybook
+  build. Backend HTTP/PostgreSQL integration tests cover cross-device restore and concurrency.
 
 ## ✅ Phase 32 — Private personal projects + Planner (2026-08-15)
 

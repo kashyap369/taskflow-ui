@@ -104,6 +104,10 @@ export interface Project {
   startDate: string;
   expectedCompletionDate: string | null;
   actualCompletionDate: string | null;
+  problemStatement?: string | null;
+  budgetAmount?: number | null;
+  budgetCurrency?: string | null;
+  approximateDurationWeeks?: number | null;
   createdByUserId: number;
   taskCount: number;
   completedTaskCount: number;

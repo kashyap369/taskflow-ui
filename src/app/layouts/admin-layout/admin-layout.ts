@@ -6,6 +6,7 @@ import {
   LucideAngularModule,
   LucideIconProvider,
   LayoutDashboard,
+  LibraryBig,
   LogOut,
   Moon,
   Settings,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-angular';
 
 import { AuthService } from '@core/auth/auth.service';
+import { APP_SETTINGS } from '@core/config/app.tokens';
 import { ThemeService } from '@core/services/theme.service';
 import { AuthFacade } from '@features/auth/auth.facade';
 
@@ -33,6 +35,7 @@ import { AuthFacade } from '@features/auth/auth.facade';
         Moon,
         LogOut,
         LayoutDashboard,
+        LibraryBig,
         Users,
         Building2,
         Settings,
@@ -44,9 +47,11 @@ export class AdminLayout {
   private readonly themeService = inject(ThemeService);
   private readonly authService = inject(AuthService);
   private readonly authFacade = inject(AuthFacade);
+  private readonly settings = inject(APP_SETTINGS);
 
   readonly isDark = this.themeService.isDark;
   readonly user = this.authService.user;
+  readonly plannerEnabled = this.settings.features.planner;
 
   toggleTheme(): void {
     this.themeService.toggle();

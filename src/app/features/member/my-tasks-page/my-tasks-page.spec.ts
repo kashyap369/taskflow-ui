@@ -54,6 +54,7 @@ const getTask = jasmine
 const repositoryStub = {
   getMyInvitations: () => of([]),
   getMyPersonalTasks: () => of(TASKS),
+  getMyPersonalProjects: () => of([]),
   getTask,
   createPersonalTask,
   updateTask,
@@ -129,7 +130,7 @@ describe('MyTasksPage', () => {
     const payload = createPersonalTask.calls.mostRecent().args[0];
     expect(payload.title).toBe('Call the dentist');
     expect(Object.keys(payload)).not.toContain('organizationId');
-    expect(Object.keys(payload)).not.toContain('projectId');
+    expect(payload.projectId).toBeNull();
   });
 
   it('fetches the description before editing, so saving cannot blank it', () => {

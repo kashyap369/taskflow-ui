@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 
 import { Observable } from 'rxjs';
 
 import { APP_SETTINGS } from '../config/app.tokens';
+import { SILENT_API_ERROR } from './api-context';
 
 @Injectable({
   providedIn: 'root',
@@ -25,6 +26,37 @@ export class ApiService {
 
   put<T>(endpoint: string, body: unknown): Observable<T> {
     return this.http.put<T>(`${this.baseUrl}${endpoint}`, body);
+  }
+
+  getSilently<T>(endpoint: string): Observable<T> {
+    return this.http.get<T>(`${this.baseUrl}${endpoint}`, {
+      context: new HttpContext().set(SILENT_API_ERROR, true),
+    });
+  }
+
+  getBlobSilently(endpoint: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}${endpoint}`, {
+      responseType: 'blob',
+      context: new HttpContext().set(SILENT_API_ERROR, true),
+    });
+  }
+
+  putSilently<T>(endpoint: string, body: unknown): Observable<T> {
+    return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, {
+      context: new HttpContext().set(SILENT_API_ERROR, true),
+    });
+  }
+
+  postSilently<T>(endpoint: string, body: unknown): Observable<T> {
+    return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, {
+      context: new HttpContext().set(SILENT_API_ERROR, true),
+    });
+  }
+
+  deleteSilently<T>(endpoint: string): Observable<T> {
+    return this.http.delete<T>(`${this.baseUrl}${endpoint}`, {
+      context: new HttpContext().set(SILENT_API_ERROR, true),
+    });
   }
 
   patch<T>(endpoint: string, body: unknown): Observable<T> {

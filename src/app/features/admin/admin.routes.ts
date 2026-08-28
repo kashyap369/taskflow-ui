@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { plannerFeatureGuard } from '@core/guards/planner-feature.guard';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -19,6 +20,11 @@ export const ADMIN_ROUTES: Routes = [
     path: 'organizations',
     loadComponent: () =>
       import('./organizations-page/organizations-page').then((m) => m.AdminOrganizationsPage),
+  },
+  {
+    path: 'planner-templates',
+    canMatch: [plannerFeatureGuard('/admin/dashboard')],
+    loadComponent: () => import('./templates-page/templates-page').then((m) => m.AdminTemplatesPage),
   },
   {
     path: 'settings',

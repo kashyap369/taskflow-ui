@@ -10,6 +10,8 @@ import {
   AdminUserDetail,
   PlatformSettings,
   UpdatePlatformSettingsPayload,
+  PlannerTemplate,
+  PlannerTemplateDefinition,
 } from './admin.models';
 
 /**
@@ -45,4 +47,9 @@ export class AdminRepository {
   updateSettings(payload: UpdatePlatformSettingsPayload): Observable<void> {
     return this.api.put<void>(API.Admin.Settings, payload);
   }
+  getPlannerTemplates(): Observable<PlannerTemplate[]> { return this.api.get<PlannerTemplate[]>(API.Admin.PlannerTemplates); }
+  createPlannerTemplate(payload: PlannerTemplateDefinition): Observable<string> { return this.api.post<string>(API.Admin.PlannerTemplates, payload); }
+  updatePlannerTemplate(id: string, payload: PlannerTemplateDefinition): Observable<string | null> { return this.api.put<string | null>(API.Admin.PlannerTemplate(id), payload); }
+  publishPlannerTemplate(id: string): Observable<string> { return this.api.post<string>(API.Admin.PublishPlannerTemplate(id), {}); }
+  archivePlannerTemplate(id: string): Observable<void> { return this.api.post<void>(API.Admin.ArchivePlannerTemplate(id), {}); }
 }
