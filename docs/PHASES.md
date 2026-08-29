@@ -4,6 +4,48 @@
 > The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
 > complete end to end, including the hardened production rollout.
 
+## ✅ Calendar Phase 4 — Events, leave, holidays + recurrence (2026-08-29)
+
+- Added organization-owned calendar entries with UTC/timezone-aware timed events, all-day leave and
+  holidays, a small Daily/Weekly/Monthly recurrence contract, and an additive migration.
+- Added organization-scoped reads plus `ManageCalendar` create/update/delete authorization; recurring
+  occurrences are expanded by bounded server queries and deletion cannot touch projects or tasks.
+- Merged entries through the existing TaskFlow calendar adapter and added accessible create/edit/delete
+  UI. Verified 256/256 frontend specs, 40/40 backend tests, build, lint/design lint, EF drift and all 42
+  contrast pairings.
+
+## ✅ Calendar Phase 3 — Team Capacity (2026-08-29)
+
+- Added real nullable task estimates and member weekly working capacities through focused,
+  permission-gated API writes and the additive `AddCalendarCapacity` migration.
+- Added a server-computed Monday–Sunday capacity query with Light/Balanced/Heavy states and explicit
+  `NotEnoughData` rows whenever capacity or an assigned task estimate is missing.
+- Added a responsive six-week Team Capacity view with sticky member context, date navigation, weekly
+  hours editing and a focused estimate queue; no forecasting or automatic assignment was introduced.
+- Verified 254/254 frontend specs, 35/35 backend tests (including real PostgreSQL/HTTP UTC and isolation
+  coverage), production build, lint/design lint, EF drift and all 42 contrast pairings.
+
+## ✅ Calendar Phase 2 — Filters, details + authorized rescheduling (2026-08-29)
+
+- Added one persisted filter state for project, team, member, item type, status, priority, overdue and
+  completed across Schedule and Project Timeline, including truthful no-match states.
+- Replaced the compact selection strip with one reusable accessible detail drawer linked to existing
+  project/task actions.
+- Added `PUT /task/{id}/schedule`, guarded by `ManageTasks`, and enabled authorized task drag/resize in
+  FullCalendar and Frappe Gantt. Project bars remain read-only; failed saves visibly restore old dates.
+- Verified 253/253 frontend specs, 30/30 backend tests, production build, lint/design lint and all 42
+  contrast pairings. Calendar Phase 3 subsequently delivered real estimates and working-hours capacity.
+
+## ✅ Calendar Phase 1 — Read-only Schedule + Project Timeline (2026-08-29)
+
+- Enabled `/organization/calendar` with FullCalendar month/week/list views and a lazy-loaded,
+  project-selectable Frappe Gantt timeline; both derive from the existing organization facade data.
+- Added TaskFlow-owned adapters, read-only item details, progress/assignee/team context, truthful
+  loading/error/empty states, organization-switch isolation, keyboard tabs and responsive themes.
+- Pinned the MIT dependencies and recorded the phased handoff in [CALENDAR.md](CALENDAR.md). The full
+  suite passes 247/247; build, lint/design lint, contrast and desktop/mobile browser passes
+  are green. Phase 2 subsequently delivered filters, the drawer and authorized rescheduling.
+
 ## ✅ Planner Phase 23 — Hardening, scale, and production rollout (2026-08-28)
 
 - Coalesces expensive Excalidraw serialization while keeping selection feedback immediate, flushes the
@@ -112,19 +154,18 @@ ProjectCompletion ledger.
 | API coverage | **80 of 82** endpoints wired — everything except the 2 long-standing **deliberate skips** (`GET /task/mine`, `GET /worklog/mine`; both would be a third rendering of data already on screen). Nothing is unconsumed for want of a screen. |
 | Lint | **`npx ng lint` passes with zero errors.** |
 | Build | `ng build` passes. |
-| Unit tests | **204/204 green.** |
+| Unit tests | **247/247 green.** |
 | a11y | Every live template lint-clean; all 42 token contrast pairings meet AA in both themes (`npm run a11y:contrast`). |
 | Loading states | Content-shaped `Skeleton` on every page that loads data. |
 | List pages | `.list-toolbar` + `createPagination` + `<app-pagination>` on every list. |
 | Forms | Every reactive form validates through the `@shared/validations` decorator engine. |
 
 **→ Read [V1-GAPS.md](V1-GAPS.md) before picking anything up.** §1 (backend-blocked) and §2 (backend
-defects) are **empty**. The only backend gap left anywhere is **forgot-password**, and it blocks no
-built screen. Remaining work is all §3 (deferred v1.x): **CSV/PDF report export** is the highest-value
-item, then the **calendar page** (Phase 25, still open), per-member trend charts, and E2E tests.
+defects) are **empty**. Remaining work is all §3 (deferred v1.x): **CSV/PDF report export** is the
+highest-value item, then per-member trend charts and E2E tests. Calendar Phase 3 is complete.
 
-**Phases 24–29 status:** 26, 27, 28, 29 are **done** (below). **24** (report export + member trend
-charts) and **25** (calendar page) remain — both need zero backend work.
+**Phases 24–29 status:** 26, 27, 28, 29 are **done** (below). **24** remains; **25** has delivered its
+Phases 1–2 and continues through the separate calendar roadmap.
 
 **No re-explaining needed.** Org portal is feature/theme-complete (Phases 8–10); Admin has a live Users
 page + dashboard (Phase 11); the **`shared/validations/` engine** is built (Phase 12) and now backs
@@ -189,10 +230,12 @@ From V1-GAPS §3 — the reports page already holds every figure it needs.
   weekly/monthly buckets and render a line chart with the existing `ngx-echarts` setup (already used for
   the team-performance bar chart).
 
-### Phase 25 — Calendar page (⬜ STILL OPEN, zero backend dependency)
-- The org sidebar still has a `disabled` "Coming soon" nav item. Tasks already carry `startDate` +
-  `expectedCompletionDate` from the list/detail DTOs — enough for a month-grid view with tasks plotted on
-  their due date. Route at `/organization/calendar` following the existing feature-page conventions.
+### Phase 25 — Calendar page (🟡 PHASES 1–3 DONE, phased expansion continues)
+- `/organization/calendar` now ships Schedule + Project Timeline, shared filters, reusable details and
+  authorized task rescheduling over existing project/task/member data.
+- The phased end-to-end implementation and session handoff contract are canonical in
+  [`CALENDAR.md`](CALENDAR.md). Phase 3 is READY and must use real estimates/capacity data rather than
+  infer availability from task counts.
 
 ### Phase 26 — Admin drawer unblock + member-removal copy ✅ **DONE**
 - **26.1** `EnsureUserAsync` now short-circuits for a platform admin. **Verified on the backend side:

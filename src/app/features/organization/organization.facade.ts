@@ -8,6 +8,7 @@ import { NotificationService } from '@core/services/notification.service';
 import { OrganizationRepository } from './organization.repository';
 import {
   CreateProjectPayload,
+  CapacityRow,
   CreateTaskPayload,
   DashboardSummary,
   MemberTaskReport,
@@ -20,6 +21,7 @@ import {
   OrganizationRoleDetail,
   Project,
   ProjectReport,
+  ScheduleTaskPayload,
   SubTask,
   TaskDetail,
   TaskListItem,
@@ -32,6 +34,8 @@ import {
   UpdateTaskPayload,
   UpdateTeamPayload,
   WorkLog,
+  CalendarEntry,
+  CalendarEntryPayload,
 } from './organization.models';
 
 const SELECTED_ORG_KEY = 'tf_org_id';
@@ -71,13 +75,18 @@ export class OrganizationFacade {
   private readonly _workLogsTaskId = signal<number | null>(null);
   private readonly _permissionCatalog = signal<OrganizationPermission[]>([]);
   private readonly _selectedRole = signal<OrganizationRoleDetail | null>(null);
+  private readonly _currentUserRole = signal<OrganizationRoleDetail | null>(null);
   private readonly _projectDetail = signal<Project | null>(null);
   private readonly _projectTasks = signal<TaskListItem[]>([]);
   private readonly _teamReport = signal<TeamPerformanceReport[]>([]);
   private readonly _memberReport = signal<MemberTaskReport | null>(null);
   private readonly _projectReport = signal<ProjectReport | null>(null);
+  private readonly _capacity = signal<CapacityRow[]>([]);
+  private readonly _calendarEntries = signal<CalendarEntry[]>([]);
+  private readonly _capacityLoading = signal(false);
   private readonly _reportLoading = signal(false);
   private readonly _loading = signal(false);
+  private readonly _loadError = signal(false);
   private readonly _saving = signal(false);
   private readonly _loaded = signal(false);
 
@@ -107,13 +116,19 @@ export class OrganizationFacade {
   readonly workLogsTaskId = this._workLogsTaskId.asReadonly();
   readonly permissionCatalog = this._permissionCatalog.asReadonly();
   readonly selectedRole = this._selectedRole.asReadonly();
+  readonly currentUserRole = this._currentUserRole.asReadonly();
   readonly projectDetail = this._projectDetail.asReadonly();
   readonly projectTasks = this._projectTasks.asReadonly();
   readonly teamReport = this._teamReport.asReadonly();
   readonly memberReport = this._memberReport.asReadonly();
   readonly projectReport = this._projectReport.asReadonly();
+  readonly capacity = this._capacity.asReadonly();
+  readonly calendarEntries = this._calendarEntries.asReadonly();
+  readonly capacityLoading = this._capacityLoading.asReadonly();
   readonly reportLoading = this._reportLoading.asReadonly();
   readonly loading = this._loading.asReadonly();
+  /** Last organization-workspace load failed; pages can distinguish failure from a truthful empty state. */
+  readonly loadError = this._loadError.asReadonly();
   readonly saving = this._saving.asReadonly();
 
   /** The signed-in principal (for greetings / ownership). */
@@ -135,6 +150,22 @@ export class OrganizationFacade {
     return org != null && user != null && org.ownerUserId === user.id;
   });
 
+  /** UI affordance only; the API repeats this check and remains authoritative. */
+  readonly canManageTasks = computed(
+    () =>
+      this.isCurrentOrgOwner() ||
+      (this._currentUserRole()?.permissions.includes('ManageTasks') ?? false),
+  );
+  readonly canManageMembers = computed(
+    () =>
+      this.isCurrentOrgOwner() ||
+      (this._currentUserRole()?.permissions.includes('ManageMembers') ?? false),
+  );
+  readonly canManageCalendar = computed(
+    () => this.isCurrentOrgOwner() ||
+      (this._currentUserRole()?.permissions.includes('ManageCalendar') ?? false),
+  );
+
   constructor() {
     // Everything below is scoped to the signed-in user, and `init()` won't refetch once `_loaded`
     // is true — so without this, a second account would inherit the first account's workspace.
@@ -147,13 +178,18 @@ export class OrganizationFacade {
     this._organizations.set([]);
     this._permissionCatalog.set([]);
     this._selectedRole.set(null);
+    this._currentUserRole.set(null);
     this._teamReport.set([]);
     this._memberReport.set(null);
     this._projectReport.set(null);
+    this._capacity.set([]);
+    this._calendarEntries.set([]);
+    this._capacityLoading.set(false);
     this.clearSubTasks();
     this.clearWorkLogs();
     this._loaded.set(false);
     this._loading.set(false);
+    this._loadError.set(false);
     this._saving.set(false);
   }
 
@@ -168,6 +204,7 @@ export class OrganizationFacade {
   /** Re-fetch the user's organizations, choose the current one, then load its data. */
   loadOrganizations(): void {
     this._loading.set(true);
+    this._loadError.set(false);
 
     this.repository.getMyOrganizations().subscribe({
       next: (orgs) => {
@@ -187,6 +224,7 @@ export class OrganizationFacade {
       error: () => {
         this._loaded.set(true);
         this._loading.set(false);
+        this._loadError.set(true);
       },
     });
   }
@@ -200,6 +238,11 @@ export class OrganizationFacade {
 
   private loadOrgData(organizationId: number): void {
     this._loading.set(true);
+    this._loadError.set(false);
+    this._currentUserRole.set(null);
+    this._capacity.set([]);
+    this._calendarEntries.set([]);
+    this._capacityLoading.set(false);
 
     // Everything the org portal pages read, loaded together so any page has data immediately and
     // switching orgs refreshes all of it. All of these endpoints return raw (unenveloped) DTOs.
@@ -226,8 +269,24 @@ export class OrganizationFacade {
         this._invitations.set(invitations);
         this._teams.set(teams);
         this._loading.set(false);
+
+        if (!this.isCurrentOrgOwner()) {
+          const currentMember = members.find((member) => member.userId === this.user()?.id);
+          if (currentMember) {
+            this.repository.getRole(currentMember.organizationRoleId).subscribe({
+              next: (role) => {
+                if (this.currentOrgId() === organizationId) {
+                  this._currentUserRole.set(role);
+                }
+              },
+            });
+          }
+        }
       },
-      error: () => this._loading.set(false),
+      error: () => {
+        this._loading.set(false);
+        this._loadError.set(true);
+      },
     });
 
     // The permission catalog is global — fetch once.
@@ -338,6 +397,7 @@ export class OrganizationFacade {
     this._assigneeRoleId.set(null);
     this._invitations.set([]);
     this._teams.set([]);
+    this._currentUserRole.set(null);
     this.clearProjectDetail();
     this.clearTeamDetail();
   }
@@ -448,6 +508,134 @@ export class OrganizationFacade {
         this._saving.set(false);
         this.notification.success('Task updated.');
         this.afterTaskChange(organizationId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  /** Persist a calendar move, then refetch canonical task data. */
+  scheduleTask(
+    payload: ScheduleTaskPayload,
+    onSuccess?: () => void,
+    onError?: () => void,
+  ): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      onError?.();
+      return;
+    }
+
+    this._saving.set(true);
+    this.repository.scheduleTask(payload).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Task schedule updated.');
+        this.reloadTasks(organizationId);
+        onSuccess?.();
+      },
+      error: () => {
+        this._saving.set(false);
+        onError?.();
+      },
+    });
+  }
+
+  setTaskEstimate(taskId: number, estimateMinutes: number | null, onSuccess?: () => void): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this._saving.set(true);
+    this.repository.setTaskEstimate(taskId, estimateMinutes).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success(estimateMinutes == null ? 'Task estimate cleared.' : 'Task estimate updated.');
+        this.reloadTasks(organizationId);
+        onSuccess?.();
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  setMemberCapacity(
+    userId: number,
+    weeklyCapacityMinutes: number | null,
+    onSuccess?: () => void,
+  ): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      return;
+    }
+    this._saving.set(true);
+    this.repository.setMemberCapacity(organizationId, userId, weeklyCapacityMinutes).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success(
+          weeklyCapacityMinutes == null ? 'Member capacity cleared.' : 'Member capacity updated.',
+        );
+        this.repository.getMembers(organizationId).subscribe({
+          next: (members) => this._members.set(members),
+        });
+        onSuccess?.();
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  loadCapacity(weekStart: string, weeks = 6): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) {
+      this._capacity.set([]);
+      return;
+    }
+    this._capacityLoading.set(true);
+    this.repository.getCapacity(organizationId, weekStart, weeks).subscribe({
+      next: (capacity) => {
+        if (this.currentOrgId() === organizationId) {
+          this._capacity.set(capacity);
+        }
+        this._capacityLoading.set(false);
+      },
+      error: () => this._capacityLoading.set(false),
+    });
+  }
+
+  loadCalendarEntries(fromUtc: string, toUtc: string): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) { this._calendarEntries.set([]); return; }
+    const request = this.repository.getCalendarEntries?.(organizationId, fromUtc, toUtc);
+    if (!request) return;
+    request.subscribe({
+      next: (entries) => {
+        if (this.currentOrgId() === organizationId) this._calendarEntries.set(entries);
+      },
+    });
+  }
+
+  saveCalendarEntry(payload: CalendarEntryPayload, onSuccess?: () => void): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) return;
+    this._saving.set(true);
+    const request: Observable<unknown> = payload.id == null
+      ? this.repository.createCalendarEntry({ ...payload, organizationId })
+      : this.repository.updateCalendarEntry(payload);
+    request.subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success(payload.id == null ? 'Calendar entry created.' : 'Calendar entry updated.');
+        onSuccess?.();
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  deleteCalendarEntry(id: number, onSuccess?: () => void): void {
+    this._saving.set(true);
+    this.repository.deleteCalendarEntry(id).subscribe({
+      next: () => {
+        this._saving.set(false);
+        this.notification.success('Calendar entry deleted.');
+        onSuccess?.();
       },
       error: () => this._saving.set(false),
     });

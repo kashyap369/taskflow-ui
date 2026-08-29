@@ -36,6 +36,9 @@
             ],
             "styles": [
               "node_modules/@excalidraw/excalidraw/dist/prod/index.css",
+              "node_modules/@fullcalendar/angular/skeleton.css",
+              "node_modules/@fullcalendar/angular/themes/classic/theme.css",
+              "node_modules/frappe-gantt/dist/frappe-gantt.css",
               "src/styles.scss"
             ]
           },
@@ -139,6 +142,9 @@
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/@excalidraw/excalidraw/dist/prod/index.css",
+              "node_modules/@fullcalendar/angular/skeleton.css",
+              "node_modules/@fullcalendar/angular/themes/classic/theme.css",
+              "node_modules/frappe-gantt/dist/frappe-gantt.css",
               "src/styles.scss"
             ],
             "scripts": [

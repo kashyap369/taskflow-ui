@@ -99,6 +99,8 @@ export const API = {
     /** Personal task (Individual account) — no organization, no project. */
     CreatePersonal: '/task/personal',
     Update: '/task',
+    Schedule: (id: number) => `/task/${id}/schedule`,
+    Estimate: (id: number) => `/task/${id}/estimate`,
     GetById: (id: number) => `/task/${id}`,
     Delete: (id: number) => `/task/${id}`,
     ByOrganization: (organizationId: number) => `/task/organization/${organizationId}`,
@@ -136,6 +138,8 @@ export const API = {
     Deactivate: '/organizationmember/deactivate',
     ChangeRole: '/organizationmember/change-role',
     Remove: '/organizationmember',
+    Capacity: (organizationId: number, userId: number) =>
+      `/organizationmember/organization/${organizationId}/users/${userId}/capacity`,
   },
 
   Invitation: {
@@ -176,5 +180,16 @@ export const API = {
     Delete: (id: number) => `/worklog/${id}`,
     ByTask: (taskId: number) => `/worklog/task/${taskId}`,
     Mine: '/worklog/mine',
+  },
+
+  Capacity: {
+    ByOrganization: (organizationId: number) => `/report/capacity/${organizationId}`,
+  },
+
+  Calendar: {
+    Create: '/calendar',
+    Update: '/calendar',
+    Delete: (id: number) => `/calendar/${id}`,
+    ByOrganization: (organizationId: number) => `/calendar/organization/${organizationId}`,
   },
 } as const;

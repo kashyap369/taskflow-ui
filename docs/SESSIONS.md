@@ -1,5 +1,40 @@
 # TaskFlow UI — Session Log
 
+## 2026-08-29 (Organization Calendar Phase 4)
+
+- Added calendar-owned organization events, member leave and holidays end to end with the additive
+  `AddCalendarEntries` migration, `ManageCalendar`, focused CRUD/window routes and bounded recurrence.
+- Schedule now merges server occurrences through the existing mapper and exposes an accessible,
+  permission-aware create/edit/delete drawer; project/task rows remain derived and independent.
+- Frontend is 256/256, backend is 40/40 with real HTTP/PostgreSQL recurrence/isolation/delete coverage;
+  production build, lint/design lint, EF drift and all 42 contrast checks pass. Optional booking is next.
+
+## 2026-08-29 (Organization Calendar Phase 3)
+
+- Added a six-week Team Capacity lens using server-owned estimates and weekly working capacities,
+  with sticky member rows, Light/Balanced/Heavy bands and explicit `Not enough data` cells.
+- Managers can set weekly hours and fill missing task estimates in context; the existing permissions
+  remain the authority and every successful edit refetches server-computed totals.
+- Frontend is 254/254; production build, lint/design lint and all 42 contrast checks pass. Capacity
+  styles are separated from renderer styles to keep Angular's component-style budget clean.
+
+## 2026-08-29 (Organization Calendar Phase 2)
+
+- Added organization-scoped shared filters and one accessible detail drawer for both calendar tabs.
+- Added a focused schedule API command using `ManageTasks`; only authorized task bars can move/resize,
+  project bars stay immutable, and both renderers revert visibly on failed persistence.
+- Frontend is 253/253, backend is 30/30, and build/lint/design lint/contrast pass. Phase 3 capacity must
+  add real estimates and working hours rather than infer availability from task counts.
+
+## 2026-08-29 (Organization Calendar Phase 1)
+
+- Enabled the organization Calendar route/navigation with a shared-canvas Schedule and Project Timeline.
+  FullCalendar and Frappe Gantt receive only TaskFlow-owned mapped records; no new API or schema exists.
+- The browser pass exposed two library-edge issues: FullCalendar v7 needs its explicit theme plugin/CSS,
+  and the app's responsive `svg` rule must not collapse Frappe's generated timeline width. Both are fixed.
+- The full frontend suite passes 247/247; build, lint/design lint and all 42 contrast checks pass.
+  Desktop/mobile Schedule and Timeline rendering, selection and horizontal scrolling were verified.
+
 ## 2026-08-28 (Planner Phase 23 — hardening and production rollout)
 
 - Coalesced large-canvas serialization without delaying selection UI and flushes the newest scene before

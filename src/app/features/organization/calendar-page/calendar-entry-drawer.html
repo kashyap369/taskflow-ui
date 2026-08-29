@@ -1,0 +1,52 @@
+<button type="button" class="drawer-backdrop" (click)="dismiss.emit()" aria-label="Close calendar entry"></button>
+<aside class="drawer" appDialog (dismiss)="dismiss.emit()">
+  <header class="drawer-head">
+    <div><span class="eyebrow">Calendar-owned</span><h2>{{ entry() ? 'Edit entry' : 'Add to calendar' }}</h2></div>
+    <button type="button" class="icon-button" (click)="dismiss.emit()" aria-label="Close"><lucide-angular name="X" size="18" /></button>
+  </header>
+  <form (ngSubmit)="submit()">
+    <label><span>Type</span><select name="kind" [(ngModel)]="kind" (ngModelChange)="kindChanged()">
+      <option [ngValue]="Kind.OrganizationEvent">Organization event</option>
+      <option [ngValue]="Kind.MemberLeave">Member leave</option>
+      <option [ngValue]="Kind.Holiday">Holiday</option>
+    </select></label>
+    <label><span>Title</span><input name="title" [(ngModel)]="title" required maxlength="160" /></label>
+    <label><span>Description <small>optional</small></span><textarea name="description" [(ngModel)]="description" rows="3" maxlength="1000"></textarea></label>
+    @if (kind === Kind.MemberLeave) {
+      <label><span>Member</span><select name="member" [(ngModel)]="memberUserId" required>
+        <option [ngValue]="null">Select member</option>
+        @for (member of members(); track member.userId) { @if (member.isActive) { <option [ngValue]="member.userId">{{ member.userFullName }}</option> } }
+      </select></label>
+    }
+    @if (kind === Kind.OrganizationEvent) {
+      <label class="check"><input type="checkbox" name="allDay" [(ngModel)]="allDay" /> All-day event</label>
+    }
+    <div class="date-grid">
+      <label><span>Starts</span><input name="start" [type]="allDay ? 'date' : 'datetime-local'" [(ngModel)]="start" required /></label>
+      <label><span>Ends</span><input name="end" [type]="allDay ? 'date' : 'datetime-local'" [(ngModel)]="end" required /></label>
+    </div>
+    <label><span>Time zone</span><input name="timeZone" [(ngModel)]="timeZone" required maxlength="100" /></label>
+    <div class="date-grid">
+      <label><span>Repeats</span><select name="frequency" [(ngModel)]="recurrenceFrequency">
+        <option [ngValue]="Frequency.None">Does not repeat</option><option [ngValue]="Frequency.Daily">Daily</option>
+        <option [ngValue]="Frequency.Weekly">Weekly</option><option [ngValue]="Frequency.Monthly">Monthly</option>
+      </select></label>
+      @if (recurrenceFrequency !== Frequency.None) {
+        <label><span>Every</span><input name="interval" type="number" min="1" max="30" [(ngModel)]="recurrenceInterval" required /></label>
+        <label><span>Repeat until <small>optional</small></span><input name="until" type="date" [(ngModel)]="recurrenceUntil" /></label>
+      }
+    </div>
+    <footer>
+      @if (entry()) {
+        @if (confirmingDelete()) {
+          <button type="button" class="danger" [disabled]="saving()" (click)="remove.emit(entry()!.id)">Confirm delete</button>
+          <button type="button" class="btn btn--secondary" (click)="confirmingDelete.set(false)">Keep it</button>
+        } @else {
+          <button type="button" class="danger" (click)="confirmingDelete.set(true)"><lucide-angular name="Trash2" size="15" /> Delete</button>
+        }
+      }
+      <span class="spacer"></span><button type="button" class="btn btn--secondary" (click)="dismiss.emit()">Cancel</button>
+      <button type="submit" class="btn btn--primary" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save entry' }}</button>
+    </footer>
+  </form>
+</aside>

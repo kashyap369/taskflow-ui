@@ -123,6 +123,7 @@ export interface TaskListItem {
   startDate: string;
   expectedCompletionDate: string | null;
   actualCompletionDate: string | null;
+  estimateMinutes?: number | null;
   projectId: number | null;
   organizationId: number | null;
   /** The team responsible (`Task.TeamId`) — what makes "tasks viewed per team" possible. */
@@ -154,6 +155,53 @@ export interface OrganizationPermission {
   description: string | null;
 }
 
+export enum CalendarEntryKind {
+  OrganizationEvent = 1,
+  MemberLeave = 2,
+  Holiday = 3,
+}
+
+export enum CalendarRecurrenceFrequency {
+  None = 0,
+  Daily = 1,
+  Weekly = 2,
+  Monthly = 3,
+}
+
+export interface CalendarEntry {
+  id: number;
+  occurrenceId: string;
+  organizationId: number;
+  kind: CalendarEntryKind;
+  title: string;
+  description: string | null;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  isAllDay: boolean;
+  timeZone: string;
+  memberUserId: number | null;
+  memberName: string | null;
+  recurrenceFrequency: CalendarRecurrenceFrequency;
+  recurrenceInterval: number;
+  recurrenceUntil: string | null;
+}
+
+export interface CalendarEntryPayload {
+  id?: number;
+  organizationId?: number;
+  kind: CalendarEntryKind;
+  title: string;
+  description: string | null;
+  startsAtUtc: string;
+  endsAtUtc: string;
+  isAllDay: boolean;
+  timeZone: string;
+  memberUserId: number | null;
+  recurrenceFrequency: CalendarRecurrenceFrequency;
+  recurrenceInterval: number;
+  recurrenceUntil: string | null;
+}
+
 /** `GET /organizationmember/organization/{id}` → OrganizationMemberDto[] */
 export interface OrganizationMember {
   id: number;
@@ -165,6 +213,25 @@ export interface OrganizationMember {
   roleName: string;
   isActive: boolean;
   joinedAt: string;
+  weeklyCapacityMinutes?: number | null;
+}
+
+export type WorkloadState = 'Light' | 'Balanced' | 'Heavy' | 'NotEnoughData';
+
+/** `GET /report/capacity/{organizationId}` → one server-computed member/week cell. */
+export interface CapacityRow {
+  organizationId: number;
+  userId: number;
+  memberName: string;
+  weekStart: string;
+  weekEnd: string;
+  weeklyCapacityMinutes: number | null;
+  assignedEstimateMinutes: number | null;
+  remainingCapacityMinutes: number | null;
+  assignedTaskCount: number;
+  missingEstimateTaskCount: number;
+  hasEnoughData: boolean;
+  workloadState: WorkloadState;
 }
 
 // `OrganizationInvitation` (`GET /organizationinvitation/organization/{id}` →
@@ -343,6 +410,7 @@ export interface TaskDetail {
   startDate: string;
   expectedCompletionDate: string | null;
   actualCompletionDate: string | null;
+  estimateMinutes?: number | null;
   projectId: number | null;
   organizationId: number | null;
   teamId: number | null;
@@ -377,6 +445,13 @@ export interface UpdateTaskPayload {
   title: string;
   description: string;
   priority: TaskPriority;
+  expectedCompletionDate: string | null;
+}
+
+/** `PUT /task/{id}/schedule` — focused calendar write; changes dates and nothing else. */
+export interface ScheduleTaskPayload {
+  taskId: number;
+  startDate: string;
   expectedCompletionDate: string | null;
 }
 

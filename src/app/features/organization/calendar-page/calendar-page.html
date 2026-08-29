@@ -1,0 +1,443 @@
+<!--
+  DIRECTION: calendar-shared-canvas-v1
+  THESIS: One calm planning canvas connects dates, project sequence, and real team capacity.
+  OWN-WORLD: TaskFlow neutral surfaces, violet brand accents, and semantic status colors remain the visual language.
+  STORY: Understand what is happening, change the planning lens, then inspect the responsible project/member context.
+  FIRST VIEWPORT: Page title, three-view tab control, compact context summary, and the beginning of the active planning canvas.
+  FORM: Dense operational workspace with a single bordered canvas, not a dashboard of nested cards.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
+<section class="page">
+  <div class="container-fluid">
+    <header class="page-head">
+      <div>
+        <h1>Calendar</h1>
+        <p>See project windows and task commitments across {{ currentOrg()?.name ?? 'your organization' }}.</p>
+      </div>
+
+      <div class="view-tabs" role="tablist" aria-label="Calendar view">
+        <button
+          id="schedule-tab"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab() === 'schedule'"
+          aria-controls="schedule-panel"
+          [class.active]="activeTab() === 'schedule'"
+          (click)="setTab('schedule')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <lucide-angular name="CalendarDays" size="16"></lucide-angular>
+          Schedule
+        </button>
+        <button
+          id="timeline-tab"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab() === 'timeline'"
+          aria-controls="timeline-panel"
+          [class.active]="activeTab() === 'timeline'"
+          (click)="setTab('timeline')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <lucide-angular name="ListChecks" size="16"></lucide-angular>
+          Project timeline
+        </button>
+        <button
+          id="capacity-tab"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="activeTab() === 'capacity'"
+          aria-controls="capacity-panel"
+          [class.active]="activeTab() === 'capacity'"
+          (click)="setTab('capacity')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <lucide-angular name="Gauge" size="16"></lucide-angular>
+          Team capacity
+        </button>
+      </div>
+    </header>
+
+    @if (loadError()) {
+      <div class="empty-state" role="alert">
+        <span class="empty-icon"><lucide-angular name="AlertCircle" size="24"></lucide-angular></span>
+        <h2>Calendar could not load</h2>
+        <p>We could not retrieve this organization’s planning data. Your existing work is unchanged.</p>
+        <button type="button" class="btn btn--secondary" (click)="retryLoad()">Try again</button>
+      </div>
+    } @else if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h2>No organization yet</h2>
+        <p>Create an organization before planning projects and tasks.</p>
+        <a routerLink="/organization/dashboard" class="btn btn--primary">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else if (loading() && calendarItems().length === 0) {
+      <div class="calendar-loading" aria-busy="true" aria-label="Loading calendar">
+        <span></span><span></span><span></span>
+      </div>
+    } @else {
+      <section class="calendar-shell">
+        @if (activeTab() !== 'capacity') {
+        <div class="filter-bar" aria-label="Calendar filters">
+          <label>
+            <span>Project</span>
+            <select
+              [value]="filters().projectId ?? ''"
+              (change)="setNumericFilter('projectId', $any($event.target).value)"
+            >
+              <option value="">All projects</option>
+              @for (project of projects(); track project.id) {
+                <option [value]="project.id">{{ project.title }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Team</span>
+            <select
+              [value]="filters().teamId ?? ''"
+              (change)="setNumericFilter('teamId', $any($event.target).value)"
+            >
+              <option value="">All teams</option>
+              @for (team of teams(); track team.id) {
+                <option [value]="team.id">{{ team.name }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Member</span>
+            <select
+              [value]="filters().memberId ?? ''"
+              (change)="setNumericFilter('memberId', $any($event.target).value)"
+            >
+              <option value="">All members</option>
+              @for (member of members(); track member.id) {
+                <option [value]="member.userId">{{ member.userFullName }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Item type</span>
+            <select
+              [value]="filters().kind"
+              (change)="setTextFilter('kind', $any($event.target).value)"
+            >
+              <option value="all">Projects and tasks</option>
+              <option value="project">Projects</option>
+              <option value="task">Tasks</option>
+              <option value="event">Organization events</option>
+              <option value="leave">Member leave</option>
+              <option value="holiday">Holidays</option>
+            </select>
+          </label>
+          <label>
+            <span>Status</span>
+            <select
+              [value]="filters().statusKey"
+              (change)="setTextFilter('statusKey', $any($event.target).value)"
+            >
+              <option value="">All statuses</option>
+              @for (status of statusOptions(); track status.value) {
+                <option [value]="status.value">{{ status.label }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>Priority</span>
+            <select
+              [value]="filters().priority ?? ''"
+              (change)="setNumericFilter('priority', $any($event.target).value)"
+            >
+              <option value="">All priorities</option>
+              @for (priority of priorityOptions; track priority.value) {
+                <option [value]="priority.value">{{ priority.label }}</option>
+              }
+            </select>
+          </label>
+          <div class="filter-toggles">
+            <label class="check-filter">
+              <input
+                type="checkbox"
+                [checked]="filters().overdueOnly"
+                (change)="setBooleanFilter('overdueOnly', $any($event.target).checked)"
+              />
+              Overdue only
+            </label>
+            <label class="check-filter">
+              <input
+                type="checkbox"
+                [checked]="filters().includeCompleted"
+                (change)="setBooleanFilter('includeCompleted', $any($event.target).checked)"
+              />
+              Include completed
+            </label>
+          </div>
+          <button
+            type="button"
+            class="clear-filters"
+            [disabled]="activeFilterCount() === 0"
+            (click)="clearFilters()"
+          >
+            Clear<span class="visually-hidden"> {{ activeFilterCount() }} filters</span>
+          </button>
+        </div>
+        }
+
+        <div class="context-bar">
+          <div class="context-copy">
+            <strong>{{ currentOrg()?.name }}</strong>
+            @if (activeTab() === 'schedule') {
+              <span>{{ filteredItems().length }} of {{ calendarItems().length }} scheduled items</span>
+            } @else if (activeTab() === 'timeline') {
+              <span>{{ canManageTasks() ? 'Drag tasks to reschedule' : 'Read-only task plan by project' }}</span>
+            } @else {
+              <span>Server-computed effort against each member’s working week</span>
+            }
+          </div>
+
+          @if (activeTab() === 'schedule') {
+            <div class="legend" aria-label="Calendar legend">
+              <span><i class="legend-project"></i>Project</span>
+              <span><i class="legend-task"></i>Task</span>
+              <span><i class="legend-overdue"></i>Overdue</span>
+              <span><i class="legend-event"></i>Event</span>
+              <span><i class="legend-leave"></i>Leave</span>
+              <span><i class="legend-holiday"></i>Holiday</span>
+              @if (canManageCalendar()) {
+                <button type="button" class="btn btn--primary add-entry" (click)="openNewEntry()">
+                  <lucide-angular name="Plus" size="15" /> Add entry
+                </button>
+              }
+            </div>
+          } @else if (activeTab() === 'timeline') {
+            <label class="project-picker">
+              <span>Project</span>
+              <select
+                [value]="selectedProjectId() ?? ''"
+                (change)="selectProject($any($event.target).value)"
+              >
+                @for (project of projects(); track project.id) {
+                  <option [value]="project.id">{{ project.title }}</option>
+                }
+              </select>
+            </label>
+          } @else {
+            <div class="capacity-nav" aria-label="Capacity date range">
+              <button type="button" (click)="moveCapacityWindow(-6)" aria-label="Previous six weeks">←</button>
+              <button type="button" (click)="resetCapacityWindow()">This week</button>
+              <button type="button" (click)="moveCapacityWindow(6)" aria-label="Next six weeks">→</button>
+            </div>
+          }
+        </div>
+
+        @if (scheduleError()) {
+          <p class="schedule-error" role="alert">{{ scheduleError() }}</p>
+        }
+
+        @if (activeTab() === 'schedule') {
+          <div
+            id="schedule-panel"
+            role="tabpanel"
+            aria-labelledby="schedule-tab"
+            class="calendar-canvas schedule-canvas"
+          >
+            @if (calendarItems().length === 0) {
+              <div class="canvas-empty">
+                <lucide-angular name="CalendarDays" size="24" aria-hidden="true"></lucide-angular>
+                <h2>Your schedule is clear</h2>
+                <p>Create a project or task and it will appear here automatically.</p>
+                @if (canManageCalendar()) {
+                  <button type="button" class="btn btn--primary" (click)="openNewEntry()">Add calendar entry</button>
+                }
+                <a routerLink="/organization/projects" class="btn btn--secondary">View projects</a>
+              </div>
+            } @else if (filteredItems().length === 0) {
+              <div class="canvas-empty">
+                <h2>No schedule items match</h2>
+                <p>Clear or adjust the shared filters to bring work back into view.</p>
+                <button type="button" class="btn btn--secondary" (click)="clearFilters()">Clear filters</button>
+              </div>
+            } @else {
+              <full-calendar [options]="calendarOptions" [events]="scheduleEvents()"></full-calendar>
+            }
+          </div>
+        } @else if (activeTab() === 'timeline') {
+          <div
+            id="timeline-panel"
+            role="tabpanel"
+            aria-labelledby="timeline-tab"
+            class="calendar-canvas timeline-canvas"
+          >
+            @if (projects().length === 0) {
+              <div class="canvas-empty">
+                <h2>No projects to plan</h2>
+                <p>Create a project first, then its tasks can form a timeline.</p>
+                <a routerLink="/organization/projects" class="btn btn--secondary">View projects</a>
+              </div>
+            } @else if (timelineTasks().length === 0) {
+              <div class="canvas-empty">
+                <h2>No dated tasks in this project</h2>
+                <p>Tasks with start and target dates will appear on this timeline.</p>
+                <a routerLink="/organization/tasks" class="btn btn--secondary">View tasks</a>
+              </div>
+            } @else {
+              @if (timelineLoading()) {
+                <p class="timeline-loading" aria-live="polite">Preparing timeline…</p>
+              }
+              <div #ganttHost class="gantt-host" aria-label="Read-only project task timeline"></div>
+            }
+          </div>
+        } @else {
+          <div
+            id="capacity-panel"
+            role="tabpanel"
+            aria-labelledby="capacity-tab"
+            class="calendar-canvas capacity-canvas"
+          >
+            <div class="capacity-intro">
+              <div>
+                <span class="capacity-kicker">Monday–Sunday · due-week allocation</span>
+                <h2>Workload you can defend</h2>
+                <p>
+                  Open tasks count in the week they are due. Missing estimates stay unknown—they never
+                  become false free time.
+                </p>
+              </div>
+              <div class="capacity-legend" aria-label="Capacity legend">
+                <span><i class="state-light"></i>Light ≤ 70%</span>
+                <span><i class="state-balanced"></i>Balanced ≤ 100%</span>
+                <span><i class="state-heavy"></i>Heavy &gt; 100%</span>
+              </div>
+            </div>
+
+            @if (capacityLoading() && capacity().length === 0) {
+              <div class="capacity-loading" aria-busy="true">Calculating capacity…</div>
+            } @else if (capacityMembers().length === 0) {
+              <div class="canvas-empty">
+                <h2>No active members</h2>
+                <p>Add or activate members before comparing team capacity.</p>
+                <a routerLink="/organization/members" class="btn btn--secondary">View members</a>
+              </div>
+            } @else {
+              <div class="capacity-table-wrap">
+                <table class="capacity-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Member</th>
+                      @for (week of capacityWeeks(); track week.start) {
+                        <th scope="col">
+                          <span>{{ week.start | date: 'MMM d':'UTC' }}</span>
+                          <small>to {{ week.end | date: 'MMM d':'UTC' }}</small>
+                        </th>
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (member of capacityMembers(); track member.userId) {
+                      <tr>
+                        <th scope="row">
+                          <strong>{{ member.userFullName }}</strong>
+                          <span>{{ member.roleName }}</span>
+                          @if (canManageMembers()) {
+                            <label class="inline-hours">
+                              <span>Weekly hours</span>
+                              <input
+                                #capacityHours
+                                type="number"
+                                min="0"
+                                max="168"
+                                step="0.5"
+                                [value]="member.weeklyCapacityMinutes === null || member.weeklyCapacityMinutes === undefined ? '' : member.weeklyCapacityMinutes / 60"
+                                (change)="saveMemberCapacity(member.userId, capacityHours.value)"
+                              />
+                            </label>
+                          } @else {
+                            <small>{{ formatMinutes(member.weeklyCapacityMinutes) }} / week</small>
+                          }
+                        </th>
+                        @for (week of capacityWeeks(); track week.start) {
+                          @if (capacityCell(member.userId, week.start); as cell) {
+                            <td [class]="'capacity-cell capacity-cell--' + cell.workloadState.toLowerCase()">
+                              @if (cell.hasEnoughData) {
+                                <strong>{{ cell.workloadState }}</strong>
+                                <span>{{ formatMinutes(cell.assignedEstimateMinutes) }} assigned</span>
+                                <small>{{ formatMinutes(cell.remainingCapacityMinutes) }} remaining</small>
+                              } @else {
+                                <strong>Not enough data</strong>
+                                <span>
+                                  @if (cell.weeklyCapacityMinutes === null) { Capacity missing }
+                                  @else { {{ cell.missingEstimateTaskCount }} unestimated task{{ cell.missingEstimateTaskCount === 1 ? '' : 's' }} }
+                                </span>
+                              }
+                            </td>
+                          }
+                        }
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <section class="estimate-queue" aria-labelledby="estimate-queue-title">
+                <div>
+                  <span class="capacity-kicker">Data quality</span>
+                  <h3 id="estimate-queue-title">Tasks still hiding availability</h3>
+                </div>
+                @if (tasksMissingEstimates().length === 0) {
+                  <p class="estimate-clear">Every assigned task in this six-week window has an estimate.</p>
+                } @else {
+                  <div class="estimate-list">
+                    @for (task of tasksMissingEstimates(); track task.id) {
+                      <article>
+                        <div>
+                          <strong>{{ task.title }}</strong>
+                          <span>{{ memberName(task) }} · due {{ (task.expectedCompletionDate ?? task.startDate) | date: 'MMM d':'UTC' }}</span>
+                        </div>
+                        @if (canManageTasks()) {
+                          <label class="estimate-input">
+                            <span>Estimate hours</span>
+                            <input #estimateHours type="number" min="0" max="168" step="0.5" />
+                            <button
+                              type="button"
+                              [disabled]="saving()"
+                              (click)="saveTaskEstimate(task.id, estimateHours.value)"
+                            >Save</button>
+                          </label>
+                        } @else {
+                          <span class="estimate-needed">Estimate needed</span>
+                        }
+                      </article>
+                    }
+                  </div>
+                }
+              </section>
+            }
+          </div>
+        }
+      </section>
+    }
+  </div>
+</section>
+
+@if (selectedItem(); as item) {
+  <app-calendar-detail-drawer
+    [item]="item"
+    [canManageTasks]="canManageTasks()"
+    [canManageCalendar]="canManageCalendar()"
+    (editCalendarEntry)="editEntry($event)"
+    (dismiss)="closeDetails()"
+  />
+}
+
+@if (entryDrawerOpen()) {
+  <app-calendar-entry-drawer
+    [entry]="editingEntry()"
+    [members]="members()"
+    [saving]="saving()"
+    (save)="saveEntry($event)"
+    (remove)="deleteEntry($event)"
+    (dismiss)="closeEntryDrawer()"
+  />
+}

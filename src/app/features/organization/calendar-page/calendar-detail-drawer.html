@@ -1,0 +1,54 @@
+<button
+  type="button"
+  class="drawer-backdrop"
+  (click)="dismiss.emit()"
+  aria-label="Close calendar item details"
+></button>
+<aside class="drawer" appDialog (dismiss)="dismiss.emit()">
+  <header class="drawer-head">
+    <div>
+      <span class="item-kind">{{ item().kind }}</span>
+      <h2>{{ item().title }}</h2>
+      <p>{{ item().projectTitle }}</p>
+    </div>
+    <button type="button" class="icon-button" (click)="dismiss.emit()" aria-label="Close details">
+      <lucide-angular name="X" size="18"></lucide-angular>
+    </button>
+  </header>
+
+  <dl class="detail-list">
+    <div><dt>Status</dt><dd>{{ item().status }}</dd></div>
+    <div><dt>Start</dt><dd>{{ item().start | date: 'fullDate' }}</dd></div>
+    <div><dt>Target</dt><dd>{{ item().end | date: 'fullDate' }}</dd></div>
+    @if (item().calendarEntry === null) { <div><dt>Progress</dt><dd>{{ item().progress }}%</dd></div> }
+    <div><dt>Assignee</dt><dd>{{ item().assignee }}</dd></div>
+    <div><dt>Team</dt><dd>{{ item().team }}</dd></div>
+  </dl>
+
+  @if (item().kind === 'task') {
+    <p class="schedule-note">
+      @if (canManageTasks()) {
+        Drag this task to move it, or drag its right edge to change its target date.
+      } @else {
+        This schedule is read-only for your organization role.
+      }
+    </p>
+  }
+
+  <div class="drawer-actions">
+    @if (item().kind === 'project') {
+      <a class="btn btn--primary" [routerLink]="['/organization/projects', item().sourceId]">
+        Open project
+      </a>
+    } @else if (item().kind === 'task') {
+      <a class="btn btn--primary" routerLink="/organization/tasks">Open task actions</a>
+      @if (item().projectId !== null) {
+        <a class="btn btn--secondary" [routerLink]="['/organization/projects', item().projectId]">
+          Open project
+        </a>
+      }
+    } @else if (item().calendarEntry && canManageCalendar()) {
+      <button type="button" class="btn btn--primary" (click)="editCalendarEntry.emit(item().calendarEntry!)">Edit calendar entry</button>
+    }
+  </div>
+</aside>

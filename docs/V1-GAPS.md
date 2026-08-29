@@ -17,8 +17,8 @@
 > (§2) is resolved, and nothing in §1's "frontend action" column is outstanding.
 >
 > **What's left is §3 only** — deferred v1.x work that never needed the API: CSV/PDF report export,
-> the calendar page, per-member trend charts, and E2E tests. Account recovery and email-code sign-in
-> shipped end to end on 2026-08-14.
+> optional calendar booking Phase 5, per-member trend charts, and E2E tests. Account recovery shipped
+> on 2026-08-14; Calendar Phases 1–4 shipped on 2026-08-29.
 
 ---
 
@@ -61,7 +61,10 @@ now ordinary frontend work — see [PHASES.md](PHASES.md) Phases 26–29.
 - **Richer per-member trend charts.** Currently six stat tiles per member; a time-series would need the
   report queried per interval (the API supports `?from&to`, so this is client-side looping). *(Team,
   project and priority reporting all gained depth in Phase 29 — the member panel is the one left.)*
-- **Calendar page.** The only nav item still marked "Coming soon" (organization sidebar).
+- ~~**Calendar page MVP.**~~ ✅ Phases 1–4 ship Schedule + Project Timeline, shared filters, details,
+  authorized rescheduling, server-computed Team Capacity, and calendar-owned events/leave/holidays with
+  recurrence. Optional booking remains explicitly phased
+  in [CALENDAR.md](CALENDAR.md).
 - **Server-side pagination.** All list paging and filtering is **client-side** over the full list the
   facade holds, because no API endpoint accepts page/size. `createPagination()` + the `Pagination`
   molecule are already the seam — when the API grows paging, swap the source signal for a paged fetch
@@ -100,7 +103,7 @@ whom. Update it alongside this one.
    the endpoints they added (**84/86**; the 2 left are the deliberate skips). Account recovery is
    complete on both sides.
 2. **Everything left is §3 frontend work that never needed the API.** In value order: **CSV/PDF report
-   export** ([PHASES.md](PHASES.md) Phase 24.1), the **calendar page** (Phase 25), **per-member trend
-   charts** (Phase 24.2), then E2E tests.
+   export** ([PHASES.md](PHASES.md) Phase 24.1), **per-member trend charts**
+   (Phase 24.2), then E2E tests.
 3. Items in **§3** follow existing patterns — see [CONVENTIONS.md](CONVENTIONS.md) for the list,
    drawer, validation and a11y patterns to copy.

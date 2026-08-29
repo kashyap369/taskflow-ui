@@ -7,6 +7,7 @@ import { ApiParams } from '@core/api/api-params';
 
 import {
   CreateOrganizationPayload,
+  CapacityRow,
   CreateProjectPayload,
   CreateTaskPayload,
   DashboardSummary,
@@ -30,8 +31,11 @@ import {
   UpdateProjectPayload,
   UpdateRolePayload,
   UpdateTaskPayload,
+  ScheduleTaskPayload,
   UpdateTeamPayload,
   WorkLog,
+  CalendarEntry,
+  CalendarEntryPayload,
 } from './organization.models';
 
 /**
@@ -41,6 +45,23 @@ import {
 @Injectable({ providedIn: 'root' })
 export class OrganizationRepository {
   private readonly api = inject(ApiService);
+
+  getCalendarEntries(organizationId: number, fromUtc: string, toUtc: string): Observable<CalendarEntry[]> {
+    return this.api.get<CalendarEntry[]>(API.Calendar.ByOrganization(organizationId),
+      ApiParams.create({ fromUtc, toUtc }));
+  }
+
+  createCalendarEntry(payload: CalendarEntryPayload): Observable<number> {
+    return this.api.post<number>(API.Calendar.Create, payload);
+  }
+
+  updateCalendarEntry(payload: CalendarEntryPayload): Observable<void> {
+    return this.api.put<void>(API.Calendar.Update, payload);
+  }
+
+  deleteCalendarEntry(id: number): Observable<void> {
+    return this.api.delete<void>(API.Calendar.Delete(id));
+  }
 
   // ── Organization ──
   getMyOrganizations(): Observable<OrganizationListItem[]> {
@@ -102,6 +123,17 @@ export class OrganizationRepository {
 
   updateTask(payload: UpdateTaskPayload): Observable<void> {
     return this.api.put<void>(API.Task.Update, payload);
+  }
+
+  scheduleTask(payload: ScheduleTaskPayload): Observable<void> {
+    return this.api.put<void>(API.Task.Schedule(payload.taskId), {
+      startDate: payload.startDate,
+      expectedCompletionDate: payload.expectedCompletionDate,
+    });
+  }
+
+  setTaskEstimate(taskId: number, estimateMinutes: number | null): Observable<void> {
+    return this.api.put<void>(API.Task.Estimate(taskId), { estimateMinutes });
   }
 
   deleteTask(taskId: number): Observable<void> {
@@ -210,6 +242,16 @@ export class OrganizationRepository {
 
   removeMember(organizationId: number, userId: number): Observable<void> {
     return this.api.delete<void>(API.Member.Remove, { organizationId, userId });
+  }
+
+  setMemberCapacity(
+    organizationId: number,
+    userId: number,
+    weeklyCapacityMinutes: number | null,
+  ): Observable<void> {
+    return this.api.put<void>(API.Member.Capacity(organizationId, userId), {
+      weeklyCapacityMinutes,
+    });
   }
 
   // ── Invitations ──
@@ -332,5 +374,12 @@ export class OrganizationRepository {
 
   getProjectReport(projectId: number): Observable<ProjectReport> {
     return this.api.get<ProjectReport>(API.Report.Project(projectId));
+  }
+
+  getCapacity(organizationId: number, weekStart: string, weeks = 6): Observable<CapacityRow[]> {
+    return this.api.get<CapacityRow[]>(
+      API.Capacity.ByOrganization(organizationId),
+      ApiParams.create({ weekStart, weeks }),
+    );
   }
 }
