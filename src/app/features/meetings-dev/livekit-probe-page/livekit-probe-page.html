@@ -1,0 +1,65 @@
+<main class="probe-shell">
+  <header>
+    <p class="eyebrow">Meeting Phase 0</p>
+    <h1>LiveKit feasibility probe</h1>
+    <p>
+      Development-only harness for two-browser audio, video, screen-share, disconnect and reconnect
+      verification. It is not production meeting UI.
+    </p>
+  </header>
+
+  <section class="probe-panel" aria-labelledby="connection-title">
+    <div>
+      <h2 id="connection-title">Connection</h2>
+      <p class="status" aria-live="polite">
+        {{ room.connectionState() }} · {{ room.participantCount() }} participant(s)
+      </p>
+    </div>
+
+    <label>
+      Display name
+      <input
+        type="text"
+        maxlength="80"
+        [ngModel]="displayName()"
+        (ngModelChange)="displayName.set($event)"
+        [disabled]="room.connectionState() !== 'disconnected'"
+      />
+    </label>
+
+    <div class="actions">
+      @if (room.connectionState() === 'disconnected') {
+        <button type="button" (click)="join()" [disabled]="busy()">Join probe room</button>
+      } @else {
+        <button type="button" (click)="leave()">Disconnect</button>
+      }
+    </div>
+
+    @if (participantIdentity()) {
+      <dl>
+        <div><dt>Room</dt><dd>{{ roomName() }}</dd></div>
+        <div><dt>Opaque identity</dt><dd>{{ participantIdentity() }}</dd></div>
+      </dl>
+    }
+
+    @if (actionError() || room.lastError()) {
+      <p class="error" role="alert">{{ actionError() || room.lastError() }}</p>
+    }
+  </section>
+
+  <section class="probe-panel" aria-labelledby="media-title">
+    <h2 id="media-title">Media</h2>
+    <div class="actions">
+      <button type="button" (click)="toggleMicrophone()" [disabled]="room.connectionState() !== 'connected'">
+        {{ room.microphoneEnabled() ? 'Mute microphone' : 'Enable microphone' }}
+      </button>
+      <button type="button" (click)="toggleCamera()" [disabled]="room.connectionState() !== 'connected'">
+        {{ room.cameraEnabled() ? 'Stop camera' : 'Enable camera' }}
+      </button>
+      <button type="button" (click)="toggleScreenShare()" [disabled]="room.connectionState() !== 'connected'">
+        {{ room.screenShareEnabled() ? 'Stop sharing' : 'Share screen' }}
+      </button>
+    </div>
+    <div #media class="media-grid" aria-label="LiveKit media tracks"></div>
+  </section>
+</main>

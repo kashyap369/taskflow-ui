@@ -44,6 +44,13 @@ State is **signals + facades** (not NgRx). Boundaries between the four buckets (
 - **Tasks & assignment** — org tasks (standalone or under a project) assigned to members, optionally role-filtered.
 - **Projects** — permission-designated members create projects, add tasks/subtasks, and assign members.
 
+### Approved post-v1 roadmap: Meetings
+
+Organization Meetings is approved but not implemented. It will support registered members and
+email-verified guests without TaskFlow accounts, revocable invite/share links, separate meeting
+capabilities and custom display badges, a custom Angular/LiveKit room, durable collaboration/attendance,
+and consent-aware recording. Start from [MEETINGS.md](MEETINGS.md).
+
 ### Reporting & Dashboard (headline feature)
 A strong dashboard backed by the API's Dapper read side:
 - Which team performed which tasks, and in what duration.

@@ -14,6 +14,9 @@ Before working, read the project docs in [`docs/`](docs/) — they carry full co
 - [`docs/DESIGN.md`](docs/DESIGN.md) — the design language: fonts, color tokens (light/dark), typography, motion. Pull from tokens, never hardcode.
 - [`docs/DESIGN-PHASES.md`](docs/DESIGN-PHASES.md) — the **design remediation plan**: a full audit of where the UI diverges from DESIGN.md (token adoption, buttons, inputs, dead controls) and a numbered phase per session. When asked to "do Phase N", read this file and do exactly that phase. Also carries the **current typeface decision (Satoshi + Geist)**, which supersedes DESIGN.md §2 until Phase 10 folds it back in.
 - [`docs/PHASES.md`](docs/PHASES.md) — the phased roadmap and **current status** (update at the end of every session).
+- [`docs/MEETINGS.md`](docs/MEETINGS.md) — pointer to the canonical cross-repository Meetings plan and
+  session handoff contract. Read the canonical file completely for any meeting, LiveKit, guest-link,
+  badge, collaboration or recording task; Phase 0 is complete and Phase 1 is READY.
 - [`docs/V1-GAPS.md`](docs/V1-GAPS.md) — **v1 is complete**; this is what it deliberately excludes and why (backend-blocked / backend defects / deferred v1.x / non-goals). Start post-v1 work here.
 - [`docs/SESSIONS.md`](docs/SESSIONS.md) — append-only session log (gotchas/decisions; add an entry each session).
 - [`docs/ATOMIC-DESIGN-GUIDE.md`](docs/ATOMIC-DESIGN-GUIDE.md) — deciding atom vs molecule vs organism and variants-as-props.

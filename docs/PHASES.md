@@ -4,6 +4,18 @@
 > The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
 > complete end to end, including the hardened production rollout.
 
+## ✅ Organization Meetings Phase 0 — LiveKit feasibility (2026-08-30)
+
+Read **[MEETINGS.md](MEETINGS.md)**, which points to the canonical cross-repository plan. It covers
+registered and unregistered email participants, revocable private/reusable links, separate capability
+levels and custom display badges, a custom Angular/LiveKit room, persistent collaboration/attendance,
+consent-aware recording and production rollout.
+
+Phase 0 is DONE and Phase 1 is READY. `livekit-client` `2.22.1` is isolated behind TaskFlow's room
+service and a development-only probe route. Two isolated Chromium contexts used separate API-issued
+tokens to exchange mic/camera tracks, share a screen, disconnect and reconnect; cleanup releases
+tracks/devices. Frontend specs pass 258/258 and production build, lint/design lint and contrast pass.
+
 ## ✅ Calendar Phase 4 — Events, leave, holidays + recurrence (2026-08-29)
 
 - Added organization-owned calendar entries with UTC/timezone-aware timed events, all-day leave and

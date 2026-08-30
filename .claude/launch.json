@@ -6,6 +6,19 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["ng", "serve"],
       "port": 4200
+    },
+    {
+      "name": "TaskFlowAndroidWeb",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "D:/Projects/TMS/TaskFlowAppAndroid",
+        "start",
+        "--",
+        "--port",
+        "4300"
+      ],
+      "port": 4300
     }
   ]
 }

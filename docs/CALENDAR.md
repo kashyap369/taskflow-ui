@@ -169,6 +169,10 @@ calendar event never deletes its related project or task.
 
 ## Phase 5 — Optional booking
 
+This phase means public appointment-booking workflows (for example, choosing an available time). It is
+**not** the approved TaskFlow live Meetings feature. Scheduled meetings will be canonical `Meeting`
+records and will be derived into Calendar during Meeting Phase 2; see [MEETINGS.md](MEETINGS.md).
+
 Treat this as a separate product decision, not an automatic dependency upgrade. First validate that
 customers need public booking links, round-robin assignment or external calendar sync. If they do:
 

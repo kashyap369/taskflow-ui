@@ -13,7 +13,8 @@
     "a11y:contrast": "node scripts/a11y-contrast.mjs",
     "design:lint": "node scripts/design-lint.mjs",
     "design:report": "node scripts/design-lint.mjs --all",
-    "assets:favicon": "node scripts/generate-favicon.cjs"
+    "assets:favicon": "node scripts/generate-favicon.cjs",
+    "meetings:phase0-smoke": "node scripts/meeting-phase0-smoke.mjs"
   },
   "prettier": {
     "printWidth": 100,
@@ -46,6 +47,7 @@
     "echarts": "^6.1.0",
     "frappe-gantt": "1.2.2",
     "fullcalendar": "7.0.2",
+    "livekit-client": "2.22.1",
     "lottie-web": "^5.13.0",
     "lucide": "^1.21.0",
     "lucide-angular": "^1.0.0",

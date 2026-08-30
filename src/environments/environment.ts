@@ -11,5 +11,6 @@ export const environment = {
   },
   features: {
     planner: true,
+    meetingsProbe: true,
   },
 } as const;

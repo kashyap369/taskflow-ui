@@ -11,6 +11,7 @@ import { guestGuard } from '@core/guards/guest.guard';
 import { roleGuard } from '@core/guards/role.guard';
 import { portalGuard } from '@core/guards/portal.guard';
 import { plannerFeatureGuard } from '@core/guards/planner-feature.guard';
+import { environment } from '@env/environment';
 
 export const routes: Routes = [
   // ── Public marketing site ──────────────────────────────
@@ -70,6 +71,17 @@ export const routes: Routes = [
     canMatch: [roleGuard('Admin')],
     canActivate: [authGuard],
     loadChildren: () => import('@features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
+  },
+
+  // Disposable Phase 0 harness. It is compiled out of navigation and cannot match in staging or
+  // production. Remove or keep isolated when the production meeting room replaces it in Phase 4.
+  {
+    path: 'dev/meetings-livekit',
+    canMatch: [() => environment.features.meetingsProbe],
+    loadComponent: () =>
+      import('@features/meetings-dev/livekit-probe-page/livekit-probe-page').then(
+        (m) => m.LiveKitProbePage,
+      ),
   },
 
   // ── Fallback ────────────────────────────────────────────

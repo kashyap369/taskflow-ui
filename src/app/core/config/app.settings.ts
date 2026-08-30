@@ -14,5 +14,6 @@ export const AppSettings = {
 
   features: {
     planner: Boolean(environment.features.planner),
+    meetingsProbe: Boolean(environment.features.meetingsProbe),
   },
 } as const;

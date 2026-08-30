@@ -1,5 +1,23 @@
 # TaskFlow UI — Session Log
 
+## 2026-08-30 (Organization Meetings Phase 0 — LiveKit feasibility)
+
+- Pinned `livekit-client` `2.22.1` and isolated it behind a TaskFlow-owned room service; added a
+  disposable, development-gated probe route rather than exposing unfinished Meetings product UI.
+- Two isolated Chromium contexts joined on independently issued five-minute tokens, exchanged
+  microphone/camera tracks, shared/stopped a screen and completed disconnect/fresh-token reconnect.
+- Frontend specs pass 258/258 and production build, lint/design lint and all 42 contrast checks pass;
+  the backend passes 42/42 with no EF drift. Phase 0 is DONE and Phase 1 is READY.
+
+## 2026-08-30 (Organization Meetings — plan approved)
+
+- Added a durable pointer to the canonical Phase 0–7 Meetings contract in the backend sibling repo,
+  covering secure registered/guest email access, separate access levels and display badges, custom
+  Angular/LiveKit calls, collaboration/attendance, recording and production hardening.
+- Phase 0 is READY; there is no Meetings route, dependency, API binding or UI implementation yet.
+- Future meeting sessions must read the canonical plan completely and use its phase gates/evidence
+  protocol so frontend and backend continue together without relying on conversation history.
+
 ## 2026-08-29 (Organization Calendar Phase 4)
 
 - Added calendar-owned organization events, member leave and holidays end to end with the additive
