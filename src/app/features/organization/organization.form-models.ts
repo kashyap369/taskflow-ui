@@ -117,3 +117,17 @@ export class InviteFormModel {
   @Min(1, 'Choose a role for this member.')
   organizationRoleId = 0;
 }
+
+/** Meeting create/update fields shared by the Meetings list and detail drawers. */
+export class MeetingFormModel {
+  @Required('A meeting title is required.')
+  @MaxLength(160, 'Title is too long (max 160).')
+  title = '';
+
+  @MaxLength(1000, 'Description is too long (max 1000).')
+  description = '';
+
+  @Required('A time zone is required.')
+  @MaxLength(100, 'Time zone is too long (max 100).')
+  timeZone = '';
+}

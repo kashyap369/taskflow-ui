@@ -17,6 +17,7 @@ import {
   toScheduleEvents,
   toTimelineTasks,
 } from './calendar-page.model';
+import { MeetingStatus } from '../meetings.models';
 
 const project: Project = {
   id: 7,
@@ -146,5 +147,26 @@ describe('calendar-page model adapters', () => {
     expect(items[0].assignee).toBe('Ada Lovelace');
     expect(event.end).toBe('2026-09-03');
     expect(event.editable).toBeFalse();
+  });
+
+  it('derives timed meetings once without creating a calendar-owned record', () => {
+    const scheduledMeeting = {
+      id: 41, organizationId: 2, title: 'Delivery review', description: 'Decide the release window',
+      status: MeetingStatus.Scheduled, scheduledStartUtc: '2026-09-02T09:00:00Z',
+      scheduledEndUtc: '2026-09-02T09:45:00Z', timeZone: 'Asia/Calcutta', actualStartUtc: null,
+      actualEndUtc: null, createdByUserId: 12, creatorName: 'Ada Lovelace', participantCount: 3,
+    };
+    const items = buildCalendarItems([], [], [], new Date('2026-08-30'), [], [
+      scheduledMeeting,
+      { ...scheduledMeeting, id: 42, title: 'Cancelled review', status: MeetingStatus.Cancelled },
+    ]);
+    const event = toScheduleEvents(items)[0];
+
+    expect(items.length).toBe(1);
+    expect(items[0].kind).toBe('meeting');
+    expect(items[0].calendarEntry).toBeNull();
+    expect(event.start).toBe('2026-09-02T09:00:00Z');
+    expect(event.end).toBe('2026-09-02T09:45:00Z');
+    expect(event.className).toContain('calendar-event--meeting');
   });
 });

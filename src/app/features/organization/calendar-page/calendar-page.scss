@@ -199,6 +199,7 @@
 .legend-project { background: var(--primary); }
 .legend-task { background: var(--info); }
 .legend-overdue { background: var(--danger); }
+.legend-meeting { background: var(--accent-violet); }
 .legend-event { background: var(--primary); }
 .legend-leave { background: var(--warning); }
 .legend-holiday { background: var(--success); }
@@ -464,6 +465,7 @@
     background: var(--info-soft);
     color: var(--info);
   }
+  full-calendar .calendar-event--meeting { --fc-event-bg-color: var(--accent-violet); --fc-event-border-color: var(--accent-violet); }
 
   full-calendar .calendar-event--event { --fc-event-bg-color: var(--primary); --fc-event-border-color: var(--primary); }
   full-calendar .calendar-event--leave { --fc-event-bg-color: var(--warning); --fc-event-border-color: var(--warning); }

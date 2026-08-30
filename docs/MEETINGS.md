@@ -11,10 +11,11 @@ attendance, recording/Egress, security, infrastructure, testing and production r
 ## Current status
 
 - Plan approved: **2026-08-30**
-- Completed phase: **Meeting Phase 0 — DONE**
-- Next phase: **Meeting Phase 1 — READY**
+- Completed phases: **Meeting Phases 0–2 — DONE**
+- Next phase: **Meeting Phase 3 — READY**
 - Implementation landed: pinned LiveKit clients/server stack, provider boundary, signed token/webhook
-  proofs, and a development-only two-browser media harness; no production Meetings UI exists yet.
+  proofs, a development-only two-browser media harness, the authoritative meeting domain/core API,
+  and the production organization management/scheduling UI with Calendar derivation.
 
 ## Resume commands
 

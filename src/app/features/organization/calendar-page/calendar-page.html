@@ -74,7 +74,7 @@
           Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
         </a>
       </div>
-    } @else if (loading() && calendarItems().length === 0) {
+    } @else if (loading()) {
       <div class="calendar-loading" aria-busy="true" aria-label="Loading calendar">
         <span></span><span></span><span></span>
       </div>
@@ -124,9 +124,10 @@
               [value]="filters().kind"
               (change)="setTextFilter('kind', $any($event.target).value)"
             >
-              <option value="all">Projects and tasks</option>
+              <option value="all">All schedule items</option>
               <option value="project">Projects</option>
               <option value="task">Tasks</option>
+              <option value="meeting">Meetings</option>
               <option value="event">Organization events</option>
               <option value="leave">Member leave</option>
               <option value="holiday">Holidays</option>
@@ -202,6 +203,7 @@
               <span><i class="legend-project"></i>Project</span>
               <span><i class="legend-task"></i>Task</span>
               <span><i class="legend-overdue"></i>Overdue</span>
+              <span><i class="legend-meeting"></i>Meeting</span>
               <span><i class="legend-event"></i>Event</span>
               <span><i class="legend-leave"></i>Leave</span>
               <span><i class="legend-holiday"></i>Holiday</span>

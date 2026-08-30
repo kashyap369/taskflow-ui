@@ -165,6 +165,14 @@ export class OrganizationFacade {
     () => this.isCurrentOrgOwner() ||
       (this._currentUserRole()?.permissions.includes('ManageCalendar') ?? false),
   );
+  readonly canCreateMeetings = computed(
+    () => this.isCurrentOrgOwner() ||
+      (this._currentUserRole()?.permissions.includes('CreateMeetings') ?? false),
+  );
+  readonly canManageMeetings = computed(
+    () => this.isCurrentOrgOwner() ||
+      (this._currentUserRole()?.permissions.includes('ManageMeetings') ?? false),
+  );
 
   constructor() {
     // Everything below is scoped to the signed-in user, and `init()` won't refetch once `_loaded`

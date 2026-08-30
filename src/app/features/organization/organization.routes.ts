@@ -31,6 +31,16 @@ export const ORGANIZATION_ROUTES: Routes = [
       import('./calendar-page/calendar-page').then((m) => m.CalendarPage),
   },
   {
+    path: 'meetings',
+    loadComponent: () =>
+      import('./meetings-page/meetings-page').then((m) => m.MeetingsPage),
+  },
+  {
+    path: 'meetings/:id',
+    loadComponent: () =>
+      import('./meeting-detail-page/meeting-detail-page').then((m) => m.MeetingDetailPage),
+  },
+  {
     path: 'members',
     loadComponent: () => import('./members-page/members-page').then((m) => m.MembersPage),
   },

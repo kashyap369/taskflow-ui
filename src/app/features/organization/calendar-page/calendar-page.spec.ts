@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideToastr } from 'ngx-toastr';
@@ -9,6 +10,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { APP_SETTINGS } from '@core/config/app.tokens';
 import { AppSettings } from '@core/config/app.settings';
 import { OrganizationRepository } from '../organization.repository';
+import { MeetingsFacade } from '../meetings.facade';
 import { OrganizationStatus, ProjectStatus } from '../organization.models';
 import { CalendarPage } from './calendar-page';
 
@@ -47,6 +49,11 @@ const repositoryStub = {
   setMemberCapacity: () => of(undefined),
 };
 
+const meetingsFacadeStub = {
+  meetings: signal([]).asReadonly(), loading: signal(false).asReadonly(), error: signal(false).asReadonly(),
+  load: () => undefined,
+};
+
 describe('CalendarPage', () => {
   let component: CalendarPage;
   let fixture: ComponentFixture<CalendarPage>;
@@ -64,6 +71,7 @@ describe('CalendarPage', () => {
         provideAnimations(),
         { provide: APP_SETTINGS, useValue: AppSettings },
         { provide: OrganizationRepository, useValue: repositoryStub },
+        { provide: MeetingsFacade, useValue: meetingsFacadeStub },
       ],
     }).compileComponents();
 

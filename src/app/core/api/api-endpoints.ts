@@ -1,4 +1,20 @@
 export const API = {
+  Meeting: {
+    Create: '/meeting',
+    ByOrganization: (organizationId: number) => `/meeting/organization/${organizationId}`,
+    GetById: (meetingId: number) => `/meeting/${meetingId}`,
+    Update: (meetingId: number) => `/meeting/${meetingId}`,
+    Start: (meetingId: number) => `/meeting/${meetingId}/start`,
+    End: (meetingId: number) => `/meeting/${meetingId}/end`,
+    Cancel: (meetingId: number) => `/meeting/${meetingId}/cancel`,
+    AddBadge: (meetingId: number) => `/meeting/${meetingId}/badges`,
+    AddParticipant: (meetingId: number) => `/meeting/${meetingId}/participants`,
+    UpdateParticipant: (meetingId: number, participantId: number) =>
+      `/meeting/${meetingId}/participants/${participantId}`,
+    AccessLinks: (meetingId: number) => `/meeting/${meetingId}/access-links`,
+    RevokeAccessLink: (meetingId: number, linkId: number) =>
+      `/meeting/${meetingId}/access-links/${linkId}`,
+  },
   Auth: {
     Login: '/auth/login',
     Register: '/auth/register',

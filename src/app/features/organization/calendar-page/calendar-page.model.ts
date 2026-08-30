@@ -10,8 +10,9 @@ import {
   taskPriorityMeta,
   taskStatusMeta,
 } from '../organization.models';
+import { MeetingListItem, MeetingStatus, meetingStatusMeta } from '../meetings.models';
 
-export type CalendarItemKind = 'project' | 'task' | 'event' | 'leave' | 'holiday';
+export type CalendarItemKind = 'project' | 'task' | 'meeting' | 'event' | 'leave' | 'holiday';
 
 export interface CalendarItem {
   id: string;
@@ -109,6 +110,7 @@ export function buildCalendarItems(
   members: OrganizationMember[],
   today = new Date(),
   entries: CalendarEntry[] = [],
+  meetings: MeetingListItem[] = [],
 ): CalendarItem[] {
   const memberNames = new Map(members.map((member) => [member.userId, member.userFullName]));
   const projectNames = new Map(projects.map((project) => [project.id, project.title]));
@@ -191,7 +193,28 @@ export function buildCalendarItems(
     };
   });
 
-  return [...projectItems, ...taskItems, ...entryItems];
+  // Meetings remain canonical Meeting records. Calendar only derives scheduled/live rows; it never
+  // writes duplicate CalendarEntry records that could drift from the meeting lifecycle.
+  const meetingItems: CalendarItem[] = meetings
+    .filter((meeting) =>
+      (meeting.status === MeetingStatus.Scheduled || meeting.status === MeetingStatus.Live)
+      && (meeting.scheduledStartUtc || meeting.actualStartUtc),
+    )
+    .map((meeting) => {
+      const start = meeting.actualStartUtc ?? meeting.scheduledStartUtc!;
+      const end = meeting.actualEndUtc ?? meeting.scheduledEndUtc ?? start;
+      return {
+        id: `meeting-${meeting.id}`, sourceId: meeting.id, kind: 'meeting', title: meeting.title,
+        start, end, status: meetingStatusMeta(meeting.status).label, assignee: meeting.creatorName,
+        team: 'Organization meeting', projectId: null,
+        projectTitle: meeting.description ?? 'Meeting', progress: 0,
+        overdue: false, completed: false, statusKey: `meeting-${meeting.status}`, priority: null,
+        priorityLabel: 'No priority', teamId: null, assignedToUserId: null,
+        calendarEntry: null, allDay: false,
+      };
+    });
+
+  return [...projectItems, ...taskItems, ...meetingItems, ...entryItems];
 }
 
 export function filterCalendarItems(
@@ -216,7 +239,7 @@ export function toScheduleEvents(items: CalendarItem[], canManageTasks = false):
     id: item.id,
     title: item.title,
     start: item.start,
-    end: item.calendarEntry ? item.end : exclusiveEnd(item.end),
+    end: item.allDay && !item.calendarEntry ? exclusiveEnd(item.end) : item.end,
     allDay: item.allDay,
     className: [
       `calendar-event--${item.kind}`,

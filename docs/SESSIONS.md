@@ -1,5 +1,16 @@
 # TaskFlow UI — Session Log
 
+## 2026-08-30 (Organization Meetings Phase 2 — management and scheduling)
+
+- Added lazy Meetings list/detail routes and sidebar navigation with Upcoming, Live and Past states,
+  search/status filtering, paging and complete loading/error/empty behavior.
+- Added validated create/edit scheduling, initial display badges, server-authoritative lifecycle
+  actions and registered-member access management; later guest links, media, chat, files and recording
+  are clearly unavailable rather than represented by dead controls.
+- Calendar derives scheduled/live meetings directly from Meeting records, never duplicate calendar
+  rows. Organization switching clears stale meeting state. All 262 specs, production build, lint,
+  design lint, detector and 42 contrast checks pass. Phase 3 is READY.
+
 ## 2026-08-30 (Organization Meetings Phase 0 — LiveKit feasibility)
 
 - Pinned `livekit-client` `2.22.1` and isolated it behind a TaskFlow-owned room service; added a
@@ -909,3 +920,10 @@
   keeping old personal and organization project screens compatible.
 - All 231 browser specs, production build, lint/design lint, Storybook, and UI detector pass; backend
   integration covers ownership, exact-once creation, external completion refresh, and removal semantics.
+
+## 2026-08-30 (Organization Meetings Phase 1 — backend contract handoff)
+
+- The backend-first Phase 1 is complete: the meeting aggregate, migration, three permissions and 13
+  feature-gated management/metadata endpoints are ready for the organization UI.
+- No Angular production surface changed in this phase. Phase 2 can now add the Meetings navigation,
+  management/scheduling pages and Calendar derivation against a tested authoritative contract.

@@ -35,6 +35,7 @@ import {
 } from 'lucide-angular';
 
 import { OrganizationFacade } from '../organization.facade';
+import { MeetingsFacade } from '../meetings.facade';
 import { CalendarEntry, CalendarEntryPayload, CapacityRow, TaskListItem, TaskStatus } from '../organization.models';
 import {
   CalendarFilters,
@@ -81,13 +82,14 @@ interface CalendarDateRange { start: Date; end: Date; }
 })
 export class CalendarPage implements OnDestroy {
   private readonly facade = inject(OrganizationFacade);
+  private readonly meetingsFacade = inject(MeetingsFacade);
 
   @ViewChild('ganttHost') private ganttHost?: ElementRef<HTMLElement>;
 
   readonly currentOrg = this.facade.currentOrg;
   readonly needsOrganization = this.facade.needsOrganization;
-  readonly loading = this.facade.loading;
-  readonly loadError = this.facade.loadError;
+  readonly loading = computed(() => this.facade.loading() || this.meetingsFacade.loading());
+  readonly loadError = computed(() => this.facade.loadError() || this.meetingsFacade.error());
   /** Filter during an organization switch so the previous workspace never flashes in this one. */
   readonly projects = computed(() => {
     const organizationId = this.currentOrg()?.id;
@@ -169,6 +171,7 @@ export class CalendarPage implements OnDestroy {
         .filter((member) => member.organizationId === this.currentOrg()?.id),
       new Date(),
       this.facade.calendarEntries().filter((entry) => entry.organizationId === this.currentOrg()?.id),
+      this.meetingsFacade.meetings().filter((meeting) => meeting.organizationId === this.currentOrg()?.id),
     ),
   );
   readonly filteredItems = computed(() => filterCalendarItems(this.calendarItems(), this.filters()));
@@ -246,6 +249,7 @@ export class CalendarPage implements OnDestroy {
     effect(() => {
       const organizationId = this.currentOrg()?.id;
       if (organizationId != null) {
+        this.meetingsFacade.load(organizationId);
         const now = new Date();
         this.loadCalendarWindow(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 6, 1)),
           new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 6, 1)));
@@ -389,6 +393,8 @@ export class CalendarPage implements OnDestroy {
 
   retryLoad(): void {
     this.facade.loadOrganizations();
+    const organizationId = this.currentOrg()?.id;
+    if (organizationId != null) this.meetingsFacade.load(organizationId);
   }
 
   capacityCell(userId: number, weekStart: string): CapacityRow | undefined {
