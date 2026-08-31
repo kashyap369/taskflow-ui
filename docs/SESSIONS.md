@@ -1,5 +1,36 @@
 # TaskFlow UI — Session Log
 
+## 2026-08-31 (Organization Meetings Phase 4 — completed end to end)
+
+- Completed the custom production room for registered participants and admitted guests: pre-join
+  preview/devices, media and screen controls, switching, tiles/roster, badges/access labels, speaker/
+  quality state, reconnect/removal/closed-room handling and deterministic cleanup.
+- Capability-aware controls and server routes enforce viewer, participant and host/co-host boundaries.
+  Two independent in-app browser contexts proved registered/guest presence, leave and fresh-token
+  reconnect against LiveKit `1.13.6`, with signed attendance webhooks persisted by the API.
+- All 275 frontend specs, production build, lint/design lint and 42 contrast checks pass; backend is
+  60/60 with no EF drift. Phase 5 is READY.
+
+## 2026-08-31 (Organization Meetings Phase 4 — P4.1 API authorization proof)
+
+- Completed the first bounded Phase 4 package on the shared API boundary: HTTP regression coverage
+  proves assigned member join-token issuance, unassigned-user denial, and verified-guest denial until
+  organizer admission. No Angular surface changed.
+- The backend suite passes 59/59 using test-only LiveKit token-signing settings and isolated forwarded
+  test IPs per client; P4.2 moderation and durable attendance is next, so Phase 4 remains IN PROGRESS.
+
+## 2026-08-31 (Organization Meetings Phase 4 — room-access hardening)
+
+- Wired the verified/admitted guest lobby into the secure room and added the live-meeting room entry
+  point for assigned organization participants.
+- Corrected the server join authorization boundary: meeting-management permission alone can no longer
+  inherit the creator's host token; only an assigned participant receives room credentials. Newly
+  assigned organization members are admitted directly, while guests remain in the organizer-controlled
+  admission flow.
+- Frontend production build and lint/design lint pass; backend tests pass 52/52. Browser specs remain
+  blocked on this host because ChromeHeadless cannot initialize its GPU/cache sandbox. Phase 4 remains
+  IN PROGRESS pending moderation, durable attendance webhooks and required multi-browser evidence.
+
 ## 2026-08-31 (Organization Meetings Phase 3 — secure guest access)
 
 - Added organizer private/reusable link management with expiry, capacity, access/badge defaults,

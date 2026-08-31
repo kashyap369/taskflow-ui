@@ -14,4 +14,11 @@ describe('MeetingsGuestRepository', () => {
     repository.session('guest-session').subscribe(); const session = http.expectOne('https://taskflow.test/api/meeting/guest/session');
     expect(session.request.headers.get('X-Meeting-Guest-Session')).toBe('guest-session'); expect(session.request.headers.has('Authorization')).toBeFalse(); session.flush({});
   });
+  it('keeps guest moderation inside the one-meeting session header', () => {
+    repository.removeRoomParticipant('guest-session', 9).subscribe();
+    const request = http.expectOne('https://taskflow.test/api/meeting/guest/room/participants/9/remove');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('X-Meeting-Guest-Session')).toBe('guest-session');
+    expect(request.request.headers.has('Authorization')).toBeFalse(); request.flush(null);
+  });
 });

@@ -27,5 +27,5 @@ export class GuestJoinPage {
   accessLabel(level: MeetingAccessLevel): string { return accessLevelLabel(level); }
   formatDate(value: string | null): string { return value ? new Intl.DateTimeFormat(undefined, { dateStyle: 'full', timeStyle: 'short' }).format(new Date(value)) : 'Available when the host starts it'; }
   stateTitle(state: MeetingParticipantState): string { return state === MeetingParticipantState.Admitted ? 'You’re cleared to join' : 'You’re in the lobby'; }
-  stateCopy(state: MeetingParticipantState): string { return state === MeetingParticipantState.Admitted ? 'The host admitted you. The audio and video room becomes available in Meeting Phase 4.' : 'Your email is verified. The host can now admit you without giving you access to the rest of TaskFlow.'; }
+  stateCopy(state: MeetingParticipantState): string { return state === MeetingParticipantState.Admitted ? 'The host admitted you. You can now enter the secure audio and video room.' : 'Your email is verified. The host can now admit you without giving you access to the rest of TaskFlow.'; }
 }

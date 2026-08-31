@@ -11,12 +11,14 @@ attendance, recording/Egress, security, infrastructure, testing and production r
 ## Current status
 
 - Plan approved: **2026-08-30**
-- Completed phases: **Meeting Phases 0–3 — DONE**
-- Next phase: **Meeting Phase 4 — READY**
+- Completed phases: **Meeting Phases 0–4 — DONE**
+- Next phase: **Meeting Phase 5 — READY**
 - Implementation landed: pinned LiveKit clients/server stack, provider boundary, signed token/webhook
   proofs, a development-only two-browser media harness, the authoritative meeting domain/core API,
   the production organization management/scheduling UI with Calendar derivation, secure private and
-  reusable invitation management, meeting-only email verification and the public guest lobby.
+  reusable invitation management, meeting-only email verification, the public guest lobby, and the
+  custom registered/guest room with pre-join devices, media/screen controls, roster/status, capability-
+  aware moderation, reconnect handling and signed durable attendance.
 
 ## Resume commands
 

@@ -7,6 +7,10 @@ export const API = {
     Start: (meetingId: number) => `/meeting/${meetingId}/start`,
     End: (meetingId: number) => `/meeting/${meetingId}/end`,
     JoinToken: (meetingId: number) => `/meeting/${meetingId}/join-token`,
+    RemoveRoomParticipant: (meetingId: number, participantId: number) =>
+      `/meeting/${meetingId}/room/participants/${participantId}/remove`,
+    MuteRoomParticipant: (meetingId: number, participantId: number) =>
+      `/meeting/${meetingId}/room/participants/${participantId}/mute`,
     Cancel: (meetingId: number) => `/meeting/${meetingId}/cancel`,
     AddBadge: (meetingId: number) => `/meeting/${meetingId}/badges`,
     AddParticipant: (meetingId: number) => `/meeting/${meetingId}/participants`,
@@ -23,6 +27,10 @@ export const API = {
     GuestSession: '/meeting/guest/session',
     GuestDisplayName: '/meeting/guest/session/display-name',
     GuestJoinToken: '/meeting/guest/join-token',
+    GuestRemoveRoomParticipant: (participantId: number) =>
+      `/meeting/guest/room/participants/${participantId}/remove`,
+    GuestMuteRoomParticipant: (participantId: number) =>
+      `/meeting/guest/room/participants/${participantId}/mute`,
   },
   Auth: {
     Login: '/auth/login',

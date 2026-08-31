@@ -42,4 +42,13 @@ describe('MeetingsRepository', () => {
     const rotate = http.expectOne('https://taskflow.test/api/meeting/41/access-links/8/rotate');
     expect(rotate.request.method).toBe('POST'); rotate.flush({ id: 9, token: 'replacement', expiresAtUtc: '2026-09-01T10:00:00Z' });
   });
+
+  it('sends moderation only through meeting-scoped room routes', () => {
+    repository.muteRoomParticipant(41, 9, { participantIdentity: 'm41-p9-identity', trackSid: 'TR_audio', muted: true }).subscribe();
+    const mute = http.expectOne('https://taskflow.test/api/meeting/41/room/participants/9/mute');
+    expect(mute.request.method).toBe('POST'); expect(mute.request.body.trackSid).toBe('TR_audio'); mute.flush(null);
+    repository.removeRoomParticipant(41, 9).subscribe();
+    const remove = http.expectOne('https://taskflow.test/api/meeting/41/room/participants/9/remove');
+    expect(remove.request.method).toBe('POST'); remove.flush(null);
+  });
 });

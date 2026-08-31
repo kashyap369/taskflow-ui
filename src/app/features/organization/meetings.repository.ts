@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { API } from '@core/api/api-endpoints';
 import { ApiParams } from '@core/api/api-params';
 import { ApiService } from '@core/api/api.service';
-import { CreateMeetingAccessLinkPayload, CreatedMeetingAccessLink, MeetingAccessLevel, MeetingAccessLink, MeetingBadgeInput, MeetingDetail, MeetingListQuery, MeetingPage, MeetingParticipantState, MeetingPayload, MeetingRoomToken } from './meetings.models';
+import { CreateMeetingAccessLinkPayload, CreatedMeetingAccessLink, MeetingAccessLevel, MeetingAccessLink, MeetingBadgeInput, MeetingDetail, MeetingListQuery, MeetingPage, MeetingParticipantState, MeetingPayload, MeetingRoomModerationPayload, MeetingRoomToken } from './meetings.models';
 
 @Injectable({ providedIn: 'root' })
 export class MeetingsRepository {
@@ -17,6 +17,13 @@ export class MeetingsRepository {
   start(id: number): Observable<void> { return this.api.post<void>(API.Meeting.Start(id), {}); }
   end(id: number): Observable<void> { return this.api.post<void>(API.Meeting.End(id), {}); }
   joinToken(id: number): Observable<MeetingRoomToken> { return this.api.post<MeetingRoomToken>(API.Meeting.JoinToken(id), {}); }
+  removeRoomParticipant(id: number, participantId: number): Observable<void> {
+    return this.api.post<void>(API.Meeting.RemoveRoomParticipant(id, participantId), {});
+  }
+  muteRoomParticipant(id: number, participantId: number,
+    payload: MeetingRoomModerationPayload): Observable<void> {
+    return this.api.post<void>(API.Meeting.MuteRoomParticipant(id, participantId), payload);
+  }
   cancel(id: number): Observable<void> { return this.api.post<void>(API.Meeting.Cancel(id), {}); }
   addBadge(id: number, badge: MeetingBadgeInput): Observable<number> { return this.api.post<number>(API.Meeting.AddBadge(id), badge); }
   addParticipant(id: number, userId: number, accessLevel: MeetingAccessLevel, badgeDefinitionId: number | null): Observable<number> {

@@ -4,16 +4,16 @@
 > The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
 > complete end to end, including the hardened production rollout.
 
-## ✅ Organization Meetings Phase 3 — secure invitations and guest lobby (2026-08-31)
+## ✅ Organization Meetings Phase 4 — custom LiveKit room (2026-08-31)
 
-Phases 0–3 are DONE and Phase 4 is READY. Organizers can create, copy, rotate and revoke private or
-reusable meeting links with expiry, use limits, access levels and badge defaults, then admit, deny,
-revoke or remove verified guests. `/meetings/join` lives outside protected layouts, scrubs the opaque
-fragment token immediately, verifies email with a meeting-only code, optionally binds an exact matching
-account after confirmation, and restores a tab-scoped guest session without granting organization
-access. The lobby truthfully keeps LiveKit media unavailable until Phase 4. All 267 specs, production
-build, lint/design lint, Impeccable detector and all 42 contrast checks pass; responsive browser QA
-confirmed fragment scrubbing and no 390px overflow.
+Phases 0–4 are DONE and Phase 5 is READY. Registered participants and admitted guests now enter a
+TaskFlow-branded pre-join and responsive room with preview/device selection, microphone/camera/screen
+controls, device switching, participant tiles and roster, badges/access labels, active-speaker and
+connection-quality state, reconnect handling and deterministic cleanup. Viewer and participant
+capabilities hide publishing/moderation controls; host/co-host mute and removal use server-authorized
+routes. Two independent in-app browser contexts proved registered/guest presence, disconnect and
+fresh-token reconnect against LiveKit `1.13.6` with real signed webhook delivery. All 275 specs,
+production build, lint/design lint and all 42 contrast checks pass; backend is 60/60 with no EF drift.
 
 ## ✅ Organization Meetings Phase 2 — management and scheduling UI (2026-08-30)
 

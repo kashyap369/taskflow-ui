@@ -45,6 +45,11 @@ export interface MeetingRoomToken {
   webSocketUrl: string; token: string; expiresAtUtc: string; meetingId: number; participantId: number;
   displayName: string; accessLevel: MeetingAccessLevel; badgeLabel: string | null;
   canPublish: boolean; canShareScreen: boolean; canModerate: boolean;
+  participantIdentity: string; meetingTitle: string;
+}
+
+export interface MeetingRoomModerationPayload {
+  participantIdentity: string; trackSid: string; muted: boolean;
 }
 
 export const meetingStatusMeta = (status: MeetingStatus): { label: string; tone: string } => ({
