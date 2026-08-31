@@ -4,6 +4,17 @@
 > The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
 > complete end to end, including the hardened production rollout.
 
+## ✅ Organization Meetings Phase 3 — secure invitations and guest lobby (2026-08-31)
+
+Phases 0–3 are DONE and Phase 4 is READY. Organizers can create, copy, rotate and revoke private or
+reusable meeting links with expiry, use limits, access levels and badge defaults, then admit, deny,
+revoke or remove verified guests. `/meetings/join` lives outside protected layouts, scrubs the opaque
+fragment token immediately, verifies email with a meeting-only code, optionally binds an exact matching
+account after confirmation, and restores a tab-scoped guest session without granting organization
+access. The lobby truthfully keeps LiveKit media unavailable until Phase 4. All 267 specs, production
+build, lint/design lint, Impeccable detector and all 42 contrast checks pass; responsive browser QA
+confirmed fragment scrubbing and no 390px overflow.
+
 ## ✅ Organization Meetings Phase 2 — management and scheduling UI (2026-08-30)
 
 Read **[MEETINGS.md](MEETINGS.md)**, which points to the canonical cross-repository plan. It covers

@@ -36,6 +36,10 @@ export const routes: Routes = [
   },
   // Legacy /login → canonical auth route
   { path: 'login', redirectTo: 'auth/login', pathMatch: 'full' },
+  {
+    path: 'meetings',
+    loadChildren: () => import('@features/meetings-guest/meetings-guest.routes').then((m) => m.MEETINGS_GUEST_ROUTES),
+  },
 
   // Planner is an immersive workspace, so it deliberately bypasses MemberLayout's top bar,
   // max-width and page padding while keeping the canonical /member/planner URL and member guards.

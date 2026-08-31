@@ -6,6 +6,7 @@ export const API = {
     Update: (meetingId: number) => `/meeting/${meetingId}`,
     Start: (meetingId: number) => `/meeting/${meetingId}/start`,
     End: (meetingId: number) => `/meeting/${meetingId}/end`,
+    JoinToken: (meetingId: number) => `/meeting/${meetingId}/join-token`,
     Cancel: (meetingId: number) => `/meeting/${meetingId}/cancel`,
     AddBadge: (meetingId: number) => `/meeting/${meetingId}/badges`,
     AddParticipant: (meetingId: number) => `/meeting/${meetingId}/participants`,
@@ -14,6 +15,14 @@ export const API = {
     AccessLinks: (meetingId: number) => `/meeting/${meetingId}/access-links`,
     RevokeAccessLink: (meetingId: number, linkId: number) =>
       `/meeting/${meetingId}/access-links/${linkId}`,
+    RotateAccessLink: (meetingId: number, linkId: number) =>
+      `/meeting/${meetingId}/access-links/${linkId}/rotate`,
+    GuestInspect: '/meeting/guest/access/inspect',
+    GuestRequestCode: '/meeting/guest/access/request-code',
+    GuestVerifyCode: '/meeting/guest/access/verify-code',
+    GuestSession: '/meeting/guest/session',
+    GuestDisplayName: '/meeting/guest/session/display-name',
+    GuestJoinToken: '/meeting/guest/join-token',
   },
   Auth: {
     Login: '/auth/login',

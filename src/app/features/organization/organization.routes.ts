@@ -36,6 +36,11 @@ export const ORGANIZATION_ROUTES: Routes = [
       import('./meetings-page/meetings-page').then((m) => m.MeetingsPage),
   },
   {
+    path: 'meetings/:id/room',
+    loadComponent: () =>
+      import('./meeting-room-page/meeting-room-page').then((m) => m.MeetingRoomPage),
+  },
+  {
     path: 'meetings/:id',
     loadComponent: () =>
       import('./meeting-detail-page/meeting-detail-page').then((m) => m.MeetingDetailPage),

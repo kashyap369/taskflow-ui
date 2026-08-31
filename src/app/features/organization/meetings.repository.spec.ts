@@ -24,4 +24,22 @@ describe('MeetingsRepository', () => {
     repository.start(41).subscribe(); const request = http.expectOne('https://taskflow.test/api/meeting/41/start');
     expect(request.request.method).toBe('POST'); expect(request.request.body).toEqual({}); request.flush(null);
   });
+
+  it('adds a safe meeting display badge through its focused route', () => {
+    repository.addBadge(41, { label: 'Product lead', color: 'indigo', icon: 'BriefcaseBusiness' }).subscribe();
+    const request = http.expectOne('https://taskflow.test/api/meeting/41/badges');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ label: 'Product lead', color: 'indigo', icon: 'BriefcaseBusiness' });
+    request.flush(12);
+  });
+
+  it('creates and rotates access links without ever putting the raw token in a read route', () => {
+    repository.createAccessLink(41, { mode: 2, lockedEmail: null, defaultAccessLevel: 3, badgeDefinitionId: null, expiresAtUtc: '2026-09-01T10:00:00Z', maximumUses: 25 }).subscribe();
+    const create = http.expectOne('https://taskflow.test/api/meeting/41/access-links');
+    expect(create.request.method).toBe('POST'); expect(create.request.body.maximumUses).toBe(25);
+    create.flush({ id: 8, token: 'shown-once', expiresAtUtc: '2026-09-01T10:00:00Z' });
+    repository.rotateAccessLink(41, 8).subscribe();
+    const rotate = http.expectOne('https://taskflow.test/api/meeting/41/access-links/8/rotate');
+    expect(rotate.request.method).toBe('POST'); rotate.flush({ id: 9, token: 'replacement', expiresAtUtc: '2026-09-01T10:00:00Z' });
+  });
 });

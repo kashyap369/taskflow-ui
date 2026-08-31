@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { API } from '@core/api/api-endpoints';
 import { ApiParams } from '@core/api/api-params';
 import { ApiService } from '@core/api/api.service';
-import { MeetingAccessLevel, MeetingDetail, MeetingListQuery, MeetingPage, MeetingParticipantState, MeetingPayload } from './meetings.models';
+import { CreateMeetingAccessLinkPayload, CreatedMeetingAccessLink, MeetingAccessLevel, MeetingAccessLink, MeetingBadgeInput, MeetingDetail, MeetingListQuery, MeetingPage, MeetingParticipantState, MeetingPayload, MeetingRoomToken } from './meetings.models';
 
 @Injectable({ providedIn: 'root' })
 export class MeetingsRepository {
@@ -16,7 +16,9 @@ export class MeetingsRepository {
   update(id: number, payload: MeetingPayload): Observable<void> { return this.api.put<void>(API.Meeting.Update(id), payload); }
   start(id: number): Observable<void> { return this.api.post<void>(API.Meeting.Start(id), {}); }
   end(id: number): Observable<void> { return this.api.post<void>(API.Meeting.End(id), {}); }
+  joinToken(id: number): Observable<MeetingRoomToken> { return this.api.post<MeetingRoomToken>(API.Meeting.JoinToken(id), {}); }
   cancel(id: number): Observable<void> { return this.api.post<void>(API.Meeting.Cancel(id), {}); }
+  addBadge(id: number, badge: MeetingBadgeInput): Observable<number> { return this.api.post<number>(API.Meeting.AddBadge(id), badge); }
   addParticipant(id: number, userId: number, accessLevel: MeetingAccessLevel, badgeDefinitionId: number | null): Observable<number> {
     return this.api.post<number>(API.Meeting.AddParticipant(id), { userId, accessLevel, badgeDefinitionId });
   }
@@ -25,4 +27,10 @@ export class MeetingsRepository {
     return this.api.put<void>(API.Meeting.UpdateParticipant(id, participantId),
       { accessLevel, badgeDefinitionId, state });
   }
+  accessLinks(id: number): Observable<MeetingAccessLink[]> { return this.api.get<MeetingAccessLink[]>(API.Meeting.AccessLinks(id)); }
+  createAccessLink(id: number, payload: CreateMeetingAccessLinkPayload): Observable<CreatedMeetingAccessLink> {
+    return this.api.post<CreatedMeetingAccessLink>(API.Meeting.AccessLinks(id), payload);
+  }
+  revokeAccessLink(id: number, linkId: number): Observable<void> { return this.api.delete<void>(API.Meeting.RevokeAccessLink(id, linkId)); }
+  rotateAccessLink(id: number, linkId: number): Observable<CreatedMeetingAccessLink> { return this.api.post<CreatedMeetingAccessLink>(API.Meeting.RotateAccessLink(id, linkId), {}); }
 }

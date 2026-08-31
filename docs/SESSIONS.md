@@ -1,5 +1,16 @@
 # TaskFlow UI — Session Log
 
+## 2026-08-31 (Organization Meetings Phase 3 — secure guest access)
+
+- Added organizer private/reusable link management with expiry, capacity, access/badge defaults,
+  one-time copy, rotation/revocation and guest admit/deny/revoke/remove controls.
+- Added the public `/meetings/join` verification and lobby flow. Fragment tokens are scrubbed before
+  inspection, pending and verified credentials stay tab-scoped, registered binding is explicit and
+  exact-email-only, and the guest session grants no organization access.
+- Fixed public brand assets for nested routes and bound the standalone meeting-badge route. All 267 specs, production build, lint/design lint,
+  Impeccable detector and 42 contrast checks pass; desktop/mobile browser QA verified token scrubbing,
+  invalid-link handling and no mobile horizontal overflow. Phase 4 is READY.
+
 ## 2026-08-30 (Organization Meetings Phase 2 — management and scheduling)
 
 - Added lazy Meetings list/detail routes and sidebar navigation with Upcoming, Live and Past states,
