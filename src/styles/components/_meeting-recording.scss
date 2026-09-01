@@ -1,0 +1,7 @@
+.recording-indicator { position: fixed; z-index: 20; top: var(--space-3); left: 50%; translate: -50%; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border-radius: var(--radius-full); background: var(--danger); color: var(--on-accent); font-size: var(--fs-body-sm); font-weight: 750; box-shadow: var(--shadow-lg); }
+.recording-indicator span { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+.recording-consent { display: flex; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--danger); border-radius: var(--radius-lg); background: var(--danger-soft); }
+.recording-consent p { margin: var(--space-1) 0 var(--space-3); color: var(--text-muted); }
+.recording-consent div div { display: flex; gap: var(--space-2); }
+.recording-consent-banner { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3); background: var(--danger-soft); color: var(--text); }
+.recording-consent-banner button { min-height: 36px; padding-inline: var(--space-3); border: 0; border-radius: var(--radius-full); background: var(--surface); color: var(--text); font-weight: 700; }

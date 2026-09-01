@@ -1,22 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
-  ChevronLeft, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, MessageSquareText, Mic, MicOff,
+  ChevronLeft, Circle, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, MessageSquareText, Mic, MicOff,
   MonitorUp, PhoneOff, Settings, Signal, UserMinus, Users, Video, VideoOff, Volume2,
   VolumeX, WifiOff, X,
 } from 'lucide-angular';
 import { MeetingRoomParticipantView, MeetingRoomService } from '@core/meetings/meeting-room.service';
-import { MeetingAccessLevel, MeetingRoomToken, accessLevelLabel } from '@features/organization/meetings.models';
+import { MeetingAccessLevel, MeetingRecording, MeetingRecordingConsentStatus, MeetingRecordingStatus, MeetingRoomToken, accessLevelLabel } from '@features/organization/meetings.models';
 import { MeetingsGuestRepository } from '../meetings-guest.repository';
 import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collaboration-panel/meeting-collaboration-panel';
 
 @Component({ selector: 'app-guest-room-page', standalone: true, imports: [CommonModule, RouterLink, LucideAngularModule, MeetingCollaborationPanel],
   templateUrl: './guest-room-page.html', styleUrl: './guest-room-page.scss', providers: [{ provide: LUCIDE_ICONS,
-    multi: true, useValue: new LucideIconProvider({ ChevronLeft, MessageSquareText, Mic, MicOff, MonitorUp, PhoneOff,
+    multi: true, useValue: new LucideIconProvider({ ChevronLeft, Circle, MessageSquareText, Mic, MicOff, MonitorUp, PhoneOff,
       Settings, Signal, UserMinus, Users, Video, VideoOff, Volume2, VolumeX, WifiOff, X }) }] })
 export class GuestRoomPage implements AfterViewInit, OnDestroy {
   private readonly repository = inject(MeetingsGuestRepository); private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
   readonly room = inject(MeetingRoomService); readonly Level = MeetingAccessLevel;
   @ViewChild('media') media?: ElementRef<HTMLElement>; @ViewChild('preview') preview?: ElementRef<HTMLVideoElement>;
   readonly token = signal<MeetingRoomToken | null>(null); readonly stage = signal<'loading' | 'prejoin' | 'joining' | 'room'>('loading');
@@ -24,9 +25,16 @@ export class GuestRoomPage implements AfterViewInit, OnDestroy {
   readonly audioInputId = signal(''); readonly videoInputId = signal(''); readonly audioOutputId = signal('');
   readonly rosterOpen = signal(true); readonly settingsOpen = signal(false); readonly moderationBusy = signal<string | null>(null);
   readonly collaborationOpen = signal(false);
+  readonly recordings = signal<MeetingRecording[]>([]); readonly recordingBusy = signal(false);
+  readonly activeRecording = computed(() => this.recordings().find((x) => x.status <= MeetingRecordingStatus.Processing) ?? null);
+  readonly recordingLive = computed(() => this.activeRecording()?.status === MeetingRecordingStatus.Starting || this.activeRecording()?.status === MeetingRecordingStatus.Recording);
+  readonly needsRecordingConsent = computed(() => { const active = this.activeRecording(); return !!active && active.status <= MeetingRecordingStatus.Recording && active.myConsent !== MeetingRecordingConsentStatus.Accepted; });
+  private recordingPoll?: number;
   sessionToken(): string { return sessionStorage.getItem('taskflow.meeting.guest-session') ?? ''; }
 
-  ngAfterViewInit(): void { this.requestToken(); } ngOnDestroy(): void { void this.room.disconnect(); }
+  ngAfterViewInit(): void { this.loadRecordings(true); this.zone.runOutsideAngular(() => { this.recordingPoll = window.setInterval(() => this.zone.run(() => this.loadRecordings(false)), 3000); }); } ngOnDestroy(): void { if (this.recordingPoll) window.clearInterval(this.recordingPoll); void this.room.disconnect(); }
+  loadRecordings(initial: boolean): void { const session = this.sessionToken(); if (!session) { if (initial) this.requestToken(); return; } this.repository.recordings(session).subscribe({ next: (rows) => { this.recordings.set(rows); if (initial && !this.needsRecordingConsent()) this.requestToken(); else if (initial) this.stage.set('prejoin'); }, error: () => { if (initial) this.requestToken(); } }); }
+  recordingConsent(accepted: boolean): void { const active = this.activeRecording(); const session = this.sessionToken(); if (!active || !session) return; this.recordingBusy.set(true); this.repository.recordingConsent(session, active.id, accepted).subscribe({ next: (value) => { this.recordingBusy.set(false); this.recordings.update((rows) => [value, ...rows.filter((x) => x.id !== value.id)]); if (accepted && !this.token()) this.requestToken(); else if (!accepted) this.error.set('You declined recording and cannot join while it is active.'); }, error: () => this.recordingBusy.set(false) }); }
   requestToken(): void {
     const session = this.sessionToken();
     if (!session) { this.error.set('Your guest session expired. Reopen the invitation and verify again.'); this.stage.set('prejoin'); return; }

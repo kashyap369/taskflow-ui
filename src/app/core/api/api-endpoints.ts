@@ -26,6 +26,11 @@ export const API = {
     Assets: (meetingId: number) => `/meeting/${meetingId}/assets`,
     Asset: (meetingId: number, assetId: number) => `/meeting/${meetingId}/assets/${assetId}`,
     Archive: (meetingId: number) => `/meeting/${meetingId}/archive`,
+    Recordings: (meetingId: number) => `/meeting/${meetingId}/recordings`,
+    RecordingConsent: (meetingId: number, recordingId: number) => `/meeting/${meetingId}/recordings/${recordingId}/consent`,
+    StopRecording: (meetingId: number, recordingId: number) => `/meeting/${meetingId}/recordings/${recordingId}/stop`,
+    RecordingContent: (meetingId: number, recordingId: number) => `/meeting/${meetingId}/recordings/${recordingId}/content`,
+    Recording: (meetingId: number, recordingId: number) => `/meeting/${meetingId}/recordings/${recordingId}`,
     GuestInspect: '/meeting/guest/access/inspect',
     GuestRequestCode: '/meeting/guest/access/request-code',
     GuestVerifyCode: '/meeting/guest/access/verify-code',
@@ -36,6 +41,9 @@ export const API = {
       `/meeting/guest/room/participants/${participantId}/remove`,
     GuestMuteRoomParticipant: (participantId: number) =>
       `/meeting/guest/room/participants/${participantId}/mute`,
+    GuestRecordings: '/meeting/guest/recordings',
+    GuestRecordingConsent: (recordingId: number) => `/meeting/guest/recordings/${recordingId}/consent`,
+    GuestRecordingContent: (recordingId: number) => `/meeting/guest/recordings/${recordingId}/content`,
   },
   Auth: {
     Login: '/auth/login',

@@ -2,6 +2,8 @@ export enum MeetingStatus { Draft = 1, Scheduled = 2, Live = 3, Ended = 4, Cance
 export enum MeetingAccessLevel { Host = 1, CoHost = 2, Participant = 3, Viewer = 4 }
 export enum MeetingParticipantState { Invited = 1, Admitted = 2, Revoked = 3, Denied = 4, Removed = 5 }
 export enum MeetingAccessLinkMode { PrivateInvitation = 1, Reusable = 2 }
+export enum MeetingRecordingStatus { PendingConsent = 1, Starting = 2, Recording = 3, Processing = 4, Ready = 5, Failed = 6 }
+export enum MeetingRecordingConsentStatus { Pending = 1, Accepted = 2, Declined = 3, TimedOut = 4 }
 
 export interface MeetingBadgeInput { label: string; color: string; icon: string | null; }
 export interface MeetingBadge extends MeetingBadgeInput { id: number; }
@@ -50,6 +52,13 @@ export interface MeetingRoomToken {
 
 export interface MeetingRoomModerationPayload {
   participantIdentity: string; trackSid: string; muted: boolean;
+}
+export interface MeetingRecordingConsent { participantId: number; participantName: string; status: MeetingRecordingConsentStatus; decidedAtUtc: string | null; }
+export interface MeetingRecording {
+  id: number; status: MeetingRecordingStatus; createdAt: string; consentExpiresAtUtc: string;
+  startedAtUtc: string | null; stoppedAtUtc: string | null; readyAtUtc: string | null;
+  failureReason: string | null; sizeBytes: number | null; durationMilliseconds: number | null;
+  canManage: boolean; myConsent: MeetingRecordingConsentStatus | null; consents: MeetingRecordingConsent[];
 }
 
 export const meetingStatusMeta = (status: MeetingStatus): { label: string; tone: string } => ({

@@ -1,22 +1,23 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ArrowLeft, CalendarClock, Check, Copy, FileText, Link2, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Mail, MessageSquareText, Pencil, Play, RefreshCw, Square, Trash2, UserPlus, Users, Video } from 'lucide-angular';
+import { ArrowLeft, CalendarClock, Check, Circle, Copy, Download, FileText, Link2, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Mail, MessageSquareText, Pencil, Play, RefreshCw, Square, Trash2, UserPlus, Users, Video } from 'lucide-angular';
 import { DialogService } from '@core/services/dialog.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
-import { CreateMeetingAccessLinkPayload, MeetingAccessLevel, MeetingAccessLinkMode, MeetingParticipantState, MeetingPayload, MeetingStatus, accessLevelLabel, meetingStatusMeta } from '../meetings.models';
+import { CreateMeetingAccessLinkPayload, MeetingAccessLevel, MeetingAccessLinkMode, MeetingParticipantState, MeetingPayload, MeetingRecording, MeetingRecordingStatus, MeetingStatus, accessLevelLabel, meetingStatusMeta } from '../meetings.models';
 import { MeetingsFacade } from '../meetings.facade';
 import { OrganizationFacade } from '../organization.facade';
 import { MeetingFormDrawer } from '../meetings-page/meeting-form-drawer';
 import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collaboration-panel/meeting-collaboration-panel';
+import { MeetingsRepository } from '../meetings.repository';
 
 @Component({ selector: 'app-meeting-detail-page', standalone: true,
   imports: [CommonModule, RouterLink, LucideAngularModule, Skeleton, MeetingFormDrawer, MeetingCollaborationPanel],
   templateUrl: './meeting-detail-page.html', styleUrls: ['./meeting-detail-page.scss', './meeting-access.scss'],
-  providers: [{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ ArrowLeft, CalendarClock, Check, Copy, FileText, Link2, Mail, MessageSquareText, Pencil, Play, RefreshCw, Square, Trash2, UserPlus, Users, Video }) }],
+  providers: [{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ ArrowLeft, CalendarClock, Check, Circle, Copy, Download, FileText, Link2, Mail, MessageSquareText, Pencil, Play, RefreshCw, Square, Trash2, UserPlus, Users, Video }) }],
 })
-export class MeetingDetailPage {
+export class MeetingDetailPage implements OnDestroy {
   private readonly route = inject(ActivatedRoute); private readonly organization = inject(OrganizationFacade); readonly facade = inject(MeetingsFacade); private readonly dialog = inject(DialogService); private readonly notification = inject(NotificationService);
   readonly id = Number(this.route.snapshot.paramMap.get('id')); readonly detail = this.facade.detail;
   readonly currentOrg = this.organization.currentOrg; readonly members = this.organization.members;
@@ -27,12 +28,19 @@ export class MeetingDetailPage {
   readonly linkLevel = signal(MeetingAccessLevel.Participant); readonly linkBadgeId = signal<number | null>(null);
   readonly linkExpiry = signal(this.defaultExpiry()); readonly linkMaximumUses = signal<number | null>(1);
   readonly freshLink = signal<string | null>(null);
+  private readonly meetingsRepository = inject(MeetingsRepository); private readonly recordingUrls = new Map<number, string>();
+  readonly recordings = signal<MeetingRecording[]>([]); readonly playbackUrl = signal<string | null>(null); readonly RecordingStatus = MeetingRecordingStatus;
   readonly participantUserId = signal<number | null>(null); readonly participantLevel = signal(MeetingAccessLevel.Participant); readonly participantBadgeId = signal<number | null>(null);
   readonly Status = MeetingStatus; readonly State = MeetingParticipantState; readonly Level = MeetingAccessLevel; readonly LinkMode = MeetingAccessLinkMode;
   readonly accessLinks = this.facade.accessLinks;
   readonly statusMeta = meetingStatusMeta; readonly accessLabel = accessLevelLabel;
   readonly availableMembers = computed(() => { const assigned = new Set(this.detail()?.participants.map((p) => p.userId) ?? []); return this.members().filter((m) => m.isActive && !assigned.has(m.userId)); });
-  constructor() { this.organization.init(); effect(() => { const orgId = this.currentOrg()?.id; if (orgId) { this.facade.load(orgId); this.facade.loadDetail(this.id); this.facade.loadAccessLinks(this.id); } }); }
+  constructor() { this.organization.init(); effect(() => { const orgId = this.currentOrg()?.id; if (orgId) { this.facade.load(orgId); this.facade.loadDetail(this.id); this.facade.loadAccessLinks(this.id); this.loadRecordings(); } }); }
+  ngOnDestroy(): void { for (const url of this.recordingUrls.values()) URL.revokeObjectURL(url); }
+  loadRecordings(): void { this.meetingsRepository.recordings(this.id).subscribe({ next: (rows) => this.recordings.set(rows), error: () => this.recordings.set([]) }); }
+  playRecording(recording: MeetingRecording): void { const existing = this.recordingUrls.get(recording.id); if (existing) { this.playbackUrl.set(existing); return; } this.meetingsRepository.recordingContent(this.id, recording.id).subscribe((blob) => { const url = URL.createObjectURL(blob); this.recordingUrls.set(recording.id, url); this.playbackUrl.set(url); }); }
+  downloadRecording(recording: MeetingRecording): void { this.meetingsRepository.recordingContent(this.id, recording.id).subscribe((blob) => { const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `meeting-${this.id}-recording-${recording.id}.mp4`; anchor.click(); URL.revokeObjectURL(url); }); }
+  async deleteRecording(recording: MeetingRecording): Promise<void> { if (!await this.dialog.confirm('Delete this recording?', 'The private MP4 will be permanently removed from storage.', 'Delete recording')) return; this.meetingsRepository.deleteRecording(this.id, recording.id).subscribe({ next: () => { this.notification.success('Recording deleted.'); this.loadRecordings(); }, error: () => this.notification.error('Recording could not be deleted.') }); }
   update(payload: MeetingPayload): void { this.facade.update(this.id, payload, () => this.showEdit.set(false)); }
   async lifecycle(action: 'start' | 'end' | 'cancel'): Promise<void> { const label = action === 'start' ? 'Start meeting?' : action === 'end' ? 'End meeting?' : 'Cancel meeting?'; const detail = action === 'start' ? 'The meeting will become live. Calling is added in Phase 4; this records the lifecycle now.' : action === 'end' ? 'This closes the live meeting and moves it to the archive.' : 'This removes the meeting from the upcoming schedule.'; if (await this.dialog.confirm(label, detail, action === 'start' ? 'Start meeting' : action === 'end' ? 'End meeting' : 'Cancel meeting')) this.facade.lifecycle(this.id, action); }
   addParticipant(): void { const userId = this.participantUserId(); if (!userId) return; this.facade.addParticipant(this.id, userId, this.participantLevel(), this.participantBadgeId()); this.showAddParticipant.set(false); this.participantUserId.set(null); }

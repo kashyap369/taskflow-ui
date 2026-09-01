@@ -1,14 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import {
-  ChevronLeft, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Mic, MicOff,
+  ChevronLeft, Circle, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Mic, MicOff,
   MessageSquareText, MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus, Users, Video, VideoOff,
   Volume2, VolumeX, WifiOff, X,
 } from 'lucide-angular';
 import { MeetingRoomParticipantView, MeetingRoomService } from '@core/meetings/meeting-room.service';
-import { MeetingAccessLevel, MeetingRoomToken, accessLevelLabel } from '../meetings.models';
+import { MeetingAccessLevel, MeetingRecording, MeetingRecordingConsentStatus, MeetingRecordingStatus, MeetingRoomToken, accessLevelLabel } from '../meetings.models';
 import { MeetingsRepository } from '../meetings.repository';
 import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collaboration-panel/meeting-collaboration-panel';
 
@@ -17,12 +17,13 @@ import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collabor
   imports: [CommonModule, RouterLink, LucideAngularModule, MeetingCollaborationPanel],
   templateUrl: './meeting-room-page.html', styleUrl: './meeting-room-page.scss',
   providers: [{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({
-    ChevronLeft, MessageSquareText, Mic, MicOff, MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus,
+    ChevronLeft, Circle, MessageSquareText, Mic, MicOff, MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus,
     Users, Video, VideoOff, Volume2, VolumeX, WifiOff, X,
   }) }],
 })
 export class MeetingRoomPage implements AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute); private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
   private readonly repository = inject(MeetingsRepository);
   readonly room = inject(MeetingRoomService); readonly id = Number(this.route.snapshot.paramMap.get('id'));
   readonly Level = MeetingAccessLevel;
@@ -32,9 +33,20 @@ export class MeetingRoomPage implements AfterViewInit, OnDestroy {
   readonly audioInputId = signal(''); readonly videoInputId = signal(''); readonly audioOutputId = signal('');
   readonly rosterOpen = signal(true); readonly settingsOpen = signal(false); readonly moderationBusy = signal<string | null>(null);
   readonly collaborationOpen = signal(false);
+  readonly recordings = signal<MeetingRecording[]>([]); readonly recordingBusy = signal(false);
+  readonly activeRecording = computed(() => this.recordings().find((x) => x.status <= MeetingRecordingStatus.Processing) ?? null);
+  readonly recordingLive = computed(() => this.activeRecording()?.status === MeetingRecordingStatus.Starting || this.activeRecording()?.status === MeetingRecordingStatus.Recording);
+  readonly needsRecordingConsent = computed(() => { const active = this.activeRecording(); return !!active && active.status <= MeetingRecordingStatus.Recording && active.myConsent !== MeetingRecordingConsentStatus.Accepted; });
+  private recordingPoll?: number;
 
-  ngAfterViewInit(): void { this.requestToken(); }
-  ngOnDestroy(): void { void this.room.disconnect(); }
+  ngAfterViewInit(): void { this.loadRecordings(true); this.zone.runOutsideAngular(() => { this.recordingPoll = window.setInterval(() => this.zone.run(() => this.loadRecordings(false)), 3000); }); }
+  ngOnDestroy(): void { if (this.recordingPoll) window.clearInterval(this.recordingPoll); void this.room.disconnect(); }
+
+  loadRecordings(initial: boolean): void {
+    this.repository.recordings(this.id).subscribe({ next: (rows) => { this.recordings.set(rows); if (initial && !this.needsRecordingConsent()) this.requestToken(); else if (initial) this.stage.set('prejoin'); }, error: () => { if (initial) this.requestToken(); } });
+  }
+  recordingConsent(accepted: boolean): void { const active = this.activeRecording(); if (!active) return; this.recordingBusy.set(true); this.repository.recordingConsent(this.id, active.id, accepted).subscribe({ next: (value) => { this.recordingBusy.set(false); this.recordings.update((rows) => [value, ...rows.filter((x) => x.id !== value.id)]); if (accepted && !this.token()) this.requestToken(); else if (!accepted) this.error.set('You declined recording and cannot join while it is active.'); }, error: () => this.recordingBusy.set(false) }); }
+  toggleRecording(): void { const active = this.activeRecording(); this.recordingBusy.set(true); const request = this.recordingLive() && active ? this.repository.stopRecording(this.id, active.id) : this.repository.requestRecording(this.id); request.subscribe({ next: (value) => { this.recordingBusy.set(false); this.recordings.update((rows) => [value, ...rows.filter((x) => x.id !== value.id)]); }, error: () => { this.recordingBusy.set(false); this.error.set('The recording request could not be completed.'); } }); }
 
   requestToken(): void {
     this.stage.set('loading'); this.error.set(null);

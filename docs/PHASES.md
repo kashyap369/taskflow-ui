@@ -1,8 +1,26 @@
 # TaskFlow UI — Phases & Status
 
 > Keep the Current Status section up to date at the end of every session.
+
+## 🟡 Organization Meetings Phase 6 — implementation complete, certification pending (2026-09-01)
+
+The Angular room now polls canonical recording state, requires explicit member/guest consent before
+joining or starting, shows a persistent recording indicator, and gives the host intentional Record/Stop
+controls. Meeting detail and the new scoped guest archive provide authenticated playback/download;
+creators can delete recordings. All nine new API routes are bound. Production build, all 278 specs,
+lint/design lint and all 42 contrast checks pass. Phase 6 remains IN PROGRESS until a Docker-capable
+staging environment proves a real playable room-composite MP4/capacity run and the target geography's
+legal/product consent and retention review is approved.
 > The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
 > complete end to end, including the hardened production rollout.
+
+## ⚠️ Organization Meetings production verification follow-up (2026-09-01)
+
+Production meeting `#3` was created, assigned to Shubham Kashyap and started; the deployed Phase 5
+collaboration surface loaded successfully. The room remains unavailable because production LiveKit is
+disabled, so PC/mobile media needs the public LiveKit/Redis/TURN deployment and production credentials.
+Unchecking scheduling also leaves hidden start/end required validators attached and blocks ready-anytime
+creation; scheduled creation works. Both fixes belong to canonical Meeting Phase 7 hardening/rollout.
 
 ## ✅ Organization Meetings Phase 5 — persistent collaboration and archive (2026-09-01)
 

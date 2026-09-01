@@ -1,5 +1,25 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-01 (Organization Meetings Phase 6 — implementation complete, certification pending)
+
+- Added member/guest consent gates, canonical recording polling, the persistent red recording state
+  and host Record/Stop controls to the custom room experience.
+- Added authenticated recording playback/download and creator deletion to meeting detail, plus a
+  scoped guest archive route. All nine new backend routes are consumed.
+- Production build, 278/278 specs, lint/design lint and all 42 contrast checks pass. Real Egress MP4
+  and capacity certification requires a Docker-capable staging host; production enablement also awaits
+  the jurisdiction-specific legal/product decision recorded in the canonical backend plan.
+
+## 2026-09-01 (Organization Meetings — production verification follow-up)
+
+- Refreshed the deployed application after the Phase 5 pushes. Production meeting `#3` was created,
+  Shubham Kashyap was added as an admitted participant, the meeting was started, and the collaboration
+  panel loaded against the newly deployed API.
+- The pre-join page reports `LiveKit media is not enabled`, so the planned PC/mobile media proof is
+  blocked by production infrastructure/configuration rather than device availability.
+- Ready-anytime creation is also blocked because removing the schedule leaves hidden start/end required
+  validators attached; scheduled creation works. Both findings are canonical Phase 7 follow-ups.
+
 ## 2026-09-01 (Organization Meetings Phase 5 — completed end to end)
 
 - Added one reusable collaboration organism to registered and guest rooms and the meeting detail

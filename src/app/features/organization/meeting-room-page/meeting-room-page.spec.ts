@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { MeetingRoomParticipantView, MeetingRoomService } from '@core/meetings/meeting-room.service';
-import { MeetingAccessLevel, MeetingRoomToken } from '../meetings.models';
+import { MeetingAccessLevel, MeetingRecordingConsentStatus, MeetingRecordingStatus, MeetingRoomToken } from '../meetings.models';
 import { MeetingsRepository } from '../meetings.repository';
 import { MeetingRoomPage } from './meeting-room-page';
 
@@ -22,9 +22,11 @@ describe('MeetingRoomPage', () => {
 
   beforeEach(async () => {
     repository = jasmine.createSpyObj<MeetingsRepository>('MeetingsRepository', [
-      'joinToken', 'end', 'removeRoomParticipant', 'muteRoomParticipant',
+      'joinToken', 'end', 'removeRoomParticipant', 'muteRoomParticipant', 'recordings',
+      'recordingConsent', 'requestRecording', 'stopRecording',
     ]);
     repository.joinToken.and.returnValue(of(viewerToken));
+    repository.recordings.and.returnValue(of([]));
     room = roomStub();
     await TestBed.configureTestingModule({
       imports: [MeetingRoomPage],
@@ -75,6 +77,16 @@ describe('MeetingRoomPage', () => {
     expect(repository.muteRoomParticipant).toHaveBeenCalledWith(42, 9, {
       participantIdentity: participant.identity, trackSid: 'TR_audio', muted: true,
     });
+  });
+
+  it('requires explicit recording consent before requesting a join token', async () => {
+    repository.recordings.and.returnValue(of([{ id: 3, status: MeetingRecordingStatus.Recording,
+      createdAt: '2026-09-01T00:00:00Z', consentExpiresAtUtc: '2026-09-01T00:01:00Z', startedAtUtc: null,
+      stoppedAtUtc: null, readyAtUtc: null, failureReason: null, sizeBytes: null, durationMilliseconds: null,
+      canManage: false, myConsent: MeetingRecordingConsentStatus.Pending, consents: [] }]));
+    fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(repository.joinToken).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('This meeting is being recorded');
   });
 
   function roomStub() {

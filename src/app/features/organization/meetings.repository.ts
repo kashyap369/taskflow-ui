@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { API } from '@core/api/api-endpoints';
 import { ApiParams } from '@core/api/api-params';
 import { ApiService } from '@core/api/api.service';
-import { CreateMeetingAccessLinkPayload, CreatedMeetingAccessLink, MeetingAccessLevel, MeetingAccessLink, MeetingBadgeInput, MeetingDetail, MeetingListQuery, MeetingPage, MeetingParticipantState, MeetingPayload, MeetingRoomModerationPayload, MeetingRoomToken } from './meetings.models';
+import { CreateMeetingAccessLinkPayload, CreatedMeetingAccessLink, MeetingAccessLevel, MeetingAccessLink, MeetingBadgeInput, MeetingDetail, MeetingListQuery, MeetingPage, MeetingParticipantState, MeetingPayload, MeetingRecording, MeetingRoomModerationPayload, MeetingRoomToken } from './meetings.models';
 
 @Injectable({ providedIn: 'root' })
 export class MeetingsRepository {
@@ -40,4 +40,10 @@ export class MeetingsRepository {
   }
   revokeAccessLink(id: number, linkId: number): Observable<void> { return this.api.delete<void>(API.Meeting.RevokeAccessLink(id, linkId)); }
   rotateAccessLink(id: number, linkId: number): Observable<CreatedMeetingAccessLink> { return this.api.post<CreatedMeetingAccessLink>(API.Meeting.RotateAccessLink(id, linkId), {}); }
+  recordings(id: number): Observable<MeetingRecording[]> { return this.api.getSilently<MeetingRecording[]>(API.Meeting.Recordings(id)); }
+  requestRecording(id: number): Observable<MeetingRecording> { return this.api.post<MeetingRecording>(API.Meeting.Recordings(id), {}); }
+  recordingConsent(id: number, recordingId: number, accepted: boolean): Observable<MeetingRecording> { return this.api.post<MeetingRecording>(API.Meeting.RecordingConsent(id, recordingId), { accepted }); }
+  stopRecording(id: number, recordingId: number): Observable<MeetingRecording> { return this.api.post<MeetingRecording>(API.Meeting.StopRecording(id, recordingId), {}); }
+  recordingContent(id: number, recordingId: number): Observable<Blob> { return this.api.getBlobSilently(API.Meeting.RecordingContent(id, recordingId)); }
+  deleteRecording(id: number, recordingId: number): Observable<void> { return this.api.delete<void>(API.Meeting.Recording(id, recordingId)); }
 }

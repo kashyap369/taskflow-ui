@@ -12,14 +12,22 @@ attendance, recording/Egress, security, infrastructure, testing and production r
 
 - Plan approved: **2026-08-30**
 - Completed phases: **Meeting Phases 0–5 — DONE**
-- Next phase: **Meeting Phase 6 — READY**
+- Current phase: **Meeting Phase 6 — implementation complete; external certification pending**
+- Production verification: meeting create, registered-member assignment, start and the deployed Phase 5
+  collaboration surface work. LiveKit is disabled in production, so join remains unavailable until a
+  public `wss://` LiveKit service and API credentials are configured. Ready-anytime creation also has
+  a known stale hidden-date-validator bug; scheduled creation works. Both are tracked in canonical
+  Phase 7 rollout/hardening work.
 - Implementation landed: pinned LiveKit clients/server stack, provider boundary, signed token/webhook
   proofs, a development-only two-browser media harness, the authoritative meeting domain/core API,
   the production organization management/scheduling UI with Calendar derivation, secure private and
   reusable invitation management, meeting-only email verification, the public guest lobby, and the
   custom registered/guest room with pre-join devices, media/screen controls, roster/status, capability-
   aware moderation, reconnect handling and signed durable attendance, plus persist-first chat, versioned
-  shared notes, private scanned files, complete archives and retention cleanup.
+  shared notes, private scanned files, complete archives and retention cleanup, plus explicit member/
+  guest recording consent, canonical room recording state, host controls and authenticated archives.
+- Remaining Phase 6 evidence: a Docker-capable staging run producing a playable room-composite MP4 at
+  the declared capacity, followed by the target geography's legal/product consent and retention signoff.
 
 ## Resume commands
 

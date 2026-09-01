@@ -15,9 +15,10 @@ describe('GuestRoomPage', () => {
   beforeEach(async () => {
     sessionStorage.setItem('taskflow.meeting.guest-session', 'guest-session');
     repository = jasmine.createSpyObj<MeetingsGuestRepository>('MeetingsGuestRepository', [
-      'joinToken', 'removeRoomParticipant', 'muteRoomParticipant',
+      'joinToken', 'removeRoomParticipant', 'muteRoomParticipant', 'recordings', 'recordingConsent',
     ]);
     repository.joinToken.and.returnValue(of(token()));
+    repository.recordings.and.returnValue(of([]));
     await TestBed.configureTestingModule({ imports: [GuestRoomPage], providers: [
       { provide: MeetingsGuestRepository, useValue: repository },
       { provide: MeetingRoomService, useValue: roomStub() },

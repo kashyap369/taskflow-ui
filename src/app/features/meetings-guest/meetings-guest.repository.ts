@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { API } from '@core/api/api-endpoints';
 import { APP_SETTINGS } from '@core/config/app.tokens';
 import { MeetingGuestAccess, MeetingGuestSession, VerifiedMeetingGuest } from './meetings-guest.models';
-import { MeetingRoomModerationPayload, MeetingRoomToken } from '@features/organization/meetings.models';
+import { MeetingRecording, MeetingRoomModerationPayload, MeetingRoomToken } from '@features/organization/meetings.models';
 
 @Injectable({ providedIn: 'root' })
 export class MeetingsGuestRepository {
@@ -24,5 +24,8 @@ export class MeetingsGuestRepository {
     payload: MeetingRoomModerationPayload): Observable<void> {
     return this.http.post<void>(`${this.base}${API.Meeting.GuestMuteRoomParticipant(participantId)}`, payload, { headers: this.headers(sessionToken) });
   }
+  recordings(sessionToken: string): Observable<MeetingRecording[]> { return this.http.get<MeetingRecording[]>(`${this.base}${API.Meeting.GuestRecordings}`, { headers: this.headers(sessionToken) }); }
+  recordingConsent(sessionToken: string, recordingId: number, accepted: boolean): Observable<MeetingRecording> { return this.http.post<MeetingRecording>(`${this.base}${API.Meeting.GuestRecordingConsent(recordingId)}`, { accepted }, { headers: this.headers(sessionToken) }); }
+  recordingContent(sessionToken: string, recordingId: number): Observable<Blob> { return this.http.get(`${this.base}${API.Meeting.GuestRecordingContent(recordingId)}`, { headers: this.headers(sessionToken), responseType: 'blob' }); }
   private headers(token: string): HttpHeaders { return new HttpHeaders({ 'X-Meeting-Guest-Session': token }); }
 }
