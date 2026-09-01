@@ -21,6 +21,11 @@ export const API = {
       `/meeting/${meetingId}/access-links/${linkId}`,
     RotateAccessLink: (meetingId: number, linkId: number) =>
       `/meeting/${meetingId}/access-links/${linkId}/rotate`,
+    Messages: (meetingId: number) => `/meeting/${meetingId}/messages`,
+    Note: (meetingId: number) => `/meeting/${meetingId}/note`,
+    Assets: (meetingId: number) => `/meeting/${meetingId}/assets`,
+    Asset: (meetingId: number, assetId: number) => `/meeting/${meetingId}/assets/${assetId}`,
+    Archive: (meetingId: number) => `/meeting/${meetingId}/archive`,
     GuestInspect: '/meeting/guest/access/inspect',
     GuestRequestCode: '/meeting/guest/access/request-code',
     GuestVerifyCode: '/meeting/guest/access/verify-code',

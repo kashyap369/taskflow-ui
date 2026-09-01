@@ -4,19 +4,20 @@ import { Router, RouterLink } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import {
   ChevronLeft, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Mic, MicOff,
-  MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus, Users, Video, VideoOff,
+  MessageSquareText, MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus, Users, Video, VideoOff,
   Volume2, VolumeX, WifiOff, X,
 } from 'lucide-angular';
 import { MeetingRoomParticipantView, MeetingRoomService } from '@core/meetings/meeting-room.service';
 import { MeetingAccessLevel, MeetingRoomToken, accessLevelLabel } from '../meetings.models';
 import { MeetingsRepository } from '../meetings.repository';
+import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collaboration-panel/meeting-collaboration-panel';
 
 @Component({
   selector: 'app-meeting-room-page', standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule],
+  imports: [CommonModule, RouterLink, LucideAngularModule, MeetingCollaborationPanel],
   templateUrl: './meeting-room-page.html', styleUrl: './meeting-room-page.scss',
   providers: [{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({
-    ChevronLeft, Mic, MicOff, MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus,
+    ChevronLeft, MessageSquareText, Mic, MicOff, MonitorUp, PhoneOff, Settings, Signal, Square, UserMinus,
     Users, Video, VideoOff, Volume2, VolumeX, WifiOff, X,
   }) }],
 })
@@ -30,6 +31,7 @@ export class MeetingRoomPage implements AfterViewInit, OnDestroy {
   readonly error = signal<string | null>(null); readonly microphoneOn = signal(false); readonly cameraOn = signal(true);
   readonly audioInputId = signal(''); readonly videoInputId = signal(''); readonly audioOutputId = signal('');
   readonly rosterOpen = signal(true); readonly settingsOpen = signal(false); readonly moderationBusy = signal<string | null>(null);
+  readonly collaborationOpen = signal(false);
 
   ngAfterViewInit(): void { this.requestToken(); }
   ngOnDestroy(): void { void this.room.disconnect(); }

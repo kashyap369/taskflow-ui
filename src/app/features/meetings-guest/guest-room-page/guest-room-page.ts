@@ -2,17 +2,18 @@ import { CommonModule } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
-  ChevronLeft, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, Mic, MicOff,
+  ChevronLeft, LUCIDE_ICONS, LucideAngularModule, LucideIconProvider, MessageSquareText, Mic, MicOff,
   MonitorUp, PhoneOff, Settings, Signal, UserMinus, Users, Video, VideoOff, Volume2,
   VolumeX, WifiOff, X,
 } from 'lucide-angular';
 import { MeetingRoomParticipantView, MeetingRoomService } from '@core/meetings/meeting-room.service';
 import { MeetingAccessLevel, MeetingRoomToken, accessLevelLabel } from '@features/organization/meetings.models';
 import { MeetingsGuestRepository } from '../meetings-guest.repository';
+import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collaboration-panel/meeting-collaboration-panel';
 
-@Component({ selector: 'app-guest-room-page', standalone: true, imports: [CommonModule, RouterLink, LucideAngularModule],
+@Component({ selector: 'app-guest-room-page', standalone: true, imports: [CommonModule, RouterLink, LucideAngularModule, MeetingCollaborationPanel],
   templateUrl: './guest-room-page.html', styleUrl: './guest-room-page.scss', providers: [{ provide: LUCIDE_ICONS,
-    multi: true, useValue: new LucideIconProvider({ ChevronLeft, Mic, MicOff, MonitorUp, PhoneOff,
+    multi: true, useValue: new LucideIconProvider({ ChevronLeft, MessageSquareText, Mic, MicOff, MonitorUp, PhoneOff,
       Settings, Signal, UserMinus, Users, Video, VideoOff, Volume2, VolumeX, WifiOff, X }) }] })
 export class GuestRoomPage implements AfterViewInit, OnDestroy {
   private readonly repository = inject(MeetingsGuestRepository); private readonly router = inject(Router);
@@ -22,7 +23,8 @@ export class GuestRoomPage implements AfterViewInit, OnDestroy {
   readonly error = signal<string | null>(null); readonly microphoneOn = signal(false); readonly cameraOn = signal(true);
   readonly audioInputId = signal(''); readonly videoInputId = signal(''); readonly audioOutputId = signal('');
   readonly rosterOpen = signal(true); readonly settingsOpen = signal(false); readonly moderationBusy = signal<string | null>(null);
-  private sessionToken(): string { return sessionStorage.getItem('taskflow.meeting.guest-session') ?? ''; }
+  readonly collaborationOpen = signal(false);
+  sessionToken(): string { return sessionStorage.getItem('taskflow.meeting.guest-session') ?? ''; }
 
   ngAfterViewInit(): void { this.requestToken(); } ngOnDestroy(): void { void this.room.disconnect(); }
   requestToken(): void {

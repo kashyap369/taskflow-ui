@@ -9,9 +9,10 @@ import { CreateMeetingAccessLinkPayload, MeetingAccessLevel, MeetingAccessLinkMo
 import { MeetingsFacade } from '../meetings.facade';
 import { OrganizationFacade } from '../organization.facade';
 import { MeetingFormDrawer } from '../meetings-page/meeting-form-drawer';
+import { MeetingCollaborationPanel } from '@shared/ui/organisms/meeting-collaboration-panel/meeting-collaboration-panel';
 
 @Component({ selector: 'app-meeting-detail-page', standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule, Skeleton, MeetingFormDrawer],
+  imports: [CommonModule, RouterLink, LucideAngularModule, Skeleton, MeetingFormDrawer, MeetingCollaborationPanel],
   templateUrl: './meeting-detail-page.html', styleUrls: ['./meeting-detail-page.scss', './meeting-access.scss'],
   providers: [{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ ArrowLeft, CalendarClock, Check, Copy, FileText, Link2, Mail, MessageSquareText, Pencil, Play, RefreshCw, Square, Trash2, UserPlus, Users, Video }) }],
 })

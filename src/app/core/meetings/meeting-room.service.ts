@@ -19,6 +19,8 @@ export interface MeetingRoomJoinPreferences {
   audioInputId?: string; videoInputId?: string; audioOutputId?: string;
 }
 
+export interface MeetingCollaborationAnnouncement { type: 'message' | 'note' | 'asset'; id?: number; version?: number; }
+
 interface ParticipantMetadata { participantId?: number; accessLevel?: number; badgeLabel?: string | null; }
 
 @Injectable({ providedIn: 'root' })
@@ -40,6 +42,7 @@ export class MeetingRoomService {
   readonly actionError = signal<string | null>(null);
   readonly disconnectMessage = signal<string | null>(null);
   readonly lastError = signal<string | null>(null);
+  readonly collaborationAnnouncement = signal<MeetingCollaborationAnnouncement | null>(null);
 
   isSupported(): boolean { return isBrowserSupported() && !!navigator.mediaDevices; }
 
@@ -114,6 +117,10 @@ export class MeetingRoomService {
     if (deviceId) await this.runMediaAction(async (room) => { await room.switchActiveDevice(kind, deviceId, false); });
   }
   async enableAudioPlayback(): Promise<void> { await this.runMediaAction(async (room) => room.startAudio()); }
+  async announceCollaboration(value: MeetingCollaborationAnnouncement): Promise<void> {
+    const bytes = new TextEncoder().encode(JSON.stringify(value));
+    await this.requireConnectedRoom().localParticipant.publishData(bytes, { reliable: true, topic: 'taskflow.collaboration' });
+  }
 
   async disconnect(): Promise<void> {
     const room = this.room; this.room = null;
@@ -138,6 +145,12 @@ export class MeetingRoomService {
       .on(RoomEvent.TrackUnmuted, () => this.syncRoom(room))
       .on(RoomEvent.TrackSubscribed, (track, _publication, participant) => { this.attachTrack(track, participant); this.syncRoom(room); })
       .on(RoomEvent.TrackUnsubscribed, (track) => { this.detachTrack(track); this.syncRoom(room); })
+      .on(RoomEvent.DataReceived, (payload, _participant, _kind, topic) => {
+        if (topic !== 'taskflow.collaboration' || payload.byteLength > 2048) return;
+        try { const value = JSON.parse(new TextDecoder().decode(payload)) as MeetingCollaborationAnnouncement;
+          if (value?.type === 'message' || value?.type === 'note' || value?.type === 'asset') this.collaborationAnnouncement.set(value); }
+        catch { /* Ignore malformed provider data; canonical state remains in the API. */ }
+      })
       .on(RoomEvent.LocalTrackPublished, (publication, participant) => { if (publication.track) this.attachTrack(publication.track, participant); this.syncRoom(room); })
       .on(RoomEvent.LocalTrackUnpublished, (publication) => { if (publication.track) this.detachTrack(publication.track); this.syncRoom(room); })
       .on(RoomEvent.Reconnecting, () => this.connectionState.set('reconnecting'))

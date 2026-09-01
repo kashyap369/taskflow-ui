@@ -4,6 +4,16 @@
 > The backend (`D:\Projects\TMS\TaskFlow`) and frontend advance together. Planner Phases 17–23 are
 > complete end to end, including the hardened production rollout.
 
+## ✅ Organization Meetings Phase 5 — persistent collaboration and archive (2026-09-01)
+
+Phases 0–5 are DONE and Phase 6 is READY. Registered participants and verified guests now share one
+persisted chat, a debounced conflict-aware meeting note, and private scanned files from the live room.
+Small LiveKit data announcements trigger canonical API reloads rather than acting as history. The
+meeting detail becomes a read-only archive after end, showing actual timing, attendance/duration,
+messages, note/editor, files/uploader and retention deadline. Host/uploader deletion and automatic
+storage-first retention cleanup prevent orphaned objects. All 276 specs, production build,
+lint/design lint and all 42 contrast checks pass; backend is 62/62 with no EF drift.
+
 ## ✅ Organization Meetings Phase 4 — custom LiveKit room (2026-08-31)
 
 Phases 0–4 are DONE and Phase 5 is READY. Registered participants and admitted guests now enter a
