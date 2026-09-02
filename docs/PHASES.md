@@ -2,6 +2,13 @@
 
 > Keep the Current Status section up to date at the end of every session.
 
+## ⏸️ Organization Meetings deferred (2026-09-02)
+
+The owner deferred Meetings, so its organization-sidebar entry is intentionally hidden while the
+implemented routes and source remain available for later work. Re-enable navigation only after the
+backend receives its LiveKit runtime configuration reliably and a production multi-client call passes.
+All unrelated portal navigation and features remain unchanged.
+
 ## 🟡 Organization Meetings Phase 6 — implementation complete, certification pending (2026-09-01)
 
 The Angular room now polls canonical recording state, requires explicit member/guest consent before

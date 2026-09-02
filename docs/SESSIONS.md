@@ -1000,3 +1000,10 @@
   feature-gated management/metadata endpoints are ready for the organization UI.
 - No Angular production surface changed in this phase. Phase 2 can now add the Meetings navigation,
   management/scheduling pages and Calendar derivation against a tested authoritative contract.
+
+## 2026-09-02 (Organization Meetings deferred)
+
+- Hid the Meetings link from the organization sidebar at the owner's direction; meeting routes and
+  implementation remain in source for a later restart.
+- No unrelated navigation or product surface was changed. Re-enable the link only after the backend
+  LiveKit runtime configuration and production multi-client call are verified.
