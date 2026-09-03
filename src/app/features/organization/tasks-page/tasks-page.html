@@ -124,46 +124,50 @@
             <div class="col-title">
               <div class="task-title">{{ task.title }}</div>
               <div class="task-meta">
-                <lucide-angular name="User" size="12" class="assignee-ico"></lucide-angular>
-                <select
-                  class="assignee-select"
-                  [class.unassigned]="!task.assignedToUserId"
-                  (change)="onAssignChange(task, $event)"
-                  aria-label="Assignee"
-                >
-                  <option value="" [selected]="!task.assignedToUserId">Unassigned</option>
-                  <!--
-                    Active members only. If the current assignee has since been deactivated or
-                    filtered out by role, keep their name in the list so the row doesn't silently
-                    read as unassigned.
-                  -->
-                  @if (task.assignedToUserId && !isAssignable(task.assignedToUserId)) {
-                    <option [value]="task.assignedToUserId" selected>
-                      {{ assigneeName(task) }}
-                    </option>
-                  }
-                  @for (m of members(); track m.id) {
-                    <option [value]="m.userId" [selected]="m.userId === task.assignedToUserId">
-                      {{ m.userFullName }}
-                    </option>
-                  }
-                </select>
+                <span class="task-assignment">
+                  <lucide-angular name="User" size="12" class="assignee-ico"></lucide-angular>
+                  <select
+                    class="assignee-select"
+                    [class.unassigned]="!task.assignedToUserId"
+                    (change)="onAssignChange(task, $event)"
+                    aria-label="Assignee"
+                  >
+                    <option value="" [selected]="!task.assignedToUserId">Unassigned</option>
+                    <!--
+                      Active members only. If the current assignee has since been deactivated or
+                      filtered out by role, keep their name in the list so the row doesn't silently
+                      read as unassigned.
+                    -->
+                    @if (task.assignedToUserId && !isAssignable(task.assignedToUserId)) {
+                      <option [value]="task.assignedToUserId" selected>
+                        {{ assigneeName(task) }}
+                      </option>
+                    }
+                    @for (m of members(); track m.id) {
+                      <option [value]="m.userId" [selected]="m.userId === task.assignedToUserId">
+                        {{ m.userFullName }}
+                      </option>
+                    }
+                  </select>
+                </span>
 
-                <lucide-angular name="Users" size="12" class="assignee-ico"></lucide-angular>
-                <!-- Team ownership is its own route, so this select writes directly. -->
-                <select
-                  class="assignee-select"
-                  [class.unassigned]="!task.teamId"
-                  (change)="onTeamChange(task, $event)"
-                  aria-label="Owning team"
-                >
-                  <option value="" [selected]="!task.teamId">No team</option>
-                  @for (opt of teamOptions(); track opt.value) {
-                    <option [value]="opt.value" [selected]="opt.value === task.teamId">
-                      {{ opt.label }}
-                    </option>
-                  }
-                </select>
+                <span class="task-assignment">
+                  <lucide-angular name="Users" size="12" class="assignee-ico"></lucide-angular>
+                  <!-- Team ownership is its own route, so this select writes directly. -->
+                  <select
+                    class="assignee-select"
+                    [class.unassigned]="!task.teamId"
+                    (change)="onTeamChange(task, $event)"
+                    aria-label="Owning team"
+                  >
+                    <option value="" [selected]="!task.teamId">No team</option>
+                    @for (opt of teamOptions(); track opt.value) {
+                      <option [value]="opt.value" [selected]="opt.value === task.teamId">
+                        {{ opt.label }}
+                      </option>
+                    }
+                  </select>
+                </span>
               </div>
             </div>
 
