@@ -12,6 +12,9 @@ import {
   LucideIconProvider,
   Pencil,
   Plus,
+  Download,
+  Upload,
+  FileSpreadsheet,
   Search,
   Trash2,
   X,
@@ -22,6 +25,11 @@ import { DialogDirective } from '@shared/directives/dialog.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
+import {
+  downloadProjectPlanTemplate,
+  parseProjectPlanFile,
+  ProjectPlanPreview,
+} from '@shared/utils/project-plan-csv';
 import { controlValidators, messageFor } from '@shared/validations';
 import { ProjectFormModel } from '../organization.form-models';
 import { Project, ProjectStatus, projectStatusMeta } from '../organization.models';
@@ -55,6 +63,9 @@ import { OrganizationFacade } from '../organization.facade';
         Search,
         Pencil,
         Trash2,
+        Download,
+        Upload,
+        FileSpreadsheet,
       }),
     },
   ],
@@ -74,6 +85,9 @@ export class ProjectsPage {
 
   /** One drawer serves create and edit; `editing` holds the row being edited (null = create). */
   readonly showDrawer = signal(false);
+  readonly showImportDrawer = signal(false);
+  readonly planPreview = signal<ProjectPlanPreview | null>(null);
+  readonly planError = signal<string | null>(null);
   readonly editing = signal<Project | null>(null);
   readonly isEditing = computed(() => this.editing() !== null);
 
@@ -148,6 +162,42 @@ export class ProjectsPage {
     this.editing.set(null);
     this.createForm.reset({ title: '', description: '', startDate: this.today(), expectedCompletionDate: '' });
     this.showDrawer.set(true);
+  }
+
+  downloadPlanTemplate(): void {
+    downloadProjectPlanTemplate(false);
+  }
+
+  openPlanImport(): void {
+    this.planPreview.set(null);
+    this.planError.set(null);
+    this.showImportDrawer.set(true);
+  }
+
+  closePlanImport(): void {
+    if (this.saving()) return;
+    this.showImportDrawer.set(false);
+    this.planPreview.set(null);
+    this.planError.set(null);
+  }
+
+  async onPlanFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    this.planPreview.set(null);
+    this.planError.set(null);
+    if (!file) return;
+    try {
+      this.planPreview.set(await parseProjectPlanFile(file));
+    } catch (error) {
+      this.planError.set(error instanceof Error ? error.message : 'This project plan could not be read.');
+    }
+  }
+
+  importPlan(): void {
+    const preview = this.planPreview();
+    if (!preview) return;
+    this.facade.importProjectPlan(preview.payload, () => this.closePlanImport());
   }
 
   openEdit(project: Project): void {

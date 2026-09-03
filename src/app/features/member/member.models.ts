@@ -15,6 +15,8 @@ export {
 export type {
   OrganizationListItem,
   Project,
+  ProjectPlanImportPayload,
+  ProjectPlanImportResult,
   SubTask,
   TaskDetail,
   TaskListItem,

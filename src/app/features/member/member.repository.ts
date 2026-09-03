@@ -10,6 +10,8 @@ import {
   OrganizationListItem,
   PersonalTaskReport,
   Project,
+  ProjectPlanImportPayload,
+  ProjectPlanImportResult,
   SubTask,
   TaskDetail,
   TaskListItem,
@@ -59,6 +61,10 @@ export class MemberRepository {
 
   createPersonalProject(payload: CreatePersonalProjectPayload): Observable<number> {
     return this.api.post<number>(API.Project.CreatePersonal, payload);
+  }
+
+  importProjectPlan(payload: ProjectPlanImportPayload): Observable<ProjectPlanImportResult> {
+    return this.api.post<ProjectPlanImportResult>(API.Project.ImportPlan, { ...payload, organizationId: null });
   }
 
   updatePersonalProject(payload: UpdatePersonalProjectPayload): Observable<void> {

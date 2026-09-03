@@ -382,6 +382,34 @@ export interface CreateProjectPayload {
   organizationId: number;
 }
 
+export interface ProjectPlanTaskPayload {
+  key: string;
+  title: string;
+  description: string;
+  startDate: string;
+  expectedCompletionDate: string | null;
+  priority: TaskPriority;
+  estimateMinutes: number | null;
+  teamName: string | null;
+  assigneeEmail: string | null;
+  subTasks: string[];
+}
+
+export interface ProjectPlanImportPayload {
+  title: string;
+  description: string;
+  startDate: string;
+  expectedCompletionDate: string | null;
+  organizationId?: number | null;
+  tasks: ProjectPlanTaskPayload[];
+}
+
+export interface ProjectPlanImportResult {
+  projectId: number;
+  taskCount: number;
+  subTaskCount: number;
+}
+
 /**
  * `POST /task` → int (new task id). `teamId` is optional and **create-only** — see
  * `UpdateTaskPayload` for why changing it later goes through its own route.

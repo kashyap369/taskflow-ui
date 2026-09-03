@@ -21,6 +21,8 @@ import {
   OrganizationRoleDetail,
   Project,
   ProjectReport,
+  ProjectPlanImportPayload,
+  ProjectPlanImportResult,
   ScheduleTaskPayload,
   SubTask,
   TaskDetail,
@@ -423,6 +425,28 @@ export class OrganizationFacade {
         this.notification.success('Project created.');
         this.reloadProjects(organizationId);
         this.refreshSummary(organizationId);
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  importProjectPlan(
+    payload: ProjectPlanImportPayload,
+    onImported?: (result: ProjectPlanImportResult) => void,
+  ): void {
+    const organizationId = this.currentOrgId();
+    if (organizationId == null) return;
+
+    this._saving.set(true);
+    this.repository.importProjectPlan({ ...payload, organizationId }).subscribe({
+      next: (result) => {
+        this._saving.set(false);
+        this.notification.success(
+          `Project imported with ${result.taskCount} tasks and ${result.subTaskCount} subtasks.`,
+        );
+        this.reloadProjects(organizationId);
+        this.refreshSummary(organizationId);
+        onImported?.(result);
       },
       error: () => this._saving.set(false),
     });

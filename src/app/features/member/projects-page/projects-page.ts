@@ -5,6 +5,9 @@ import { RouterLink } from '@angular/router';
 import {
   ArrowRight,
   CalendarDays,
+  Download,
+  Upload,
+  FileSpreadsheet,
   FolderKanban,
   LUCIDE_ICONS,
   LucideAngularModule,
@@ -21,6 +24,11 @@ import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { controlValidators, messageFor } from '@shared/validations';
+import {
+  downloadProjectPlanTemplate,
+  parseProjectPlanFile,
+  ProjectPlanPreview,
+} from '@shared/utils/project-plan-csv';
 import { ProjectFormModel } from '@features/organization/organization.form-models';
 import { MemberFacade } from '../member.facade';
 import { Project, projectStatusMeta } from '../member.models';
@@ -52,6 +60,9 @@ import { Project, projectStatusMeta } from '../member.models';
         ShieldCheck,
         Trash2,
         X,
+        Download,
+        Upload,
+        FileSpreadsheet,
       }),
     },
   ],
@@ -66,6 +77,9 @@ export class MemberProjectsPage {
   readonly saving = this.facade.saving;
   readonly search = signal('');
   readonly showDrawer = signal(false);
+  readonly showImportDrawer = signal(false);
+  readonly planPreview = signal<ProjectPlanPreview | null>(null);
+  readonly planError = signal<string | null>(null);
   readonly editing = signal<Project | null>(null);
   readonly isEditing = computed(() => this.editing() !== null);
   readonly loadingRows = [0, 1, 2, 3];
@@ -111,6 +125,49 @@ export class MemberProjectsPage {
       expectedCompletionDate: '',
     });
     this.showDrawer.set(true);
+  }
+
+  downloadPlanTemplate(): void {
+    downloadProjectPlanTemplate(true);
+  }
+
+  openPlanImport(): void {
+    this.planPreview.set(null);
+    this.planError.set(null);
+    this.showImportDrawer.set(true);
+  }
+
+  closePlanImport(): void {
+    if (this.saving()) return;
+    this.showImportDrawer.set(false);
+    this.planPreview.set(null);
+    this.planError.set(null);
+  }
+
+  async onPlanFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    this.planPreview.set(null);
+    this.planError.set(null);
+    if (!file) return;
+    try {
+      const preview = await parseProjectPlanFile(file);
+      const organizationFields = preview.payload.tasks.find(
+        (task) => task.teamName || task.assigneeEmail,
+      );
+      if (organizationFields) {
+        throw new Error('Personal project plans cannot include a Team Name or Assignee Email.');
+      }
+      this.planPreview.set(preview);
+    } catch (error) {
+      this.planError.set(error instanceof Error ? error.message : 'This project plan could not be read.');
+    }
+  }
+
+  importPlan(): void {
+    const preview = this.planPreview();
+    if (!preview) return;
+    this.facade.importProjectPlan(preview.payload, () => this.closePlanImport());
   }
 
   openEdit(project: Project): void {

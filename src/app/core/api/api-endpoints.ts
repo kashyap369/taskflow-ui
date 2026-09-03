@@ -98,6 +98,7 @@ export const API = {
   Project: {
     Create: '/project',
     CreatePersonal: '/project/personal',
+    ImportPlan: '/project/plan-import',
     Update: '/project',
     GetById: (id: number) => `/project/${id}`,
     Delete: (id: number) => `/project/${id}`,

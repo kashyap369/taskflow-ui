@@ -10,6 +10,8 @@ import {
   OrganizationListItem,
   PersonalTaskReport,
   Project,
+  ProjectPlanImportPayload,
+  ProjectPlanImportResult,
   SubTask,
   TaskListItem,
   UpdatePersonalProjectPayload,
@@ -270,6 +272,23 @@ export class MemberFacade {
         this._saving.set(false);
         this.notification.success('Project created.');
         this.loadProjects(() => onCreated?.(projectId));
+      },
+      error: () => this._saving.set(false),
+    });
+  }
+
+  importProjectPlan(
+    payload: ProjectPlanImportPayload,
+    onImported?: (result: ProjectPlanImportResult) => void,
+  ): void {
+    this._saving.set(true);
+    this.repository.importProjectPlan(payload).subscribe({
+      next: (result) => {
+        this._saving.set(false);
+        this.notification.success(
+          `Project imported with ${result.taskCount} tasks and ${result.subTaskCount} subtasks.`,
+        );
+        this.loadProjects(() => onImported?.(result));
       },
       error: () => this._saving.set(false),
     });
