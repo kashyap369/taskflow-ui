@@ -1,5 +1,27 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-04 (Meetings: first working production call)
+
+- **A device preference was ending live calls.** `connect()` applied the speaker choice with
+  `room.switchActiveDevice('audiooutput', …)` inside its try block. Android Chrome has no
+  `setSinkId`, so it threw, the catch disconnected the room, and the user landed back on pre-join —
+  after audio and video had already published. Every mobile session died at ~3s; desktop Chrome
+  implements `setSinkId`, so the same build worked there, which is what made it look like a network
+  or NAT problem for hours.
+- Microphone, camera and all three device selections now go through `applyPreference()`: failures
+  become a device warning and the call continues. Only the connection itself may abort a join.
+  Audio-output selection is skipped entirely where `setSinkId` is absent.
+- **How it was found:** `disconnect()` records its trigger into `sessionStorage` and pre-join renders
+  the previous teardown. The phone reported `connect-failed (state: connected)`, which named the
+  branch immediately. Worth keeping — the room previously fell back to pre-join in silence, and the
+  service had computed a `disconnectMessage` all along that nothing displayed.
+- The recordings poll now backs off after three failures. With recording disabled server-side the
+  endpoint 404s every time, and the 3s poll produced 466 console errors and a toast each in one
+  observed join.
+- Gotcha: LiveKit logs `CLIENT_REQUEST_LEAVE` for *our* `room.disconnect()`, indistinguishable from
+  the user pressing Leave. Do not read it as a user action.
+- 286/286 specs, production build, lint, design lint and 42 contrast checks pass.
+
 ## 2026-09-04 (Organization Meetings Phase 7 — P7.1 readiness and ready-anytime creation)
 
 - **Restored the Meetings sidebar entry** by exactly reverting `fc84119` — the `/organization/meetings`
