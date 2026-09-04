@@ -8,6 +8,19 @@ It covers both the Angular frontend and ASP.NET Core backend, including secure u
 guests, private/reusable share links, custom display badges, LiveKit media, persistent chat/notes/files,
 attendance, recording/Egress, security, infrastructure, testing and production rollout.
 
+## Production triage
+
+When a meeting fails in production, read
+[`D:\Projects\TMS\TaskFlow\infra\meetings\RUNBOOK.md`](../../../TaskFlow/infra/meetings/RUNBOOK.md)
+first. It records the four faults behind the first working call on 2026-09-04 — including the
+Android-only `setSinkId` fault that lived in *this* repo and tore down connected calls after ~3
+seconds — plus the LiveKit log fields that identify each, and three red herrings not worth
+re-investigating.
+
+Quick client-side check: pre-join renders *"Previous attempt ended by ..."* from
+`sessionStorage['taskflow.meeting.lastDisconnect']`, naming which branch tore the room down
+(`page-destroyed`, `user-left`, `connect-reset`, `connect-failed`).
+
 ## Current status
 
 - Plan approved: **2026-08-30**

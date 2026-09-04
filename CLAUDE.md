@@ -44,6 +44,9 @@ Before working, read the project docs in [`docs/`](docs/) — they carry full co
   session handoff contract. Read the canonical file completely for any meeting, LiveKit, guest-link,
   badge, collaboration or recording task; Phase 0 is complete and Phase 1 is READY.
 - [`docs/V1-GAPS.md`](docs/V1-GAPS.md) — **v1 is complete**; this is what it deliberately excludes and why (backend-blocked / backend defects / deferred v1.x / non-goals). Start post-v1 work here.
+- `D:\Projects\TMS\TaskFlow\infra\meetings\RUNBOOK.md` — **production meetings triage**, covering
+  both repos. Read before diagnosing any meeting failure; the Android `setSinkId` fault documented
+  there was a frontend bug that looked exactly like a network problem.
 - [`docs/SESSIONS.md`](docs/SESSIONS.md) — append-only session log (gotchas/decisions; add an entry each session).
 - [`docs/ATOMIC-DESIGN-GUIDE.md`](docs/ATOMIC-DESIGN-GUIDE.md) — deciding atom vs molecule vs organism and variants-as-props.
 
