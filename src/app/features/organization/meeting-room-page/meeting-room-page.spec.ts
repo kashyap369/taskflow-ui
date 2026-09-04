@@ -103,6 +103,8 @@ describe('MeetingRoomPage', () => {
       setMicrophoneEnabled: jasmine.createSpy().and.resolveTo(), setCameraEnabled: jasmine.createSpy().and.resolveTo(),
       setScreenShareEnabled: jasmine.createSpy().and.resolveTo(), switchDevice: jasmine.createSpy().and.resolveTo(),
       enableAudioPlayback: jasmine.createSpy().and.resolveTo(),
+      readLastDisconnect: jasmine.createSpy().and.returnValue(null),
+      clearLastDisconnect: jasmine.createSpy(),
     };
   }
 

@@ -88,7 +88,7 @@ export class MeetingRoomService {
 
   async connect(webSocketUrl: string, token: string, mediaContainer: HTMLElement,
     preferences: MeetingRoomJoinPreferences = { microphoneEnabled: false, cameraEnabled: false }): Promise<void> {
-    await this.disconnect(); await this.stopPreview(); this.lastError.set(null); this.actionError.set(null);
+    await this.disconnect('connect-reset'); await this.stopPreview(); this.lastError.set(null); this.actionError.set(null);
     this.disconnectMessage.set(null); this.connectionState.set('connecting'); this.mediaContainer = mediaContainer;
     const room = new Room({ adaptiveStream: true, dynacast: true }); this.room = room; this.bindRoomEvents(room);
     try {
@@ -100,7 +100,7 @@ export class MeetingRoomService {
       if (preferences.audioOutputId) await room.switchActiveDevice('audiooutput', preferences.audioOutputId, false);
       this.attachExistingTracks(room); this.syncRoom(room);
     } catch (error) {
-      this.lastError.set(this.errorMessage(error)); await this.disconnect(); throw error;
+      this.lastError.set(this.errorMessage(error)); await this.disconnect('connect-failed'); throw error;
     }
   }
 
@@ -122,8 +122,36 @@ export class MeetingRoomService {
     await this.requireConnectedRoom().localParticipant.publishData(bytes, { reliable: true, topic: 'taskflow.collaboration' });
   }
 
-  async disconnect(): Promise<void> {
+  /**
+   * Records why the room was torn down. `room.disconnect()` makes livekit-client send a
+   * LeaveRequest, which the server logs as CLIENT_REQUEST_LEAVE — indistinguishable from the user
+   * pressing Leave. Production sessions were ending after ~3s with that reason and no visible
+   * cause, so the trigger is captured here and survives the component being destroyed.
+   */
+  private recordDisconnectTrigger(trigger: string): void {
+    try {
+      sessionStorage.setItem('taskflow.meeting.lastDisconnect', JSON.stringify({
+        trigger, at: new Date().toISOString(), state: this.connectionState(),
+        stack: (new Error().stack ?? '').split(String.fromCharCode(10)).slice(1, 6).join(' | '),
+      }));
+    } catch { /* private mode or storage disabled — diagnostics are best-effort */ }
+  }
+
+  /** The last recorded teardown, for the pre-join screen to explain an unexpected drop. */
+  readLastDisconnect(): { trigger: string; at: string; state: string; stack: string } | null {
+    try {
+      const raw = sessionStorage.getItem('taskflow.meeting.lastDisconnect');
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+
+  clearLastDisconnect(): void {
+    try { sessionStorage.removeItem('taskflow.meeting.lastDisconnect'); } catch { /* ignore */ }
+  }
+
+  async disconnect(trigger = 'unspecified'): Promise<void> {
     const room = this.room; this.room = null;
+    if (room) this.recordDisconnectTrigger(trigger);
     if (room) { room.removeAllListeners(); await room.disconnect(true); }
     await this.stopPreview(); this.mediaContainer?.replaceChildren(); this.mediaContainer = null;
     this.connectionState.set('disconnected'); this.participants.set([]); this.participantCount.set(0);

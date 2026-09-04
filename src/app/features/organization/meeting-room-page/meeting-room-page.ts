@@ -38,12 +38,21 @@ export class MeetingRoomPage implements AfterViewInit, OnDestroy {
   readonly recordingLive = computed(() => this.activeRecording()?.status === MeetingRecordingStatus.Starting || this.activeRecording()?.status === MeetingRecordingStatus.Recording);
   readonly needsRecordingConsent = computed(() => { const active = this.activeRecording(); return !!active && active.status <= MeetingRecordingStatus.Recording && active.myConsent !== MeetingRecordingConsentStatus.Accepted; });
   private recordingPoll?: number;
+  private recordingPollFailures = 0;
+  /** Shown on pre-join when a previous attempt ended without the user asking to leave. */
+  readonly lastDisconnect = signal<{ trigger: string; at: string; state: string; stack: string } | null>(null);
 
-  ngAfterViewInit(): void { this.loadRecordings(true); this.zone.runOutsideAngular(() => { this.recordingPoll = window.setInterval(() => this.zone.run(() => this.loadRecordings(false)), 3000); }); }
-  ngOnDestroy(): void { if (this.recordingPoll) window.clearInterval(this.recordingPoll); void this.room.disconnect(); }
+  ngAfterViewInit(): void {
+    this.lastDisconnect.set(this.room.readLastDisconnect());
+    this.loadRecordings(true);
+    this.zone.runOutsideAngular(() => { this.recordingPoll = window.setInterval(() => this.zone.run(() => this.loadRecordings(false)), 3000); });
+  }
+  /** Recording may be disabled server-side (404 on every poll); stop asking rather than spamming. */
+  private stopRecordingPoll(): void { if (this.recordingPoll) { window.clearInterval(this.recordingPoll); this.recordingPoll = undefined; } }
+  ngOnDestroy(): void { if (this.recordingPoll) window.clearInterval(this.recordingPoll); void this.room.disconnect('page-destroyed'); }
 
   loadRecordings(initial: boolean): void {
-    this.repository.recordings(this.id).subscribe({ next: (rows) => { this.recordings.set(rows); if (initial && !this.needsRecordingConsent()) this.requestToken(); else if (initial) this.stage.set('prejoin'); }, error: () => { if (initial) this.requestToken(); } });
+    this.repository.recordings(this.id).subscribe({ next: (rows) => { this.recordingPollFailures = 0; this.recordings.set(rows); if (initial && !this.needsRecordingConsent()) this.requestToken(); else if (initial) this.stage.set('prejoin'); }, error: () => { if (initial) this.requestToken(); else if (++this.recordingPollFailures >= 3) this.stopRecordingPoll(); } });
   }
   recordingConsent(accepted: boolean): void { const active = this.activeRecording(); if (!active) return; this.recordingBusy.set(true); this.repository.recordingConsent(this.id, active.id, accepted).subscribe({ next: (value) => { this.recordingBusy.set(false); this.recordings.update((rows) => [value, ...rows.filter((x) => x.id !== value.id)]); if (accepted && !this.token()) this.requestToken(); else if (!accepted) this.error.set('You declined recording and cannot join while it is active.'); }, error: () => this.recordingBusy.set(false) }); }
   toggleRecording(): void { const active = this.activeRecording(); this.recordingBusy.set(true); const request = this.recordingLive() && active ? this.repository.stopRecording(this.id, active.id) : this.repository.requestRecording(this.id); request.subscribe({ next: (value) => { this.recordingBusy.set(false); this.recordings.update((rows) => [value, ...rows.filter((x) => x.id !== value.id)]); }, error: () => { this.recordingBusy.set(false); this.error.set('The recording request could not be completed.'); } }); }
@@ -94,7 +103,7 @@ export class MeetingRoomPage implements AfterViewInit, OnDestroy {
     if (kind === 'audioinput') this.audioInputId.set(value); else if (kind === 'videoinput') this.videoInputId.set(value); else this.audioOutputId.set(value);
     await this.safely(() => this.room.switchDevice(kind, value));
   }
-  async leave(): Promise<void> { await this.room.disconnect(); await this.router.navigate(['/organization/meetings', this.id]); }
+  async leave(): Promise<void> { this.room.clearLastDisconnect(); await this.room.disconnect('user-left'); await this.router.navigate(['/organization/meetings', this.id]); }
   endMeeting(): void {
     this.repository.end(this.id).subscribe({ next: () => void this.leave(), error: () => this.error.set('The meeting could not be ended. Try again.') });
   }
