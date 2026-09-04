@@ -93,15 +93,33 @@ export class MeetingRoomService {
     const room = new Room({ adaptiveStream: true, dynacast: true }); this.room = room; this.bindRoomEvents(room);
     try {
       await room.connect(webSocketUrl, token, { autoSubscribe: true });
-      if (preferences.microphoneEnabled) await room.localParticipant.setMicrophoneEnabled(true);
-      if (preferences.cameraEnabled) await room.localParticipant.setCameraEnabled(true);
-      if (preferences.audioInputId) await room.switchActiveDevice('audioinput', preferences.audioInputId);
-      if (preferences.videoInputId) await room.switchActiveDevice('videoinput', preferences.videoInputId);
-      if (preferences.audioOutputId) await room.switchActiveDevice('audiooutput', preferences.audioOutputId, false);
+      // Everything past this point is a preference, not a requirement. Only the connection itself
+      // may abort a join: Android Chrome has no setSinkId, so selecting a speaker throws there, and
+      // that used to tear down a fully connected call with published audio and video.
+      await this.applyPreference(() => room.localParticipant.setMicrophoneEnabled(true), preferences.microphoneEnabled);
+      await this.applyPreference(() => room.localParticipant.setCameraEnabled(true), preferences.cameraEnabled);
+      await this.applyPreference(() => room.switchActiveDevice('audioinput', preferences.audioInputId!), !!preferences.audioInputId);
+      await this.applyPreference(() => room.switchActiveDevice('videoinput', preferences.videoInputId!), !!preferences.videoInputId);
+      await this.applyPreference(() => room.switchActiveDevice('audiooutput', preferences.audioOutputId!, false),
+        !!preferences.audioOutputId && this.supportsAudioOutputSelection());
       this.attachExistingTracks(room); this.syncRoom(room);
     } catch (error) {
       this.lastError.set(this.errorMessage(error)); await this.disconnect('connect-failed'); throw error;
     }
+  }
+
+  /**
+   * Applies one optional join preference. A failure is surfaced as a device warning and the call
+   * continues — losing the whole meeting because a speaker could not be selected is never right.
+   */
+  private async applyPreference(action: () => Promise<unknown>, when: boolean): Promise<void> {
+    if (!when) return;
+    try { await action(); } catch (error) { this.deviceError.set(this.errorMessage(error)); }
+  }
+
+  /** `setSinkId` is absent on Android Chrome and Firefox; asking there always throws. */
+  private supportsAudioOutputSelection(): boolean {
+    return typeof HTMLMediaElement !== 'undefined' && 'setSinkId' in HTMLMediaElement.prototype;
   }
 
   async setMicrophoneEnabled(enabled: boolean): Promise<void> {
