@@ -35,7 +35,14 @@ export class MeetingDetailPage implements OnDestroy {
   readonly accessLinks = this.facade.accessLinks;
   readonly statusMeta = meetingStatusMeta; readonly accessLabel = accessLevelLabel;
   readonly availableMembers = computed(() => { const assigned = new Set(this.detail()?.participants.map((p) => p.userId) ?? []); return this.members().filter((m) => m.isActive && !assigned.has(m.userId)); });
-  constructor() { this.organization.init(); effect(() => { const orgId = this.currentOrg()?.id; if (orgId) { this.facade.load(orgId); this.facade.loadDetail(this.id); this.facade.loadAccessLinks(this.id); this.loadRecordings(); } }); }
+  constructor() {
+    this.organization.init();
+    effect(() => { const orgId = this.currentOrg()?.id; if (orgId) { this.facade.load(orgId); this.facade.loadDetail(this.id); this.loadRecordings(); } });
+    // Access links need the creator or ManageMeetings, so wait for the detail to say whether this
+    // user may manage. Asking unconditionally made every participant's visit raise a permission
+    // error toast on a page they are perfectly entitled to open.
+    effect(() => { const detail = this.detail(); if (detail?.id === this.id && detail.canManage) this.facade.loadAccessLinks(this.id); });
+  }
   ngOnDestroy(): void { for (const url of this.recordingUrls.values()) URL.revokeObjectURL(url); }
   loadRecordings(): void { this.meetingsRepository.recordings(this.id).subscribe({ next: (rows) => this.recordings.set(rows), error: () => this.recordings.set([]) }); }
   playRecording(recording: MeetingRecording): void { const existing = this.recordingUrls.get(recording.id); if (existing) { this.playbackUrl.set(existing); return; } this.meetingsRepository.recordingContent(this.id, recording.id).subscribe((blob) => { const url = URL.createObjectURL(blob); this.recordingUrls.set(recording.id, url); this.playbackUrl.set(url); }); }
