@@ -1,4 +1,8 @@
-import { ProjectPlanImportPayload, ProjectPlanTaskPayload, TaskPriority } from '@features/organization/organization.models';
+import {
+  ProjectPlanImportPayload,
+  ProjectPlanTaskPayload,
+  TaskPriority,
+} from '@shared/models/project-plan.model';
 
 export interface ProjectPlanPreview {
   payload: ProjectPlanImportPayload;
@@ -192,7 +196,7 @@ function readDate(value: string, line: number, column: string): string {
   let month: number;
   let day: number;
   const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  const dayFirstMatch = /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/.exec(value);
+  const dayFirstMatch = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(value);
   if (isoMatch) {
     [, year, month, day] = isoMatch.map(Number);
   } else if (dayFirstMatch) {

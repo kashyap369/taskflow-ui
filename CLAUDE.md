@@ -2,6 +2,32 @@
 
 Angular 20 app using Component-Driven Development with Atomic Design (atoms → molecules → organisms) under `src/app/shared/ui/`.
 
+## Repository map (BOTH sides of this product)
+
+TaskFlow is **two repositories on one machine**. Most tasks touch one; many need to be checked against
+the other. Always confirm which side owns the work before writing code.
+
+| | Backend | Frontend |
+|---|---|---|
+| **Path** | `D:\Projects\TMS\TaskFlow` | `D:\Projects\TMS\TaskFlowUI\TaskFlowApp` (this repo) |
+| **Stack** | ASP.NET Core 8 + PostgreSQL, Clean Architecture / DDD / CQRS | Angular 20, standalone + signals, Atomic Design, multi-portal |
+| **Git remote** | `https://github.com/kashyap369/TaskFlow-CleanArchitecture-API.git` | `https://github.com/kashyap369/taskflow-ui.git` |
+| **Dev URL** | `https://localhost:7086/api` (also `http://localhost:5138`) | `http://localhost:4200` (the only origin CORS allows) |
+| **Guide** | `D:\Projects\TMS\TaskFlow\CLAUDE.md` | `D:\Projects\TMS\TaskFlowUI\TaskFlowApp\CLAUDE.md` |
+| **Docs** | `D:\Projects\TMS\TaskFlow\docs\` | `D:\Projects\TMS\TaskFlowUI\TaskFlowApp\docs\` |
+
+Each repository has its own remote and its own commit history — **commit them separately**; there is no
+monorepo and no shared branch.
+
+**Cross-repo rules**
+- `D:\Projects\TMS\TaskFlow\docs\ProjectCompletion.md` is the **single parity ledger for both
+  repositories**. Read it first to decide which side a task belongs to; update it in the same session as
+  any work that changes the API surface or what the UI consumes.
+- `D:\Projects\TMS\TaskFlow\docs\MEETINGS.md` is the **canonical cross-repository Meetings roadmap**.
+  This repo's [docs/MEETINGS.md](docs/MEETINGS.md) is only a pointer — never duplicate the roadmap there.
+- Everything else is per-repo: read the local `docs/` set for the side you are editing.
+- When a change spans both sides, update **both** doc sets (PHASES + SESSIONS on each) plus the ledger.
+
 ## Read the docs first (IMPORTANT)
 
 Before working, read the project docs in [`docs/`](docs/) — they carry full context so you don't have to re-derive it:

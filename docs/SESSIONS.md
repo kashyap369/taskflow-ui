@@ -1,5 +1,33 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-04 (Organization Meetings Phase 7 — P7.1 readiness and ready-anytime creation)
+
+- **Restored the Meetings sidebar entry** by exactly reverting `fc84119` — the `/organization/meetings`
+  link and the `Video` icon in both the template and the icon provider (the icon import was removed
+  with the link, so restoring only the anchor would have rendered a blank icon slot).
+- The owner lifted the deferral after the production LiveKit configuration was confirmed complete and
+  the media host answered healthy over TLS.
+
+- **Root cause of the ready-anytime bug:** the meeting drawer's start/end inputs used the template
+  `required` attribute. In reactive forms that activates Angular's `RequiredValidator` directive on the
+  control, and when `@if` destroyed the inputs the validator stayed attached — so unchecking "Schedule
+  for a specific time" left the form invalid with no visible field to explain it. Now `aria-required`,
+  which keeps the accessibility semantics without attaching a validator; `submit()` still enforces
+  completeness and owns the specific messages.
+- **Why it escaped:** the existing drawer spec never called `detectChanges()`, so the template — and
+  therefore the template-attached validator — never existed during the test. The new spec renders, so a
+  re-added `required` now fails the suite. Worth remembering for any bug that lives in a directive
+  rather than in component code.
+- Added a read-only Meetings readiness panel to the admin Platform settings page on
+  `GET /admin/meetings/readiness`, with a re-check action. It always re-fetches: a cached "Ready" would
+  hide a service that has since restarted without its LiveKit configuration.
+- Repaired two pre-existing gate breaks from the 2026-09-03 import commits: `ng lint` failed on a real
+  `shared → feature` boundary violation, so the plan contracts moved to
+  `shared/models/project-plan.model.ts` (re-exported from `organization.models.ts`, the same treatment
+  invitations get for being used by two portals), plus two useless regex escapes; `design:lint` failed
+  on a non-token `border-radius: 0` → `var(--radius-none)`.
+- All 284 specs, production build, lint, design lint and 42 contrast checks pass.
+
 ## 2026-09-01 (Organization Meetings Phase 6 — implementation complete, certification pending)
 
 - Added member/guest consent gates, canonical recording polling, the persistent red recording state

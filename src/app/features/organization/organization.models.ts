@@ -25,12 +25,16 @@ export enum TaskStatus {
   Cancelled = 5,
 }
 
-export enum TaskPriority {
-  Low = 1,
-  Medium = 2,
-  High = 3,
-  Critical = 4,
-}
+
+import { TaskPriority } from '@shared/models/project-plan.model';
+
+// The plan-import contracts and TaskPriority live in `shared/models` because the member portal
+// imports plans too, and the shared CSV parser that builds them may not depend on a feature.
+export { TaskPriority } from '@shared/models/project-plan.model';
+export type {
+  ProjectPlanImportPayload,
+  ProjectPlanTaskPayload,
+} from '@shared/models/project-plan.model';
 
 // Invitations are shared with the member portal (the invitee's side), so their model lives in
 // `shared/models`. Re-exported here so `organization.models` stays the one import for org pages.
@@ -382,27 +386,6 @@ export interface CreateProjectPayload {
   organizationId: number;
 }
 
-export interface ProjectPlanTaskPayload {
-  key: string;
-  title: string;
-  description: string;
-  startDate: string;
-  expectedCompletionDate: string | null;
-  priority: TaskPriority;
-  estimateMinutes: number | null;
-  teamName: string | null;
-  assigneeEmail: string | null;
-  subTasks: string[];
-}
-
-export interface ProjectPlanImportPayload {
-  title: string;
-  description: string;
-  startDate: string;
-  expectedCompletionDate: string | null;
-  organizationId?: number | null;
-  tasks: ProjectPlanTaskPayload[];
-}
 
 export interface ProjectPlanImportResult {
   projectId: number;

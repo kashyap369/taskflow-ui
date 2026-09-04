@@ -7,6 +7,7 @@ import {
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
+  Radio,
   Settings,
   ShieldAlert,
   TriangleAlert,
@@ -16,6 +17,7 @@ import {
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { controlValidators, messageFor } from '@shared/validations';
 import { AdminFacade } from '../admin.facade';
+import { MEETING_READINESS_META } from '../admin.models';
 import { PlatformSettingsFormModel } from '../admin.form-models';
 
 /**
@@ -43,6 +45,7 @@ import { PlatformSettingsFormModel } from '../admin.form-models';
         ShieldAlert,
         Info,
         CalendarDays,
+        Radio,
       }),
     },
   ],
@@ -54,6 +57,23 @@ export class AdminSettingsPage {
   readonly settings = this.facade.settings;
   readonly loading = this.facade.settingsLoading;
   readonly saving = this.facade.settingsSaving;
+
+  readonly readiness = this.facade.meetingReadiness;
+  readonly readinessLoading = this.facade.meetingReadinessLoading;
+
+  /** Label + tone for the status pill; falls back to the neutral "Disabled" styling. */
+  readonly readinessMeta = computed(
+    () => MEETING_READINESS_META[this.readiness()?.status ?? 'Disabled'],
+  );
+
+  /** One sentence saying what the status means for a member trying to join right now. */
+  readonly readinessSummary = computed(() => {
+    const readiness = this.readiness();
+    if (!readiness) return '';
+    if (readiness.status === 'Ready') return 'Members can be issued room credentials.';
+    if (readiness.status === 'Disabled') return 'Meetings are switched off for this deployment.';
+    return 'Meetings are switched on but cannot serve a room.';
+  });
 
   /** Nothing has arrived yet — show the form-shaped skeleton rather than an empty form. */
   readonly loadingSettings = computed(() => this.settings() === null);
@@ -89,6 +109,7 @@ export class AdminSettingsPage {
 
   constructor() {
     this.facade.loadSettings();
+    this.facade.loadMeetingReadiness();
 
     // Refill whenever the singleton lands — on first load and after a save (which re-fetches, so
     // the form settles back to pristine on the server's values).
@@ -122,6 +143,11 @@ export class AdminSettingsPage {
       maintenanceMode: value.maintenanceMode,
       maintenanceMessage: value.maintenanceMessage.trim() || null,
     });
+  }
+
+  /** Re-read readiness after an operator changes deployment variables and restarts the API. */
+  refreshReadiness(): void {
+    this.facade.loadMeetingReadiness();
   }
 
   /** Discard unsaved edits back to the loaded values. */

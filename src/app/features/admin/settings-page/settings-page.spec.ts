@@ -4,7 +4,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
 import { AdminRepository } from '../admin.repository';
-import { PlatformSettings } from '../admin.models';
+import { MeetingReadiness, PlatformSettings } from '../admin.models';
 import { AdminSettingsPage } from './settings-page';
 
 const SETTINGS: PlatformSettings = {
@@ -18,13 +18,33 @@ const SETTINGS: PlatformSettings = {
   updatedAt: null,
 };
 
+const READY: MeetingReadiness = {
+  status: 'Ready',
+  meetingsEnabled: true,
+  guestsEnabled: true,
+  recordingEnabled: false,
+  liveKitEnabled: true,
+  webSocketScheme: 'wss',
+  webSocketHost: 'media.example.com',
+  apiKeyConfigured: true,
+  apiKeyFingerprint: 'a1b2c3d4',
+  apiSecretConfigured: true,
+  apiSecretLength: 36,
+  recordingStorageConfigured: true,
+  joinTokenIssued: true,
+  joinTokenFailure: null,
+  blockers: [],
+};
+
 describe('AdminSettingsPage', () => {
   let component: AdminSettingsPage;
   let fixture: ComponentFixture<AdminSettingsPage>;
   let updateSettings: jasmine.Spy;
+  let getMeetingReadiness: jasmine.Spy;
 
   beforeEach(async () => {
     updateSettings = jasmine.createSpy('updateSettings').and.returnValue(of(void 0));
+    getMeetingReadiness = jasmine.createSpy('getMeetingReadiness').and.returnValue(of(READY));
 
     await TestBed.configureTestingModule({
       imports: [AdminSettingsPage],
@@ -33,7 +53,7 @@ describe('AdminSettingsPage', () => {
         provideAnimations(),
         {
           provide: AdminRepository,
-          useValue: { getSettings: () => of(SETTINGS), updateSettings },
+          useValue: { getSettings: () => of(SETTINGS), updateSettings, getMeetingReadiness },
         },
       ],
     }).compileComponents();
@@ -100,6 +120,34 @@ describe('AdminSettingsPage', () => {
 
     expect(updateSettings).not.toHaveBeenCalled();
     expect(component.form.controls.applicationName.touched).toBeTrue();
+  });
+
+  // The panel exists because a hosting platform can save LiveKit variables without the running
+  // service receiving them — the failure that deferred Meetings on 2026-09-02.
+  it('reports meetings readiness from the deployed API', () => {
+    expect(getMeetingReadiness).toHaveBeenCalled();
+    expect(component.readinessMeta().label).toBe('Ready');
+    expect(component.readinessSummary()).toContain('room credentials');
+  });
+
+  it('names the blockers when the process never received its LiveKit configuration', () => {
+    getMeetingReadiness.and.returnValue(
+      of({
+        ...READY,
+        status: 'Disabled' as const,
+        liveKitEnabled: false,
+        joinTokenIssued: false,
+        joinTokenFailure: 'LiveKit is disabled, so token signing was not attempted.',
+        blockers: ['LiveKit:Enabled is false in the running process.'],
+      }),
+    );
+
+    component.refreshReadiness();
+    fixture.detectChanges();
+
+    expect(component.readinessMeta().tone).toBe('neutral');
+    expect(component.readiness()?.blockers.length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('LiveKit:Enabled is false');
   });
 
   it('discards edits back to the loaded values', () => {

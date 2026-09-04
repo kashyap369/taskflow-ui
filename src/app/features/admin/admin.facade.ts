@@ -9,6 +9,7 @@ import {
   AdminOrganization,
   AdminUser,
   AdminUserDetail,
+  MeetingReadiness,
   OrganizationStatus,
   PlatformSettings,
   UpdatePlatformSettingsPayload,
@@ -44,6 +45,8 @@ export class AdminFacade {
   private readonly _settings = signal<PlatformSettings | null>(null);
   private readonly _settingsLoading = signal(false);
   private readonly _settingsSaving = signal(false);
+  private readonly _meetingReadiness = signal<MeetingReadiness | null>(null);
+  private readonly _meetingReadinessLoading = signal(false);
   private readonly _plannerTemplates = signal<PlannerTemplate[]>([]);
   private readonly _templatesLoading = signal(false);
   private readonly _templateSaving = signal(false);
@@ -61,6 +64,8 @@ export class AdminFacade {
   readonly settings = this._settings.asReadonly();
   readonly settingsLoading = this._settingsLoading.asReadonly();
   readonly settingsSaving = this._settingsSaving.asReadonly();
+  readonly meetingReadiness = this._meetingReadiness.asReadonly();
+  readonly meetingReadinessLoading = this._meetingReadinessLoading.asReadonly();
   readonly plannerTemplates = this._plannerTemplates.asReadonly();
   readonly templatesLoading = this._templatesLoading.asReadonly();
   readonly templateSaving = this._templateSaving.asReadonly();
@@ -113,6 +118,8 @@ export class AdminFacade {
     this._settings.set(null);
     this._settingsLoading.set(false);
     this._settingsSaving.set(false);
+    this._meetingReadiness.set(null);
+    this._meetingReadinessLoading.set(false);
     this._plannerTemplates.set([]); this._templatesLoading.set(false); this._templateSaving.set(false);
   }
 
@@ -235,6 +242,25 @@ export class AdminFacade {
         this.loadSettings();
       },
       error: () => this._settingsSaving.set(false),
+    });
+  }
+
+  /**
+   * `GET /admin/meetings/readiness`. Always re-fetches: it describes the deployed process right
+   * now, and a cached "Ready" would hide a service that has since restarted without its LiveKit
+   * configuration. Failures leave the panel empty rather than asserting a state we cannot see.
+   */
+  loadMeetingReadiness(): void {
+    this._meetingReadinessLoading.set(true);
+    this.repository.getMeetingReadiness().subscribe({
+      next: (readiness) => {
+        this._meetingReadiness.set(readiness);
+        this._meetingReadinessLoading.set(false);
+      },
+      error: () => {
+        this._meetingReadiness.set(null);
+        this._meetingReadinessLoading.set(false);
+      },
     });
   }
 

@@ -12,12 +12,16 @@ attendance, recording/Egress, security, infrastructure, testing and production r
 
 - Plan approved: **2026-08-30**
 - Completed phases: **Meeting Phases 0–5 — DONE**
-- Current phase: **Meeting Phase 6 — implementation complete; external certification pending**
+- Current phase: **Meeting Phase 6 — implementation complete; external certification pending**, with
+  **Phase 7 IN PROGRESS in parallel** under an approved exception recorded in the canonical plan
+  (Phase 6's only open criteria are external: a Docker-capable staging Egress run and legal/product
+  approval). **P7.1 is done (2026-09-04)** — ready-anytime creation is fixed and an AdminOnly meeting
+  readiness report is surfaced on the admin Platform settings page.
 - Production verification: meeting create, registered-member assignment, start and the deployed Phase 5
   collaboration surface work. LiveKit is disabled in production, so join remains unavailable until a
-  public `wss://` LiveKit service and API credentials are configured. Ready-anytime creation also has
-  a known stale hidden-date-validator bug; scheduled creation works. Both are tracked in canonical
-  Phase 7 rollout/hardening work.
+  public `wss://` LiveKit service and API credentials are configured — `/admin/settings` now reports
+  whether the running API received that configuration. The ready-anytime creation bug is **fixed**
+  (2026-09-04): the stale validator came from a template `required` attribute, not from form code.
 - Implementation landed: pinned LiveKit clients/server stack, provider boundary, signed token/webhook
   proofs, a development-only two-browser media harness, the authoritative meeting domain/core API,
   the production organization management/scheduling UI with Calendar derivation, secure private and

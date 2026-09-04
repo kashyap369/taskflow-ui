@@ -8,6 +8,7 @@ import {
   AdminOrganization,
   AdminUser,
   AdminUserDetail,
+  MeetingReadiness,
   PlatformSettings,
   UpdatePlatformSettingsPayload,
   PlannerTemplate,
@@ -41,6 +42,11 @@ export class AdminRepository {
   /** `GET /admin/settings` → PlatformSettingDto (AdminOnly). */
   getSettings(): Observable<PlatformSettings> {
     return this.api.get<PlatformSettings>(API.Admin.Settings);
+  }
+
+  /** `GET /admin/meetings/readiness` → MeetingReadinessReport (AdminOnly). */
+  getMeetingReadiness(): Observable<MeetingReadiness> {
+    return this.api.get<MeetingReadiness>(API.Admin.MeetingReadiness);
   }
 
   /** `PUT /admin/settings` → 204. */

@@ -16,4 +16,21 @@ describe('MeetingFormDrawer', () => {
     expect(save).toHaveBeenCalledTimes(1);
     expect(component.scheduleError()).toContain('daylight saving');
   });
+
+  it('clears the schedule requirement when the meeting becomes ready-anytime', () => {
+    const fixture = TestBed.configureTestingModule({ imports: [MeetingFormDrawer] }).createComponent(MeetingFormDrawer);
+    const component = fixture.componentInstance; const save = jasmine.createSpy('save'); component.save.subscribe(save);
+    fixture.detectChanges();
+    component.form.patchValue({ title: 'Open office hours', scheduled: true });
+    fixture.detectChanges();
+    component.form.patchValue({ scheduled: false });
+    fixture.detectChanges();
+    expect(component.form.controls.start.invalid).toBeFalse();
+    expect(component.form.controls.end.invalid).toBeFalse();
+    expect(component.form.valid).toBeTrue();
+    component.submit();
+    expect(save).toHaveBeenCalled();
+    expect(save.calls.mostRecent().args[0].scheduledStartUtc).toBeNull();
+    expect(save.calls.mostRecent().args[0].scheduledEndUtc).toBeNull();
+  });
 });

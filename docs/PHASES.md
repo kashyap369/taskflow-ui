@@ -2,12 +2,35 @@
 
 > Keep the Current Status section up to date at the end of every session.
 
-## ⏸️ Organization Meetings deferred (2026-09-02)
+## 🟡 Organization Meetings Phase 7 — P7.1 done: readiness and ready-anytime creation (2026-09-04)
 
-The owner deferred Meetings, so its organization-sidebar entry is intentionally hidden while the
-implemented routes and source remain available for later work. Re-enable navigation only after the
-backend receives its LiveKit runtime configuration reliably and a production multi-client call passes.
-All unrelated portal navigation and features remain unchanged.
+Ready-anytime meeting creation works again. The drawer's start/end inputs carried the template
+`required` attribute, so Angular's `RequiredValidator` attached to the controls; removing the schedule
+destroys the inputs but leaves the validator behind, so the form stayed invalid with no visible
+message. They now use `aria-required`, keeping the semantics without a validator — schedule
+completeness is still enforced in `submit()`, where the specific messages live — and the regression
+spec renders the template, so a re-added `required` fails the suite. The admin Platform settings page
+also gained a read-only Meetings readiness panel on `GET /admin/meetings/readiness`, so an operator can
+see whether the deployed API received its LiveKit configuration. All 284 specs, production build,
+lint/design lint and 42 contrast checks pass. Meetings stays deferred and its sidebar entry hidden.
+
+## ▶️ Organization Meetings resumed — sidebar entry restored (2026-09-04)
+
+The owner lifted the deferral, so `/organization/meetings` is back in the organization sidebar
+(an exact revert of `fc84119`, restoring the link and its `Video` icon). The production API now
+carries a complete, valid LiveKit configuration and the media endpoint answers healthy over TLS.
+Recording remains disabled server-side pending the legal/retention decision, so the room's record
+controls stay unavailable by design.
+
+**Not yet proven:** a real production call. Check the Meetings readiness panel on `/admin/settings`
+first, then run a two-device call.
+
+### Superseded — Organization Meetings deferred (2026-09-02)
+
+The owner deferred Meetings, so its organization-sidebar entry was intentionally hidden while the
+implemented routes and source remained available for later work. Navigation was to be re-enabled only
+after the backend reliably received its LiveKit runtime configuration and a production multi-client
+call passed.
 
 ## 🟡 Organization Meetings Phase 6 — implementation complete, certification pending (2026-09-01)
 

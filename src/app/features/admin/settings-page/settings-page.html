@@ -171,5 +171,101 @@
         </div>
       </form>
     }
+
+    <!--
+      Meetings readiness — read-only diagnostics, deliberately outside the settings form: it
+      reports what the deployed API loaded, and nothing here is editable from the browser.
+    -->
+    <section class="panel readiness" aria-labelledby="meetings-readiness-heading">
+      <div class="panel-head">
+        <h2 id="meetings-readiness-heading">
+          <lucide-angular name="Radio" size="18"></lucide-angular> Meetings readiness
+        </h2>
+        <p>
+          Whether the deployed API can actually run a meeting. Saving LiveKit variables on the
+          hosting platform is not the same as the running service receiving them.
+        </p>
+      </div>
+
+      @if (readinessLoading()) {
+        <app-skeleton height="120px"></app-skeleton>
+      } @else if (readiness(); as r) {
+        <p class="readiness-status" [class]="'tone-' + readinessMeta().tone">
+          <span class="dot" aria-hidden="true"></span>
+          <strong>{{ readinessMeta().label }}</strong>
+          <span>{{ readinessSummary() }}</span>
+        </p>
+
+        @if (r.blockers.length) {
+          <ul class="readiness-blockers">
+            @for (blocker of r.blockers; track blocker) {
+              <li>
+                <lucide-angular name="TriangleAlert" size="15"></lucide-angular>
+                <span>{{ blocker }}</span>
+              </li>
+            }
+          </ul>
+        }
+
+        <dl class="detail-list">
+          <div class="detail-row">
+            <dt>Meetings feature</dt>
+            <dd>{{ r.meetingsEnabled ? 'Enabled' : 'Disabled' }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Guests / recording</dt>
+            <dd>
+              {{ r.guestsEnabled ? 'Guests on' : 'Guests off' }} ·
+              {{ r.recordingEnabled ? 'Recording on' : 'Recording off' }}
+            </dd>
+          </div>
+          <div class="detail-row">
+            <dt>Media endpoint</dt>
+            <dd class="mono">
+              {{ r.webSocketScheme && r.webSocketHost
+                ? r.webSocketScheme + '://' + r.webSocketHost
+                : 'Not configured' }}
+            </dd>
+          </div>
+          <div class="detail-row">
+            <dt>API key</dt>
+            <dd class="mono">
+              {{ r.apiKeyConfigured ? 'fingerprint ' + r.apiKeyFingerprint : 'Missing' }}
+            </dd>
+          </div>
+          <div class="detail-row">
+            <dt>API secret</dt>
+            <dd class="mono">
+              {{ r.apiSecretConfigured ? r.apiSecretLength + ' characters' : 'Missing' }}
+            </dd>
+          </div>
+          <div class="detail-row">
+            <dt>Recording storage</dt>
+            <dd>{{ r.recordingStorageConfigured ? 'Configured' : 'Not configured' }}</dd>
+          </div>
+          <div class="detail-row">
+            <dt>Join token signing</dt>
+            <dd>{{ r.joinTokenIssued ? 'Proven' : r.joinTokenFailure || 'Not proven' }}</dd>
+          </div>
+        </dl>
+
+        <p class="inline-warning">
+          <lucide-angular name="Info" size="15"></lucide-angular>
+          Ready means this process signed a join token. A real call still needs the staging
+          two-client media check.
+        </p>
+      } @else {
+        <p class="readiness-empty">
+          Readiness could not be read. The API may be unreachable, or the route may predate this
+          deployment.
+        </p>
+      }
+
+      <div class="page-actions">
+        <button type="button" class="btn-ghost" (click)="refreshReadiness()">
+          Re-check readiness
+        </button>
+      </div>
+    </section>
   </div>
 </section>

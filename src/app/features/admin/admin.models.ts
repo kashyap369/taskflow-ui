@@ -103,6 +103,38 @@ export interface UpdatePlatformSettingsPayload {
   maintenanceMessage: string | null;
 }
 
+/**
+ * `GET /admin/meetings/readiness` → MeetingReadinessReport (AdminOnly).
+ *
+ * Answers "can this deployed API actually run a meeting?". A hosting platform can save the
+ * `LiveKit__*` variables without propagating them into the running service — the failure that
+ * deferred Meetings on 2026-09-02 — and members see it only as a refusal at join time.
+ * Carries no secret: the API key arrives as a short fingerprint and the secret only as a length.
+ */
+export interface MeetingReadiness {
+  status: 'Ready' | 'Disabled' | 'Misconfigured';
+  meetingsEnabled: boolean;
+  guestsEnabled: boolean;
+  recordingEnabled: boolean;
+  liveKitEnabled: boolean;
+  webSocketScheme: string | null;
+  webSocketHost: string | null;
+  apiKeyConfigured: boolean;
+  apiKeyFingerprint: string | null;
+  apiSecretConfigured: boolean;
+  apiSecretLength: number;
+  recordingStorageConfigured: boolean;
+  joinTokenIssued: boolean;
+  joinTokenFailure: string | null;
+  blockers: string[];
+}
+
+export const MEETING_READINESS_META: Record<MeetingReadiness['status'], { label: string; tone: Tone }> = {
+  Ready: { label: 'Ready', tone: 'success' },
+  Disabled: { label: 'Disabled', tone: 'neutral' },
+  Misconfigured: { label: 'Misconfigured', tone: 'danger' },
+};
+
 // ── UI label / tone helpers ───────────────────────────────
 
 /** A tone maps to the design-system color families used by badges/cards (see `@shared/models`). */

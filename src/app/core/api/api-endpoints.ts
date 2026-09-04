@@ -72,6 +72,7 @@ export const API = {
   Admin: {
     Organizations: '/admin/organizations',
     Settings: '/admin/settings',
+    MeetingReadiness: '/admin/meetings/readiness',
     PlannerTemplates: '/admin/planner/templates',
     PlannerTemplate: (id: string) => `/admin/planner/templates/${id}`,
     PublishPlannerTemplate: (id: string) => `/admin/planner/templates/${id}/publish`,
