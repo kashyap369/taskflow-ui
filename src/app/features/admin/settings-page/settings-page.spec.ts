@@ -34,6 +34,15 @@ const READY: MeetingReadiness = {
   joinTokenIssued: true,
   joinTokenFailure: null,
   blockers: [],
+  capacity: {
+    maxParticipantsPerMeeting: 50,
+    maxConcurrentLiveMeetingsPerOrganization: 10,
+    maxConcurrentRecordings: 1,
+    maxMessagesPerMeeting: 5000,
+    maxAssetsPerMeeting: 100,
+    maxFileBytes: 26214400,
+    maxStorageBytesPerMeeting: 262144000,
+  },
 };
 
 describe('AdminSettingsPage', () => {
@@ -148,6 +157,18 @@ describe('AdminSettingsPage', () => {
     expect(component.readinessMeta().tone).toBe('neutral');
     expect(component.readiness()?.blockers.length).toBe(1);
     expect(fixture.nativeElement.textContent).toContain('LiveKit:Enabled is false');
+  });
+
+  // Phase 7 / P7.3: the ceilings are enforced server-side, and an operator can only size a
+  // deployment or explain a refusal if the running numbers are visible somewhere.
+  it('shows the capacity the deployed API declares, in the units an operator reads', () => {
+    const text = fixture.nativeElement.textContent as string;
+
+    expect(text).toContain('Declared capacity');
+    expect(text).toContain('50');
+    expect(text).toContain('25 MB each');
+    expect(text).toContain('250 MB total');
+    expect(component.megabytes(262144000)).toBe('250 MB');
   });
 
   it('discards edits back to the loaded values', () => {

@@ -2,7 +2,21 @@
 
 > Keep the Current Status section up to date at the end of every session.
 
-## 🟡 Organization Meetings Phase 7 — P7.1 done: readiness and ready-anytime creation (2026-09-04)
+## 🟡 Organization Meetings Phase 7 — P7.3 done: declared capacity shown to operators (2026-09-05)
+
+The API now declares and enforces meeting capacity (participants, live meetings per organization,
+simultaneous recordings, messages and files per meeting), and `GET /admin/meetings/readiness`
+returns those ceilings as a `capacity` object. The admin Platform settings readiness panel renders
+them as a read-only **Declared capacity** block, in the units an operator reads — file limits in MB,
+not bytes — so sizing a deployment or explaining a refusal does not require access to a config file.
+
+Nothing else in the UI changed: refusals arrive as ordinary server messages, which the meeting pages
+already render, so the ceilings needed no per-page handling. Specs `287/287` (one new), production
+build, lint, design lint and all 42 contrast checks pass. The canonical roadmap and the capacity
+numbers live in the backend repo: [MEETINGS.md](../../../TaskFlow/docs/MEETINGS.md) and
+`docs/MEETINGS-CAPACITY.md`.
+
+## ✅ Organization Meetings Phase 7 — P7.1 done: readiness and ready-anytime creation (2026-09-04)
 
 Ready-anytime meeting creation works again. The drawer's start/end inputs carried the template
 `required` attribute, so Angular's `RequiredValidator` attached to the controls; removing the schedule

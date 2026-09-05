@@ -75,6 +75,14 @@ export class AdminSettingsPage {
     return 'Meetings are switched on but cannot serve a room.';
   });
 
+  /**
+   * Byte ceilings are configured in bytes and read in megabytes. Rounded to whole MB because the
+   * exact byte count is never what the reader is checking.
+   */
+  megabytes(bytes: number): string {
+    return `${Math.round(bytes / 1048576)} MB`;
+  }
+
   /** Nothing has arrived yet — show the form-shaped skeleton rather than an empty form. */
   readonly loadingSettings = computed(() => this.settings() === null);
 

@@ -127,6 +127,22 @@ export interface MeetingReadiness {
   joinTokenIssued: boolean;
   joinTokenFailure: string | null;
   blockers: string[];
+  capacity: MeetingCapacity;
+}
+
+/**
+ * The ceilings the deployed API enforces. TaskFlow declares capacity rather than implying
+ * unlimited scale, so an operator sizing a deployment — or explaining to a host why a start was
+ * refused — reads the running numbers here instead of a configuration file they cannot see.
+ */
+export interface MeetingCapacity {
+  maxParticipantsPerMeeting: number;
+  maxConcurrentLiveMeetingsPerOrganization: number;
+  maxConcurrentRecordings: number;
+  maxMessagesPerMeeting: number;
+  maxAssetsPerMeeting: number;
+  maxFileBytes: number;
+  maxStorageBytesPerMeeting: number;
 }
 
 export const MEETING_READINESS_META: Record<MeetingReadiness['status'], { label: string; tone: Tone }> = {

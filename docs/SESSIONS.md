@@ -1,5 +1,18 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-05 (Meetings Phase 7 / P7.3 — declared capacity in the readiness panel)
+
+- The readiness report gained a `capacity` object (the ceilings the deployed API enforces), and the
+  admin settings page renders it as a read-only **Declared capacity** block beneath the existing
+  diagnostics. Byte ceilings are shown in MB via a `megabytes()` helper — the exact byte count is
+  never what the reader is checking.
+- **Why this is UI at all:** the limits are refused server-side, so the client does not need to know
+  them to behave correctly. The panel exists for the operator, who otherwise cannot answer "why was
+  that meeting refused" without shell access to the deployment's configuration.
+- No meeting page needed a change. Capacity refusals arrive as ordinary server error messages, which
+  the meeting pages already render; the client still branches on no meeting error code.
+- Specs `287/287` (one new), build, lint, design lint and 42 contrast checks pass.
+
 ## 2026-09-04 (Meetings: first working production call)
 
 - **A device preference was ending live calls.** `connect()` applied the speaker choice with

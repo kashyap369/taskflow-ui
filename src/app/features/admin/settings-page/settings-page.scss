@@ -85,6 +85,11 @@
 }
 
 /* Read-only details */
+.readiness-subhead {
+  margin: var(--space-5) 0 0;
+  color: var(--text-muted); font-size: var(--fs-body-sm); font-weight: var(--fw-semibold);
+  text-transform: uppercase; letter-spacing: .04em;
+}
 .detail-list { margin: var(--space-2) 0 0; }
 .detail-row {
   display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);

@@ -249,6 +249,39 @@
           </div>
         </dl>
 
+        <!--
+          Declared capacity: the ceilings this process enforces. Read-only like the rest of the
+          panel — these are deployment configuration, not something to change from a browser.
+        -->
+        @if (r.capacity; as capacity) {
+          <h3 class="readiness-subhead">Declared capacity</h3>
+          <dl class="detail-list">
+            <div class="detail-row">
+              <dt>Participants per meeting</dt>
+              <dd>{{ capacity.maxParticipantsPerMeeting }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Live meetings per organization</dt>
+              <dd>{{ capacity.maxConcurrentLiveMeetingsPerOrganization }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Simultaneous recordings</dt>
+              <dd>{{ capacity.maxConcurrentRecordings }} (whole deployment)</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Chat messages per meeting</dt>
+              <dd>{{ capacity.maxMessagesPerMeeting }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Files per meeting</dt>
+              <dd>
+                {{ capacity.maxAssetsPerMeeting }} · {{ megabytes(capacity.maxFileBytes) }} each ·
+                {{ megabytes(capacity.maxStorageBytesPerMeeting) }} total
+              </dd>
+            </div>
+          </dl>
+        }
+
         <p class="inline-warning">
           <lucide-angular name="Info" size="15"></lucide-angular>
           Ready means this process signed a join token. A real call still needs the staging
