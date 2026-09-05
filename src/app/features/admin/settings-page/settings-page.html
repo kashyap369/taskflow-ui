@@ -300,5 +300,91 @@
         </button>
       </div>
     </section>
+
+    <!--
+      Meetings health — the rolling window and the alert rules evaluated against it. Readiness above
+      says whether the stack is configured; this says whether it is working. Everything here is
+      counts and rule outcomes: no meeting, participant, room or address reaches it, so this panel
+      can be screenshotted into a ticket as it stands.
+    -->
+    <section class="panel readiness" aria-labelledby="meetings-health-heading">
+      <div class="panel-head">
+        <h2 id="meetings-health-heading">
+          <lucide-angular name="Activity" size="18"></lucide-angular> Meetings health
+        </h2>
+        <p>
+          What the meeting stack has been doing recently, and which alert rules are firing. The
+          window belongs to the API instance that answered this request.
+        </p>
+      </div>
+
+      @if (healthLoading()) {
+        <app-skeleton height="120px"></app-skeleton>
+      } @else if (health(); as h) {
+        <p
+          class="readiness-status"
+          [class]="'tone-' + (firingAlerts().length ? severityMeta(firingAlerts()[0].severity).tone : 'success')"
+        >
+          <span class="dot" aria-hidden="true"></span>
+          <strong>{{ firingAlerts().length ? 'Attention' : 'Healthy' }}</strong>
+          <span>{{ healthSummary() }}</span>
+        </p>
+
+        @if (!h.fullyObserved) {
+          <p class="inline-warning">
+            <lucide-angular name="Info" size="15"></lucide-angular>
+            This process has been collecting for less than an hour, so the longer windows are not a
+            full picture yet.
+          </p>
+        }
+
+        @if (firingAlerts().length) {
+          <ul class="readiness-blockers">
+            @for (alert of firingAlerts(); track alert.id) {
+              <li>
+                <lucide-angular name="TriangleAlert" size="15"></lucide-angular>
+                <span>
+                  <strong>{{ severityMeta(alert.severity).label }}</strong> — {{ alert.summary }}
+                  Seen {{ alert.observed }} in {{ alert.windowMinutes }} min (fires at
+                  {{ alert.threshold }}). Runbook: <span class="mono">{{ alert.runbook }}</span>
+                </span>
+              </li>
+            }
+          </ul>
+        }
+
+        <dl class="detail-list">
+          <div class="detail-row">
+            <dt>Request latency</dt>
+            <dd>
+              {{ h.latency.requests }} requests · {{ h.latency.averageMilliseconds }} ms average ·
+              {{ h.latency.maxMilliseconds }} ms worst (last {{ h.latency.windowMinutes }} min)
+            </dd>
+          </div>
+          @for (row of h.series; track row.signal + row.key) {
+            <div class="detail-row">
+              <dt>{{ signalLabel(row.signal) }} · {{ row.key }}</dt>
+              <dd class="mono">
+                {{ row.lastFiveMinutes }} / {{ row.lastFifteenMinutes }} / {{ row.lastHour }}
+              </dd>
+            </div>
+          }
+        </dl>
+
+        <p class="inline-warning">
+          <lucide-angular name="Info" size="15"></lucide-angular>
+          Counts are 5 / 15 / 60 minutes. They live in memory and reset when the API restarts.
+        </p>
+      } @else {
+        <p class="readiness-empty">
+          Meeting health could not be read. The API may be unreachable, or the route may predate
+          this deployment.
+        </p>
+      }
+
+      <div class="page-actions">
+        <button type="button" class="btn-ghost" (click)="refreshHealth()">Refresh health</button>
+      </div>
+    </section>
   </div>
 </section>

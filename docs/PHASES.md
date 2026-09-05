@@ -2,7 +2,25 @@
 
 > Keep the Current Status section up to date at the end of every session.
 
-## 🟡 Organization Meetings Phase 7 — P7.3 done: declared capacity shown to operators (2026-09-05)
+## 🟡 Organization Meetings Phase 7 — P7.4 done: meetings health panel (2026-09-05)
+
+The API now emits structured meeting signals and evaluates eight alert rules against them, and
+`GET /admin/meetings/health` (AdminOnly) returns the rules plus a rolling 5 / 15 / 60-minute count
+per signal. The admin Platform settings page renders it as a **Meetings health** panel beside
+Meetings readiness: firing alerts first, each with what it observed, the threshold it fires at and
+the runbook anchor to read — an alert that only says something is wrong sends the reader looking.
+
+Two things the panel is careful about. A quiet system and a blank panel must not look the same, so
+when nothing is firing it says how many rules were evaluated. And when the API has been collecting
+for less than its longest window it says so, because "no failures in the last hour" from a process
+that started ten minutes ago is a claim the data cannot support.
+
+The response carries counts and rule outcomes only — no meeting, participant, room or address — so
+the panel can be screenshotted into a ticket as it stands. Specs `291/291` (four new), production
+build, lint, design lint and all 42 contrast checks pass. The rules, thresholds and runbooks live in
+the backend repo: `docs/MEETINGS-OBSERVABILITY.md`.
+
+## ✅ Organization Meetings Phase 7 — P7.3 done: declared capacity shown to operators (2026-09-05)
 
 The API now declares and enforces meeting capacity (participants, live meetings per organization,
 simultaneous recordings, messages and files per meeting), and `GET /admin/meetings/readiness`

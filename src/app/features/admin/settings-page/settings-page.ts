@@ -7,6 +7,7 @@ import {
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
+  Activity,
   Radio,
   Settings,
   ShieldAlert,
@@ -17,7 +18,7 @@ import {
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { controlValidators, messageFor } from '@shared/validations';
 import { AdminFacade } from '../admin.facade';
-import { MEETING_READINESS_META } from '../admin.models';
+import { MEETING_ALERT_SEVERITY_META, MEETING_READINESS_META } from '../admin.models';
 import { PlatformSettingsFormModel } from '../admin.form-models';
 
 /**
@@ -46,6 +47,7 @@ import { PlatformSettingsFormModel } from '../admin.form-models';
         Info,
         CalendarDays,
         Radio,
+        Activity,
       }),
     },
   ],
@@ -60,6 +62,48 @@ export class AdminSettingsPage {
 
   readonly readiness = this.facade.meetingReadiness;
   readonly readinessLoading = this.facade.meetingReadinessLoading;
+
+  readonly health = this.facade.meetingHealth;
+  readonly healthLoading = this.facade.meetingHealthLoading;
+
+  /**
+   * Firing rules first, and only firing rules in the list. The quiet ones still matter — an
+   * operator has to know they were evaluated — but they are reported as a count rather than as
+   * eight green rows, because a panel of green rows is a panel nobody reads.
+   */
+  readonly firingAlerts = computed(() => (this.health()?.alerts ?? []).filter((a) => a.firing));
+
+  readonly quietAlertCount = computed(
+    () => (this.health()?.alerts ?? []).filter((a) => !a.firing).length,
+  );
+
+  /** The one-line verdict above the panel. */
+  readonly healthSummary = computed(() => {
+    const health = this.health();
+    if (!health) return '';
+    const firing = this.firingAlerts();
+    if (!firing.length) {
+      return `No alert firing. ${this.quietAlertCount()} rules evaluated.`;
+    }
+    const critical = firing.filter((a) => a.severity === 'Critical').length;
+    return critical
+      ? `${critical} critical and ${firing.length - critical} other alerts firing.`
+      : `${firing.length} warning alerts firing.`;
+  });
+
+  severityMeta(severity: 'Critical' | 'Warning') {
+    return MEETING_ALERT_SEVERITY_META[severity];
+  }
+
+  /** Trim the metric prefix so the table reads as English rather than as dotted metric names. */
+  signalLabel(signal: string): string {
+    return signal.replace('taskflow.meetings.', '').replace(/[._]/g, ' ');
+  }
+
+  /** Re-read the rolling window. It moves on its own, so a stale panel is a misleading one. */
+  refreshHealth(): void {
+    this.facade.loadMeetingHealth();
+  }
 
   /** Label + tone for the status pill; falls back to the neutral "Disabled" styling. */
   readonly readinessMeta = computed(
@@ -118,6 +162,7 @@ export class AdminSettingsPage {
   constructor() {
     this.facade.loadSettings();
     this.facade.loadMeetingReadiness();
+    this.facade.loadMeetingHealth();
 
     // Refill whenever the singleton lands — on first load and after a save (which re-fetches, so
     // the form settles back to pristine on the server's values).

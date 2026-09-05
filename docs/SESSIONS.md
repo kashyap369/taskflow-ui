@@ -1,5 +1,27 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-05 (Meetings Phase 7 / P7.4 — the meetings health panel)
+
+- Added a **Meetings health** panel to the admin Platform settings page, reading
+  `GET /admin/meetings/health`. It sits beside Meetings readiness because the two answer different
+  questions: readiness is "is this process configured to run a meeting", health is "is it actually
+  working".
+- **Firing alerts are the list; quiet ones are a count.** Eight green rows is a panel nobody reads,
+  and a reader who skims past green rows will skim past a red one. But the quiet rules still have to
+  be visible as *evaluated*, so the summary line says how many were checked — otherwise a healthy
+  system and a broken endpoint look identical.
+- Each firing alert carries its observation, its threshold, its window and the runbook anchor. An
+  alert that says only "media calls are failing" makes the operator go looking; one that says "seen
+  7 in 5 min, fires at 3, runbook `#media_calls_failing`" does not.
+- `fullyObserved: false` renders an explicit warning. The window is in-memory and resets with the
+  API process, so a calm-looking hour from a freshly restarted container is not evidence of a calm
+  hour.
+- The facade always re-fetches rather than caching, for the same reason readiness does: a rolling
+  window that is minutes stale shows an operator a system that has already stopped being calm.
+- Specs `291/291` (four new), production build, lint, design lint and 42 contrast checks pass. No
+  new component and no new styles — the panel reuses the readiness panel's classes, so the design
+  lint surface did not move.
+
 ## 2026-09-05 (Meetings Phase 7 / P7.3 — declared capacity in the readiness panel)
 
 - The readiness report gained a `capacity` object (the ceilings the deployed API enforces), and the

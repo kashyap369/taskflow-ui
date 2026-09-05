@@ -9,6 +9,7 @@ import {
   AdminOrganization,
   AdminUser,
   AdminUserDetail,
+  MeetingHealth,
   MeetingReadiness,
   OrganizationStatus,
   PlatformSettings,
@@ -47,6 +48,8 @@ export class AdminFacade {
   private readonly _settingsSaving = signal(false);
   private readonly _meetingReadiness = signal<MeetingReadiness | null>(null);
   private readonly _meetingReadinessLoading = signal(false);
+  private readonly _meetingHealth = signal<MeetingHealth | null>(null);
+  private readonly _meetingHealthLoading = signal(false);
   private readonly _plannerTemplates = signal<PlannerTemplate[]>([]);
   private readonly _templatesLoading = signal(false);
   private readonly _templateSaving = signal(false);
@@ -66,6 +69,8 @@ export class AdminFacade {
   readonly settingsSaving = this._settingsSaving.asReadonly();
   readonly meetingReadiness = this._meetingReadiness.asReadonly();
   readonly meetingReadinessLoading = this._meetingReadinessLoading.asReadonly();
+  readonly meetingHealth = this._meetingHealth.asReadonly();
+  readonly meetingHealthLoading = this._meetingHealthLoading.asReadonly();
   readonly plannerTemplates = this._plannerTemplates.asReadonly();
   readonly templatesLoading = this._templatesLoading.asReadonly();
   readonly templateSaving = this._templateSaving.asReadonly();
@@ -120,6 +125,8 @@ export class AdminFacade {
     this._settingsSaving.set(false);
     this._meetingReadiness.set(null);
     this._meetingReadinessLoading.set(false);
+    this._meetingHealth.set(null);
+    this._meetingHealthLoading.set(false);
     this._plannerTemplates.set([]); this._templatesLoading.set(false); this._templateSaving.set(false);
   }
 
@@ -260,6 +267,27 @@ export class AdminFacade {
       error: () => {
         this._meetingReadiness.set(null);
         this._meetingReadinessLoading.set(false);
+      },
+    });
+  }
+
+  /**
+   * `GET /admin/meetings/health`. Always re-fetches, for the same reason readiness does: it is a
+   * rolling window over the last hour, and a cached copy would show an operator a calm system
+   * minutes after it stopped being one. The window belongs to the instance that answered, so a
+   * scaled-out deployment needs a collector rather than this panel — docs/MEETINGS-OBSERVABILITY.md
+   * says which environment is which.
+   */
+  loadMeetingHealth(): void {
+    this._meetingHealthLoading.set(true);
+    this.repository.getMeetingHealth().subscribe({
+      next: (health) => {
+        this._meetingHealth.set(health);
+        this._meetingHealthLoading.set(false);
+      },
+      error: () => {
+        this._meetingHealth.set(null);
+        this._meetingHealthLoading.set(false);
       },
     });
   }

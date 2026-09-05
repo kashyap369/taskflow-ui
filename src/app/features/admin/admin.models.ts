@@ -145,6 +145,56 @@ export interface MeetingCapacity {
   maxStorageBytesPerMeeting: number;
 }
 
+/**
+ * `GET /admin/meetings/health` → MeetingHealthReport (AdminOnly).
+ *
+ * Readiness answers "is it configured"; this answers "is it working". Counts and rule outcomes
+ * only — no meeting, participant, room or address is ever in it, so the panel is safe to
+ * screenshot into a ticket.
+ */
+export interface MeetingHealth {
+  generatedAtUtc: string;
+  observingSinceUtc: string;
+  /** False while the process has been up for less than the longest window it reports. */
+  fullyObserved: boolean;
+  alerts: MeetingHealthAlert[];
+  series: MeetingHealthSeries[];
+  latency: MeetingRequestLatency;
+}
+
+/** One alert rule with the number it saw and the number it fires at. */
+export interface MeetingHealthAlert {
+  id: string;
+  severity: 'Critical' | 'Warning';
+  firing: boolean;
+  observed: number;
+  threshold: number;
+  windowMinutes: number;
+  summary: string;
+  /** Anchor in docs/MEETINGS-OBSERVABILITY.md saying what to do about it. */
+  runbook: string;
+}
+
+export interface MeetingHealthSeries {
+  signal: string;
+  key: string;
+  lastFiveMinutes: number;
+  lastFifteenMinutes: number;
+  lastHour: number;
+}
+
+export interface MeetingRequestLatency {
+  requests: number;
+  averageMilliseconds: number;
+  maxMilliseconds: number;
+  windowMinutes: number;
+}
+
+export const MEETING_ALERT_SEVERITY_META: Record<MeetingHealthAlert['severity'], { label: string; tone: Tone }> = {
+  Critical: { label: 'Critical', tone: 'danger' },
+  Warning: { label: 'Warning', tone: 'warning' },
+};
+
 export const MEETING_READINESS_META: Record<MeetingReadiness['status'], { label: string; tone: Tone }> = {
   Ready: { label: 'Ready', tone: 'success' },
   Disabled: { label: 'Disabled', tone: 'neutral' },

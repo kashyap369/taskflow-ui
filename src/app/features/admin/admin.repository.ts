@@ -8,6 +8,7 @@ import {
   AdminOrganization,
   AdminUser,
   AdminUserDetail,
+  MeetingHealth,
   MeetingReadiness,
   PlatformSettings,
   UpdatePlatformSettingsPayload,
@@ -47,6 +48,11 @@ export class AdminRepository {
   /** `GET /admin/meetings/readiness` → MeetingReadinessReport (AdminOnly). */
   getMeetingReadiness(): Observable<MeetingReadiness> {
     return this.api.get<MeetingReadiness>(API.Admin.MeetingReadiness);
+  }
+
+  /** `GET /admin/meetings/health` → MeetingHealthReport (AdminOnly). */
+  getMeetingHealth(): Observable<MeetingHealth> {
+    return this.api.get<MeetingHealth>(API.Admin.MeetingHealth);
   }
 
   /** `PUT /admin/settings` → 204. */

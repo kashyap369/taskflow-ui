@@ -4,7 +4,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
 import { AdminRepository } from '../admin.repository';
-import { MeetingReadiness, PlatformSettings } from '../admin.models';
+import { MeetingHealth, MeetingReadiness, PlatformSettings } from '../admin.models';
 import { AdminSettingsPage } from './settings-page';
 
 const SETTINGS: PlatformSettings = {
@@ -45,15 +45,60 @@ const READY: MeetingReadiness = {
   },
 };
 
+const QUIET_HEALTH: MeetingHealth = {
+  generatedAtUtc: '2026-09-05T10:00:00Z',
+  observingSinceUtc: '2026-09-05T08:00:00Z',
+  fullyObserved: true,
+  alerts: [
+    {
+      id: 'media_calls_failing',
+      severity: 'Critical',
+      firing: false,
+      observed: 0,
+      threshold: 3,
+      windowMinutes: 5,
+      summary: 'Calls to LiveKit are failing.',
+      runbook: '#media_calls_failing',
+    },
+    {
+      id: 'throttling',
+      severity: 'Warning',
+      firing: false,
+      observed: 2,
+      threshold: 25,
+      windowMinutes: 15,
+      summary: 'Meeting requests are being rate limited.',
+      runbook: '#throttling',
+    },
+  ],
+  series: [
+    {
+      signal: 'taskflow.meetings.join.tokens',
+      key: 'issued',
+      lastFiveMinutes: 4,
+      lastFifteenMinutes: 9,
+      lastHour: 31,
+    },
+  ],
+  latency: {
+    requests: 40,
+    averageMilliseconds: 62.5,
+    maxMilliseconds: 310,
+    windowMinutes: 15,
+  },
+};
+
 describe('AdminSettingsPage', () => {
   let component: AdminSettingsPage;
   let fixture: ComponentFixture<AdminSettingsPage>;
   let updateSettings: jasmine.Spy;
   let getMeetingReadiness: jasmine.Spy;
+  let getMeetingHealth: jasmine.Spy;
 
   beforeEach(async () => {
     updateSettings = jasmine.createSpy('updateSettings').and.returnValue(of(void 0));
     getMeetingReadiness = jasmine.createSpy('getMeetingReadiness').and.returnValue(of(READY));
+    getMeetingHealth = jasmine.createSpy('getMeetingHealth').and.returnValue(of(QUIET_HEALTH));
 
     await TestBed.configureTestingModule({
       imports: [AdminSettingsPage],
@@ -62,7 +107,12 @@ describe('AdminSettingsPage', () => {
         provideAnimations(),
         {
           provide: AdminRepository,
-          useValue: { getSettings: () => of(SETTINGS), updateSettings, getMeetingReadiness },
+          useValue: {
+            getSettings: () => of(SETTINGS),
+            updateSettings,
+            getMeetingReadiness,
+            getMeetingHealth,
+          },
         },
       ],
     }).compileComponents();
@@ -169,6 +219,58 @@ describe('AdminSettingsPage', () => {
     expect(text).toContain('25 MB each');
     expect(text).toContain('250 MB total');
     expect(component.megabytes(262144000)).toBe('250 MB');
+  });
+
+  // Phase 7 / P7.4. A quiet system and a blank panel must not look the same: the operator has to
+  // be able to tell "nothing is wrong" from "nothing was measured".
+  it('says how many alert rules were evaluated when none are firing', () => {
+    expect(getMeetingHealth).toHaveBeenCalled();
+    expect(component.firingAlerts().length).toBe(0);
+    expect(component.healthSummary()).toBe('No alert firing. 2 rules evaluated.');
+    expect(fixture.nativeElement.textContent).toContain('Healthy');
+  });
+
+  // A firing alert has to arrive with the number it saw, the number it fires at and where to read
+  // what to do — an alert that only says something is wrong makes the reader go looking.
+  it('shows a firing alert with its observation, threshold and runbook anchor', () => {
+    getMeetingHealth.and.returnValue(
+      of({
+        ...QUIET_HEALTH,
+        alerts: [
+          { ...QUIET_HEALTH.alerts[0], firing: true, observed: 7 },
+          QUIET_HEALTH.alerts[1],
+        ],
+      }),
+    );
+
+    component.refreshHealth();
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(component.firingAlerts().length).toBe(1);
+    expect(component.healthSummary()).toContain('1 critical');
+    expect(text).toContain('Calls to LiveKit are failing.');
+    expect(text).toContain('Seen 7 in 5 min');
+    expect(text).toContain('#media_calls_failing');
+  });
+
+  // The window resets with the process, so a report covering less than its longest window must say
+  // so rather than letting an operator read a quiet hour that was never watched.
+  it('warns when the process has not been collecting for a full window', () => {
+    getMeetingHealth.and.returnValue(of({ ...QUIET_HEALTH, fullyObserved: false }));
+
+    component.refreshHealth();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('less than an hour');
+  });
+
+  it('renders signal counts as 5 / 15 / 60 minute columns', () => {
+    const text = fixture.nativeElement.textContent as string;
+
+    expect(component.signalLabel('taskflow.meetings.join.tokens')).toBe('join tokens');
+    expect(text).toContain('4 / 9 / 31');
+    expect(text).toContain('62.5 ms average');
   });
 
   it('discards edits back to the loaded values', () => {
