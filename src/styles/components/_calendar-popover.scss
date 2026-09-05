@@ -1,0 +1,88 @@
+// FullCalendar's "+N more" day popover is rendered through a portal into <body>, so it sits OUTSIDE
+// the <full-calendar> element and outside the calendar component's emulated-encapsulation scope.
+// Two consequences, both of which made the popover look broken (transparent panel, unstyled rows):
+//   1. The `--fc-classic-*` tokens the classic theme paints with are declared on `full-calendar`
+//      in calendar-page.scss, so inside the portal they resolved to nothing — `background-color:
+//      var(--fc-classic-background)` produced no background at all.
+//   2. Our `full-calendar .calendar-event--*` event colours never matched either.
+// This file is global on purpose: it re-declares the same tokens on the popover root and repeats the
+// event colours there. The popover root is matched by its stable public DOM contract — FullCalendar
+// gives it `role="dialog"` plus the `data-date` of the day it belongs to; every theme class on it is
+// build-hashed and must not be relied on.
+
+[role='dialog'][data-date] {
+  --fc-classic-background: var(--surface);
+  --fc-classic-border: var(--border);
+  --fc-classic-strong-border: var(--border-input);
+  --fc-classic-foreground: var(--text);
+  --fc-classic-muted-foreground: var(--text-muted);
+  --fc-classic-faint-foreground: var(--text-subtle);
+  --fc-classic-faint: var(--surface-2);
+  --fc-classic-muted: var(--surface-inset);
+  --fc-classic-strong: var(--border-strong);
+  --fc-classic-button: var(--surface);
+  --fc-classic-button-border: var(--border-input);
+  --fc-classic-button-strong: var(--primary);
+  --fc-classic-button-strong-border: var(--primary);
+  --fc-classic-button-foreground: var(--text);
+  --fc-classic-primary: var(--primary);
+  --fc-classic-primary-foreground: var(--on-primary);
+  --fc-classic-today: var(--primary-soft);
+  --fc-classic-now: var(--danger);
+  --fc-border-color: var(--border);
+  --fc-event-bg-color: var(--info-soft);
+  --fc-event-border-color: transparent;
+  --fc-event-text-color: var(--info);
+  --fc-neutral-bg-color: var(--surface-2);
+  --fc-page-bg-color: var(--surface);
+  --fc-today-bg-color: var(--primary-soft);
+
+  // The skeleton stylesheet parks the popover at z-index 4, which is below the app's sticky chrome
+  // once the element is reparented to <body>.
+  --fc-popover-z: 1000;
+
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: var(--fs-body-sm);
+
+  // Header ("August 26, 2026" + close button) and body cell, in source order after the two
+  // focus-trap sentinels FullCalendar renders as the first and last children.
+  > div:nth-child(2) {
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: var(--fw-semibold);
+  }
+
+  > div:nth-child(3) {
+    padding: var(--space-2);
+  }
+
+  .fc-event,
+  [class*='calendar-event--'] {
+    padding: var(--space-1);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--fs-body-xs);
+    font-weight: var(--fw-semibold);
+  }
+
+  .calendar-event--project { background: var(--primary-soft); color: var(--primary); }
+  .calendar-event--task { background: var(--info-soft); color: var(--info); }
+  .calendar-event--meeting { --fc-event-bg-color: var(--accent-violet); --fc-event-border-color: var(--accent-violet); }
+  .calendar-event--event { --fc-event-bg-color: var(--primary); --fc-event-border-color: var(--primary); }
+  .calendar-event--leave { --fc-event-bg-color: var(--warning); --fc-event-border-color: var(--warning); }
+  .calendar-event--holiday { --fc-event-bg-color: var(--success); --fc-event-border-color: var(--success); }
+  .calendar-event--completed { background: var(--success-soft); color: var(--success); }
+
+  .calendar-event--overdue {
+    border-inline-start: 3px solid var(--danger);
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+}
