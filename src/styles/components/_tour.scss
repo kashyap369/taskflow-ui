@@ -1,0 +1,129 @@
+/**
+ * Page tours (driver.js).
+ *
+ * driver.js renders its popover and overlay in a portal at the document
+ * root, outside any component's view encapsulation — the same situation
+ * as SweetAlert in DialogService. So its skin has to be written here,
+ * globally, in terms of the live theme tokens. Doing it this way means
+ * tours follow light/dark automatically instead of shipping a second
+ * palette that drifts.
+ *
+ * The `.taskflow-tour` class is set as `popoverClass` in TourService.
+ */
+
+.driver-popover.taskflow-tour {
+  max-width: 340px;
+  padding: var(--space-5);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-xl);
+  color: var(--text);
+
+  .driver-popover-title {
+    margin-bottom: var(--space-2);
+    font-size: var(--fs-body-lg);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .driver-popover-description {
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-body-sm);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .driver-popover-progress-text {
+    font-size: var(--fs-body-2xs);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  // The arrow is drawn with borders, so it needs the surface colour
+  // per direction rather than a single `background`.
+  .driver-popover-arrow-side-top    { border-top-color: var(--surface); }
+  .driver-popover-arrow-side-right  { border-right-color: var(--surface); }
+  .driver-popover-arrow-side-bottom { border-bottom-color: var(--surface); }
+  .driver-popover-arrow-side-left   { border-left-color: var(--surface); }
+
+  .driver-popover-close-btn {
+    color: var(--text-subtle);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text);
+    }
+  }
+
+  .driver-popover-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+
+    button {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+
+      font-size: var(--fs-body-sm);
+      font-weight: 500;
+      text-shadow: none;
+
+      transition:
+        background var(--dur-1) var(--ease-out),
+        border-color var(--dur-1) var(--ease-out);
+
+      &:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+    }
+
+    // Back: quiet. Next/Done: the obvious thing to press.
+    .driver-popover-prev-btn {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-muted);
+
+      &:hover {
+        background: var(--surface-inset);
+        color: var(--text);
+      }
+    }
+
+    .driver-popover-next-btn {
+      border: 1px solid transparent;
+      background: var(--primary);
+      color: var(--on-primary);
+
+      &:hover {
+        background: var(--primary-strong);
+      }
+    }
+  }
+}
+
+/**
+ * The cut-out overlay. driver.js drives the highlight with an SVG
+ * stage; colouring it from `--scrim` keeps the dimming consistent with
+ * modals and drawers instead of introducing a third shade of black.
+ */
+.driver-overlay {
+  color: var(--scrim);
+}
+
+.driver-active-element {
+  // Keeps a highlighted control legible against the dimmed page.
+  border-radius: var(--radius-md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover.taskflow-tour,
+  .driver-overlay {
+    transition: none !important;
+  }
+}

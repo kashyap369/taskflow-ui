@@ -39,7 +39,7 @@
       <div class="settings-grid">
         <!-- General -->
         <section class="panel">
-          <div class="panel-head">
+          <div class="panel-head" data-tour="org.settings.general">
             <h2>General</h2>
             <p>The name and description shown across the workspace.</p>
           </div>
@@ -146,7 +146,7 @@
 
       <!-- Danger zone (owner only) -->
       @if (isOwner()) {
-        <section class="panel danger-zone">
+        <section data-tour="org.settings.danger" class="panel danger-zone">
           <div class="panel-head">
             <h2>
               <lucide-angular name="ShieldAlert" size="18"></lucide-angular>

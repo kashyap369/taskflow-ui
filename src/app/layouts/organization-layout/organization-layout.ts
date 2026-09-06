@@ -36,10 +36,11 @@ import { AuthFacade } from '@features/auth/auth.facade';
 import { MemberFacade } from '@features/member/member.facade';
 import { OrganizationFacade } from '@features/organization/organization.facade';
 import { OrganizationListItem } from '@features/organization/organization.models';
+import { HelpLauncher } from '@shared/ui/organisms/help-launcher/help-launcher';
 
 @Component({
   selector: 'app-organization-layout',
-  imports: [LucideAngularModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [LucideAngularModule, RouterOutlet, RouterLink, RouterLinkActive, HelpLauncher],
   templateUrl: './organization-layout.html',
   styleUrl: './organization-layout.scss',
   providers: [

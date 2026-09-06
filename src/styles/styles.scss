@@ -31,3 +31,8 @@
 
 @import "ngx-toastr/toastr";
 @import "./components/toastr";
+
+// Page tours. Vendor stylesheet first, then our skin over it — see
+// components/_tour.scss for why the skin cannot live in a component.
+@import "driver.js/dist/driver.css";
+@import "./components/tour";

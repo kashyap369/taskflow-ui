@@ -1,0 +1,398 @@
+/**
+ * The floating help launcher.
+ *
+ * Sits bottom-right. That corner is free: toasts are configured
+ * top-right (`provideToastr({ positionClass: 'toast-top-right' })`), so
+ * a notification and the launcher never fight for the same space.
+ *
+ * Every value here is a token. The collapsed pill is a fixed height so
+ * that expanding to show the contextual line grows it rightwards and
+ * downwards from a stable anchor, rather than making the whole control
+ * jump.
+ */
+
+.help-launcher {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: 1040; // Under modals and the toast container, over page content.
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+/* ---------------------------------------------------------------- */
+/* The button                                                        */
+/* ---------------------------------------------------------------- */
+
+.help-fab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-full);
+
+  background: var(--gradient-brand);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-lg);
+
+  cursor: pointer;
+  transition:
+    transform var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  &.is-open {
+    box-shadow: var(--shadow-xl);
+  }
+}
+
+.help-fab-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+
+  img {
+    display: block;
+  }
+}
+
+.help-fab-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+
+  font-size: var(--fs-body-sm);
+  font-weight: 600;
+
+  small {
+    font-size: var(--fs-body-xs);
+    font-weight: 400;
+    color: var(--on-accent-muted);
+    white-space: nowrap;
+  }
+}
+
+/**
+ * The once-per-page teaser. A short slide rather than a pulse loop:
+ * it happens once, so it can afford to be a real movement, and nothing
+ * is left animating in the user's peripheral vision afterwards.
+ */
+.help-fab.is-teasing {
+  animation: help-teaser-in var(--dur-3) var(--ease-out);
+}
+
+@keyframes help-teaser-in {
+  from {
+    transform: translateY(6px);
+    opacity: 0.85;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/**
+ * A quiet ring while this page's tour has never been seen. Two pulses
+ * and it stops — a permanently animating element in the corner of a
+ * tool people keep open all day is noise, not guidance.
+ */
+.help-fab.is-unseen:not(.is-open)::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--accent-border-strong);
+  animation: help-ring var(--dur-4) var(--ease-out) 2;
+  pointer-events: none;
+}
+
+.help-fab {
+  position: relative;
+}
+
+@keyframes help-ring {
+  from {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* The popover                                                       */
+/* ---------------------------------------------------------------- */
+
+.help-menu {
+  width: 320px;
+  max-width: calc(100vw - var(--space-8));
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-xl);
+
+  overflow: hidden;
+  animation: help-menu-in var(--dur-2) var(--ease-out);
+}
+
+@keyframes help-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.help-menu-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+
+  h6 {
+    margin: 0;
+    font-size: var(--fs-body-md);
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--fs-body-xs);
+    color: var(--text-muted);
+  }
+}
+
+.help-menu-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+
+  border-radius: var(--radius-md);
+  background: var(--accent-surface);
+  color: var(--primary);
+}
+
+.help-menu-body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+}
+
+.help-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+
+  cursor: pointer;
+  transition: background var(--dur-1) var(--ease-out);
+
+  span {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
+  }
+
+  small {
+    font-size: var(--fs-body-xs);
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-inset);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  &.is-primary {
+    color: var(--primary);
+
+    small {
+      color: var(--text-muted);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Related pages                                                     */
+/* ---------------------------------------------------------------- */
+
+.help-related {
+  padding: var(--space-3) var(--space-5) var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.help-related-label {
+  display: block;
+  margin-bottom: var(--space-2);
+
+  font-size: var(--fs-body-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.help-related-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.help-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-2);
+  color: var(--text-muted);
+
+  font-size: var(--fs-body-xs);
+  cursor: pointer;
+  transition:
+    color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--primary);
+    border-color: var(--accent-border-strong);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Footer                                                            */
+/* ---------------------------------------------------------------- */
+
+.help-menu-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+
+    font-size: var(--fs-body-xs);
+    font-weight: 500;
+    color: var(--primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.help-quiet {
+  border: 0;
+  background: transparent;
+  padding: 0;
+
+  font-size: var(--fs-body-2xs);
+  color: var(--text-subtle);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text-muted);
+    text-decoration: underline;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Small screens                                                     */
+/* ---------------------------------------------------------------- */
+
+@media (max-width: 575.98px) {
+  .help-launcher {
+    right: var(--space-4);
+    // Clears a bottom bar or an on-screen keyboard's safe area.
+    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  // Icon only: the label is a luxury the narrow viewport cannot afford,
+  // and the aria-label still names the control for assistive tech.
+  .help-fab-text {
+    display: none;
+  }
+
+  .help-fab {
+    padding: var(--space-3);
+  }
+}
+
+/**
+ * Respect a reduced-motion preference: the launcher still appears and
+ * still teases, it just does not slide or ring.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .help-fab,
+  .help-menu {
+    animation: none;
+    transition: none;
+  }
+
+  .help-fab.is-unseen:not(.is-open)::after {
+    animation: none;
+    opacity: 0.5;
+  }
+}

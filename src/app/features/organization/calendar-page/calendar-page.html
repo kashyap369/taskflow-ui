@@ -79,7 +79,7 @@
         <span></span><span></span><span></span>
       </div>
     } @else {
-      <section class="calendar-shell">
+      <section data-tour="org.calendar.grid" class="calendar-shell">
         @if (activeTab() !== 'capacity') {
         <div class="filter-bar" aria-label="Calendar filters">
           <label>
@@ -301,7 +301,7 @@
             <div class="capacity-intro">
               <div>
                 <span class="capacity-kicker">Monday–Sunday · due-week allocation</span>
-                <h2>Workload you can defend</h2>
+                <h2>Workload data-tour="org.calendar.workload" you can defend</h2>
                 <p>
                   Open tasks count in the week they are due. Missing estimates stay unknown—they never
                   become false free time.

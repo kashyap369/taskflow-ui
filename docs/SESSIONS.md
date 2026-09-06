@@ -1057,3 +1057,28 @@
   implementation remain in source for a later restart.
 - No unrelated navigation or product surface was changed. Re-enable the link only after the backend
   LiveKit runtime configuration and production multi-client call are verified.
+
+## 2026-09-07 (In-app guidance — tours and documentation)
+
+- Added a context-aware help system: a floating launcher on every organization and member page, 17
+  page tours driven by driver.js, and a `/help` documentation section with 15 written guides.
+- One catalogue drives all of it (`core/guidance/guidance.registry.ts`): the launcher, the docs index
+  and the "related pages" links all read from it, so a new page needs one entry, not three edits.
+- Progress lives in `localStorage`, namespaced per user id. Deliberate: there is no onboarding table
+  on the API and none was added. The cost is that clearing site data offers the tours again; every
+  tour is dismissible and none auto-plays twice, so the worst case is one extra nudge. If it ever
+  needs to follow users across devices, only `GuidanceProgressService` has to change.
+- Tour steps anchor to `data-tour` attributes, not class names. A step whose anchor is missing keeps
+  its text and renders as a centred card instead of breaking the tour — which is why the registry
+  could be written complete before any template was annotated, and why the six anchors that live
+  inside drawers (task subtasks, work logs, project edit) are fine left unanchored.
+- Gotcha: the layouts register their own `LUCIDE_ICONS` sets, and an element injector resolves that
+  token at the nearest provider rather than merging down the tree. The launcher therefore carries its
+  own complete icon set, including every topic icon from the registry.
+- Gotcha: `meetings-page.html` is written as near-single-line markup with `@else { ... }` blocks on
+  the same line as their content. A scripted attribute insertion that splits on the first space
+  corrupts the block into `@else data-tour="..." {` and fails the Angular compiler with four
+  misleading NG5002 errors. Anchor the element, never the block.
+- The launcher renders nothing when the current route has no topic. That is how the meeting room
+  (`/room`), the guest portal and the auth pages stay clear of a floating button — no separate
+  suppression list in the layouts.

@@ -1,0 +1,147 @@
+<div class="help-page">
+  <header class="help-hero">
+    <span class="help-eyebrow">
+      <lucide-angular name="Sparkles" size="14"></lucide-angular>
+      Documentation
+    </span>
+
+    <h1>How to use TaskFlow</h1>
+
+    <p>
+      Every page in TaskFlow also explains itself — look for the
+      <strong>Help</strong> button in the bottom-right corner and it will walk you through
+      whichever page you are on. This is the longer version.
+    </p>
+  </header>
+
+  <!-- The model. This is the part worth reading first: most confusion -->
+  <!-- with TaskFlow is about how these relate, not where they live.   -->
+
+  @if (isOrganization()) {
+    <section class="help-model">
+      <h2>How it fits together</h2>
+
+      <p class="help-model-lead">
+        Six things, in the order you set them up. Each one depends on the one before it.
+      </p>
+
+      <ol class="help-chain">
+        <li>
+          <span class="chain-step">1</span>
+          <div>
+            <h3>Organization</h3>
+            <p>Your workspace. Everything below belongs to it, and whoever created it is the owner.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">2</span>
+          <div>
+            <h3>Roles</h3>
+            <p>What a kind of member may do. Permissions are granted here and nowhere else.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">3</span>
+          <div>
+            <h3>Members</h3>
+            <p>People who accepted an invitation. Each holds one role, which is where their access comes from.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">4</span>
+          <div>
+            <h3>Teams</h3>
+            <p>Groups of members, for organising and reporting. Teams do not grant permissions — roles do.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">5</span>
+          <div>
+            <h3>Projects</h3>
+            <p>Containers for related work, with their own dates and progress.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">6</span>
+          <div>
+            <h3>Tasks &amp; subtasks</h3>
+            <p>
+              The actual work. A task belongs to a project, is assigned to one member, and can be
+              split into subtasks. Time is logged against tasks.
+            </p>
+          </div>
+        </li>
+      </ol>
+
+      <aside class="help-note">
+        <strong>Calendar, Meetings and Reports read from all of this.</strong>
+        They store almost nothing of their own — which is why a task with no due date never appears
+        on the calendar, and why unlogged work shows as no work in the time reports.
+      </aside>
+    </section>
+  } @else {
+    <section class="help-model">
+      <h2>How your workspace works</h2>
+
+      <ol class="help-chain">
+        <li>
+          <span class="chain-step">1</span>
+          <div>
+            <h3>Invitations</h3>
+            <p>Organizations invite you. Accepting one makes you a member of their workspace.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">2</span>
+          <div>
+            <h3>My tasks</h3>
+            <p>Work assigned to you, gathered from every organization you belong to.</p>
+          </div>
+        </li>
+        <li>
+          <span class="chain-step">3</span>
+          <div>
+            <h3>Time logs</h3>
+            <p>Hours you record against a task. These are what the organization’s time reports are built from.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+  }
+
+  <!-- Page directory -->
+
+  <section class="help-directory">
+    <div class="help-directory-head">
+      <h2>Every page, explained</h2>
+
+      <label class="help-search">
+        <lucide-angular name="Search" size="16"></lucide-angular>
+        <input
+          type="search"
+          placeholder="Search pages"
+          [value]="query()"
+          (input)="onSearch($event)"
+          aria-label="Search documentation"
+        />
+      </label>
+    </div>
+
+    @if (topics().length === 0) {
+      <p class="help-empty">Nothing matches “{{ query() }}”.</p>
+    } @else {
+      <div class="help-grid">
+        @for (topic of topics(); track topic.key) {
+          <a class="help-card" [routerLink]="['/help', topic.docSlug]">
+            <span class="help-card-icon">
+              <lucide-angular [name]="topic.icon" size="18"></lucide-angular>
+            </span>
+
+            <h3>{{ topic.label }}</h3>
+            <p>{{ topic.summary }}</p>
+          </a>
+        }
+      </div>
+    }
+  </section>
+</div>

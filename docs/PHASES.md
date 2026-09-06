@@ -1358,6 +1358,15 @@ maintenance **off**) with `supportEmail` now set to `support@taskflow.com` by th
 - ⬜ `PagedResponse<T>` envelope support in `core/api` when the API adds pagination (then swap the
   client-side `createPagination` source for a server-driven one).
 
+## In-app guidance (2026-09-07)
+- ✅ **Help launcher + page tours** — `core/guidance/` (registry, progress, tour runner, route
+  matching), `shared/ui/organisms/help-launcher/`, driver.js skinned in `styles/components/_tour.scss`.
+- ✅ **Documentation section** — `/help` inside both portals (`features/help/`), Markdown in
+  `public/help-docs/`, rendered with `marked`. Sidebar "How to use TaskFlow" links to it.
+- ✅ **17 page tours + first-run welcome**, one per organization and member page.
+- ⬜ Specs for `GuidanceService` route matching and `GuidanceProgressService` storage fallbacks.
+- ⬜ Six tour steps still unanchored because their targets live inside drawers; they render as cards.
+
 ## Backlog (unscheduled)
 - Dark/light theme toggle (theme SCSS exists), i18n, PWA/offline.
 - Real-time updates (notifications/activity feed) when the API adds them.

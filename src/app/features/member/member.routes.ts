@@ -25,5 +25,9 @@ export const MEMBER_ROUTES: Routes = [
     loadComponent: () =>
       import('./invitations-page/invitations-page').then((m) => m.MemberInvitationsPage),
   },
+  {
+    path: 'help',
+    loadChildren: () => import('@features/help/help.routes').then((m) => m.HELP_ROUTES),
+  },
   // Additional member pages (calendar, settings) go here.
 ];

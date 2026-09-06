@@ -1,0 +1,238 @@
+.help-page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-bottom: var(--space-16);
+}
+
+.help-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+
+  font-size: var(--fs-body-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--primary);
+  }
+}
+
+.help-article-head {
+  margin-bottom: var(--space-8);
+
+  h1 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--fs-page-title);
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  p {
+    margin: 0;
+    max-width: 60ch;
+    font-size: var(--fs-body-md);
+    color: var(--text-muted);
+  }
+}
+
+.help-article-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: var(--space-10);
+  align-items: start;
+}
+
+@media (max-width: 991.98px) {
+  .help-article-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Rendered Markdown                                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The prose styles have to be written against plain tags, because the
+ * body is injected with [innerHTML] from Markdown — there are no
+ * classes to hook. That injected content is not part of this
+ * component's template, so Angular's emulated encapsulation does not
+ * attribute it; `::ng-deep` is the sanctioned way to reach it.
+ */
+.help-prose {
+  min-width: 0;
+
+  ::ng-deep {
+    h2 {
+      margin: var(--space-8) 0 var(--space-3);
+      font-size: var(--fs-h4);
+      font-weight: 600;
+      color: var(--text);
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    h3 {
+      margin: var(--space-6) 0 var(--space-2);
+      font-size: var(--fs-body-lg);
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    p,
+    li {
+      font-size: var(--fs-body-md);
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+
+    p {
+      margin: 0 0 var(--space-4);
+      max-width: 68ch;
+    }
+
+    ul,
+    ol {
+      margin: 0 0 var(--space-4);
+      padding-left: var(--space-6);
+      max-width: 68ch;
+    }
+
+    li {
+      margin-bottom: var(--space-2);
+    }
+
+    strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-inset);
+      color: var(--text);
+      font-size: 0.9em;
+    }
+
+    blockquote {
+      margin: 0 0 var(--space-4);
+      padding: var(--space-3) var(--space-5);
+      border-left: 3px solid var(--primary);
+      border-radius: var(--radius-md);
+      background: var(--surface-inset);
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    // Wide tables scroll inside their own container rather than
+    // pushing the page sideways.
+    table {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      margin: 0 0 var(--space-5);
+      border-collapse: collapse;
+      font-size: var(--fs-body-sm);
+    }
+
+    th,
+    td {
+      padding: var(--space-2) var(--space-4);
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      color: var(--text-muted);
+    }
+
+    th {
+      color: var(--text);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    hr {
+      margin: var(--space-8) 0;
+      border: 0;
+      border-top: 1px solid var(--border);
+    }
+  }
+}
+
+.help-empty {
+  font-size: var(--fs-body-md);
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Sidebar                                                             */
+/* ------------------------------------------------------------------ */
+
+.help-aside {
+  position: sticky;
+  top: var(--space-6);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+
+  h2 {
+    margin: 0 0 var(--space-3);
+    font-size: var(--fs-body-2xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+}
+
+@media (max-width: 991.98px) {
+  .help-aside {
+    position: static;
+  }
+}
+
+.help-aside-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+
+    font-size: var(--fs-body-sm);
+    color: var(--text-muted);
+    text-decoration: none;
+
+    transition: background var(--dur-1) var(--ease-out);
+
+    &:hover {
+      background: var(--surface-inset);
+      color: var(--primary);
+    }
+  }
+}
+
+.help-aside-note {
+  margin: var(--space-2) 0 0;
+  font-size: var(--fs-body-xs);
+  line-height: 1.5;
+  color: var(--text-subtle);
+}

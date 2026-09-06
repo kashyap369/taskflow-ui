@@ -1,0 +1,65 @@
+<div class="help-page help-article">
+  <a class="help-back" routerLink="/help">
+    <lucide-angular name="ArrowLeft" size="16"></lucide-angular>
+    All documentation
+  </a>
+
+  <header class="help-article-head">
+    <h1>{{ title() }}</h1>
+
+    @if (topics().length > 0) {
+      <p>{{ topics()[0].summary }}</p>
+    }
+  </header>
+
+  <div class="help-article-body">
+    <article class="help-prose">
+      @if (content(); as html) {
+        <div [innerHTML]="html"></div>
+      } @else {
+        <!-- The registry may name a document before it is written. -->
+        <!-- Say so plainly rather than showing an error page.       -->
+        <p class="help-empty">
+          This guide has not been written yet. The
+          <strong>Help</strong> button on the page itself still explains it step by step.
+        </p>
+      }
+    </article>
+
+    <aside class="help-aside">
+      @if (topics().length > 0) {
+        <section>
+          <h2>Open the page</h2>
+
+          <div class="help-aside-links">
+            @for (topic of topics(); track topic.key) {
+              <a [routerLink]="routeFor(topic)">
+                <lucide-angular [name]="topic.icon" size="15"></lucide-angular>
+                {{ topic.label }}
+              </a>
+            }
+          </div>
+
+          <p class="help-aside-note">
+            The help button on that page offers a step-by-step tour of it.
+          </p>
+        </section>
+      }
+
+      @if (related().length > 0) {
+        <section>
+          <h2>Related</h2>
+
+          <div class="help-aside-links">
+            @for (topic of related(); track topic.key) {
+              <a [routerLink]="['/help', topic.docSlug]">
+                <lucide-angular [name]="topic.icon" size="15"></lucide-angular>
+                {{ topic.label }}
+              </a>
+            }
+          </div>
+        </section>
+      }
+    </aside>
+  </div>
+</div>

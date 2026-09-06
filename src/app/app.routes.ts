@@ -1,3 +1,4 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
 
 import { PublicLayout } from '@layouts/public-layout/public-layout';
@@ -11,6 +12,7 @@ import { guestGuard } from '@core/guards/guest.guard';
 import { roleGuard } from '@core/guards/role.guard';
 import { portalGuard } from '@core/guards/portal.guard';
 import { plannerFeatureGuard } from '@core/guards/planner-feature.guard';
+import { AuthStore } from '@core/auth/auth.store';
 import { environment } from '@env/environment';
 
 export const routes: Routes = [
@@ -88,6 +90,33 @@ export const routes: Routes = [
       ),
   },
 
+  // ── Documentation ───────────────────────────────────────
+  // The docs render inside a portal so the reader keeps the sidebar and
+  // their sense of place. `/help` is the single canonical link used by
+  // the help launcher and both sidebars; it resolves to whichever
+  // portal the reader belongs to, so no template needs to know which
+  // shell it is in. Signed-out readers are handled by the portal's own
+  // guard once they land there.
+  {
+    path: 'help',
+    redirectTo: () => helpUrlFor(undefined),
+  },
+  {
+    path: 'help/:slug',
+    redirectTo: (redirect) => helpUrlFor(redirect.params['slug']),
+  },
+
   // ── Fallback ────────────────────────────────────────────
   { path: '**', redirectTo: '' },
 ];
+
+/**
+ * Where `/help` actually lives for the current reader. Called inside a
+ * redirect function, so `inject` is legal here — it runs in the
+ * router's injection context.
+ */
+function helpUrlFor(slug: unknown): string {
+  const base = inject(AuthStore).portal() === 'organization' ? '/organization/help' : '/member/help';
+
+  return typeof slug === 'string' && slug.length > 0 ? `${base}/${slug}` : base;
+}

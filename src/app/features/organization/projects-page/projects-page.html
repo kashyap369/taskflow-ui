@@ -12,11 +12,11 @@
             <lucide-angular name="Download" size="17"></lucide-angular>
             Download plan template
           </button>
-          <button type="button" class="btn-ghost plan-action" (click)="openPlanImport()">
+          <button data-tour="org.projects.import" type="button" class="btn-ghost plan-action" (click)="openPlanImport()">
             <lucide-angular name="Upload" size="17"></lucide-angular>
             Import project plan
           </button>
-          <button type="button" class="btn-primary-cta" (click)="openCreate()">
+          <button data-tour="org.projects.create" type="button" class="btn-primary-cta" (click)="openCreate()">
             <lucide-angular name="Plus" size="18"></lucide-angular>
             New project
           </button>
@@ -92,7 +92,7 @@
         </div>
       }
 
-      <div class="project-grid">
+      <div data-tour="org.projects.list" class="project-grid">
         @for (project of pager.items(); track project.id) {
           <article class="project-card">
             <header class="pc-head">

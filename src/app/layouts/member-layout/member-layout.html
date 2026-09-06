@@ -8,7 +8,7 @@
       <span class="portal-tag">Personal</span>
     </a>
 
-    <nav class="portal-nav">
+    <nav class="portal-nav" data-tour="org.nav">
       <a routerLink="/member/dashboard" routerLinkActive="active">
         <lucide-angular name="LayoutDashboard" [size]="16"></lucide-angular>
         <span>Dashboard</span>
@@ -41,6 +41,10 @@
             {{ pendingInvitations() }}
           </span>
         }
+      </a>
+      <a routerLink="/help" routerLinkActive="active">
+        <lucide-angular name="CircleHelp" [size]="16"></lucide-angular>
+        <span>How to use</span>
       </a>
     </nav>
 
@@ -75,4 +79,7 @@
   <main class="portal-content">
     <router-outlet />
   </main>
+
+  <!-- Context-aware help. Renders nothing on routes with no topic. -->
+  <app-help-launcher />
 </div>

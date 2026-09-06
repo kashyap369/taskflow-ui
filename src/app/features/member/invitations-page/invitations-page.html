@@ -43,7 +43,7 @@
       </div>
     } @else {
       @if (actionable().length > 0) {
-        <div class="invite-list">
+        <div data-tour="invitations.list" class="invite-list">
           @for (invite of actionable(); track invite.id) {
             <article class="invite-card">
               <div class="invite-top">

@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import {
   Building2,
+  CircleHelp,
   FolderKanban,
   LayoutDashboard,
   ListChecks,
@@ -20,12 +21,13 @@ import { APP_SETTINGS } from '@core/config/app.tokens';
 import { ThemeService } from '@core/services/theme.service';
 import { AuthFacade } from '@features/auth/auth.facade';
 import { MemberFacade } from '@features/member/member.facade';
+import { HelpLauncher } from '@shared/ui/organisms/help-launcher/help-launcher';
 
 /** Shell for the Member (Individual / solo user) portal. */
 @Component({
   selector: 'app-member-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, HelpLauncher],
   templateUrl: './member-layout.html',
   styleUrl: './member-layout.scss',
   providers: [
@@ -37,6 +39,7 @@ import { MemberFacade } from '@features/member/member.facade';
         Moon,
         LogOut,
         LayoutDashboard,
+        CircleHelp,
         Mail,
         ListChecks,
         Building2,

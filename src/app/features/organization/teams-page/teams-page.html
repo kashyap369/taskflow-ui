@@ -6,7 +6,7 @@
         <p>Group people into teams inside {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button type="button" class="btn-primary-cta" (click)="openCreate()">
+        <button data-tour="org.teams.create" type="button" class="btn-primary-cta" (click)="openCreate()">
           <lucide-angular name="Plus" size="18"></lucide-angular>
           New team
         </button>
@@ -70,7 +70,7 @@
         </div>
       }
 
-      <div class="team-grid">
+      <div data-tour="org.teams.list" class="team-grid">
         @for (team of pager.items(); track team.id) {
           <article class="team-card">
             <div class="team-card-top">

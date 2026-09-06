@@ -21,7 +21,7 @@
 
     <!-- Workspace / org switcher -->
 
-    <div class="workspace-switcher">
+    <div class="workspace-switcher" data-tour="org.workspace-switcher">
       <button
         class="workspace-card"
         type="button"
@@ -70,7 +70,7 @@
 
     <!-- Navigation -->
 
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" data-tour="org.nav">
       @if (isPersonalAccount()) {
         <a routerLink="/member/dashboard">
           <lucide-angular name="UserRound"></lucide-angular>
@@ -179,10 +179,10 @@
 
     <!-- Help -->
 
-    <a class="help-link">
+    <a class="help-link" routerLink="/help" routerLinkActive="active">
       <lucide-angular name="CircleHelp"> </lucide-angular>
 
-      Help & Support
+      How to use TaskFlow
     </a>
   </aside>
 
@@ -258,5 +258,9 @@
     <main class="content">
       <router-outlet />
     </main>
+
+    <!-- Context-aware help. Renders nothing on routes with no topic -->
+    <!-- (the meeting room, guest pages), so no suppression is needed here. -->
+    <app-help-launcher />
   </div>
 </div>

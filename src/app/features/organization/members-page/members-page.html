@@ -6,7 +6,7 @@
         <p>Invite and manage people in {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button type="button" class="btn-primary-cta" (click)="openInvite()" [disabled]="!hasRoles()"
+        <button data-tour="org.members.invite" type="button" class="btn-primary-cta" (click)="openInvite()" [disabled]="!hasRoles()"
           [title]="hasRoles() ? 'Invite a member' : 'Create a role first'">
           <lucide-angular name="UserPlus" size="18"></lucide-angular>
           Invite member
@@ -53,7 +53,7 @@
 
       <!-- Members -->
       <div class="panel">
-        <div class="panel-head"><h2>Team members</h2><span class="count">{{ members().length }}</span></div>
+        <div data-tour="org.members.list" class="panel-head"><h2>Team members</h2><span class="count">{{ members().length }}</span></div>
 
         @if (!hasMembers()) {
           <div class="lottie-state compact">
@@ -147,7 +147,7 @@
 
       <!-- Pending invitations -->
       <div class="panel">
-        <div class="panel-head"><h2>Pending invitations</h2><span class="count">{{ pendingInvitations().length }}</span></div>
+        <div data-tour="org.members.pending" class="panel-head"><h2>Pending invitations</h2><span class="count">{{ pendingInvitations().length }}</span></div>
 
         @if (pendingInvitations().length === 0) {
           <p class="muted-empty">No pending invitations.</p>

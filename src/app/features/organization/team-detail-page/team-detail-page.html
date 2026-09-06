@@ -97,7 +97,7 @@
           </div>
         }
 
-        <div class="member-list">
+        <div class="member-list" data-tour="org.team-detail.members">
           @for (m of pager.items(); track m.userId) {
             <div class="member-row">
               <span class="avatar">{{ initials(m.fullName) }}</span>

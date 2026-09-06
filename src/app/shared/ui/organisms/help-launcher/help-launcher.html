@@ -1,0 +1,106 @@
+@if (guidance.currentTopic(); as topic) {
+  <div class="help-launcher" data-tour="help.launcher">
+    <!-- Menu -->
+
+    @if (open()) {
+      <div class="help-menu" role="dialog" aria-label="Help for this page">
+        <header class="help-menu-head">
+          <span class="help-menu-icon">
+            <lucide-angular [name]="topic.icon" size="18"></lucide-angular>
+          </span>
+
+          <div>
+            <h6>{{ topic.label }}</h6>
+            <small>{{ topic.summary }}</small>
+          </div>
+        </header>
+
+        <div class="help-menu-body">
+          @if (topic.tour.length > 0) {
+            @if (guidance.progress.isCompleted(topic.key)) {
+              <button class="help-action" type="button" (click)="restartTour()">
+                <lucide-angular name="RotateCcw" size="16"></lucide-angular>
+                <span>
+                  Replay the tour
+                  <small>{{ topic.tour.length }} steps · you have seen this one</small>
+                </span>
+              </button>
+            } @else {
+              <button class="help-action is-primary" type="button" (click)="startTour()">
+                <lucide-angular name="Play" size="16"></lucide-angular>
+                <span>
+                  Take the tour
+                  <small>{{ topic.tour.length }} steps around this page</small>
+                </span>
+              </button>
+            }
+          }
+
+          <button class="help-action" type="button" (click)="openDoc(topic)">
+            <lucide-angular name="BookOpen" size="16"></lucide-angular>
+            <span>
+              Read the guide
+              <small>How {{ topic.label | lowercase }} works, in detail</small>
+            </span>
+          </button>
+        </div>
+
+        <!-- Related pages: this is where the model of how TaskFlow -->
+        <!-- fits together gets taught, not in any single tour.      -->
+
+        @if (guidance.relatedTopics().length > 0) {
+          <div class="help-related">
+            <span class="help-related-label">Related</span>
+
+            <div class="help-related-links">
+              @for (related of guidance.relatedTopics(); track related.key) {
+                <button class="help-chip" type="button" (click)="openDoc(related)">
+                  <lucide-angular [name]="related.icon" size="13"></lucide-angular>
+                  {{ related.label }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <footer class="help-menu-foot">
+          <a routerLink="/help" (click)="open.set(false)">
+            <lucide-angular name="LifeBuoy" size="15"></lucide-angular>
+            Full documentation
+          </a>
+
+          @if (guidance.progress.promptsEnabled()) {
+            <button class="help-quiet" type="button" (click)="silencePrompts()">
+              Stop suggesting tours
+            </button>
+          }
+        </footer>
+      </div>
+    }
+
+    <!-- Launcher button -->
+
+    <button
+      class="help-fab"
+      type="button"
+      [ngClass]="{ 'is-teasing': teasing(), 'is-open': open(), 'is-unseen': guidance.shouldPrompt() }"
+      [attr.aria-expanded]="open()"
+      [attr.aria-label]="'Help with ' + topic.label"
+      (click)="toggle()"
+    >
+      <span class="help-fab-mark">
+        <img src="/taskflow-mark.svg" alt="" width="24" height="24" />
+      </span>
+
+      <span class="help-fab-text">
+        {{ label() }}
+
+        <!-- Only rendered while teasing, so the label itself never -->
+        <!-- changes underneath the user.                            -->
+        @if (teasing()) {
+          <small>Guide me through {{ topic.label }}</small>
+        }
+      </span>
+    </button>
+  </div>
+}

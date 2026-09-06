@@ -62,7 +62,7 @@
     @if (filteredProjects().length === 0) {
       <div class="filter-empty">No personal projects match that search.</div>
     } @else {
-      <div class="project-list">
+      <div data-tour="member.projects.list" class="project-list">
         @for (project of filteredProjects(); track project.id) {
           <article class="project-row">
             <div class="project-main">

@@ -76,6 +76,10 @@ export const ORGANIZATION_ROUTES: Routes = [
       ),
   },
   {
+    path: 'help',
+    loadChildren: () => import('@features/help/help.routes').then((m) => m.HELP_ROUTES),
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./settings-page/settings-page').then((m) => m.SettingsPage),
   },
