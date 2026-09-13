@@ -1,15 +1,18 @@
 import {
-  ProjectPlanImportPayload,
+  ProjectPlanPreview,
   ProjectPlanTaskPayload,
   TaskPriority,
 } from '@shared/models/project-plan.model';
+import {
+  downloadProjectPlanMarkdownTemplate,
+  parseProjectPlanMarkdownFile,
+} from './project-plan-markdown';
 
-export interface ProjectPlanPreview {
-  payload: ProjectPlanImportPayload;
-  fileName: string;
-  taskCount: number;
-  subTaskCount: number;
-}
+export type { ProjectPlanPreview };
+export { downloadProjectPlanMarkdownTemplate };
+
+/** Extensions the import drawer accepts, for the file input's `accept` attribute. */
+export const PROJECT_PLAN_ACCEPT = '.csv,.md,.markdown,text/csv,text/markdown';
 
 const COLUMNS = [
   'Row Type',
@@ -63,9 +66,17 @@ export function downloadProjectPlanTemplate(personal: boolean): void {
   URL.revokeObjectURL(url);
 }
 
+/**
+ * Reads a plan file of either supported format. Markdown is delegated to its own reader; both
+ * produce the same payload, so callers do not care which format the user chose.
+ */
 export async function parseProjectPlanFile(file: File): Promise<ProjectPlanPreview> {
-  if (!file.name.toLowerCase().endsWith('.csv')) {
-    throw new Error('Choose a .csv project plan downloaded from TaskFlow.');
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.md') || name.endsWith('.markdown')) {
+    return parseProjectPlanMarkdownFile(file);
+  }
+  if (!name.endsWith('.csv')) {
+    throw new Error('Choose a .csv or .md project plan.');
   }
   if (file.size > 5 * 1024 * 1024) {
     throw new Error('The project plan must be 5 MB or smaller.');
@@ -153,6 +164,7 @@ export async function parseProjectPlanFile(file: File): Promise<ProjectPlanPrevi
   if (subTaskCount > 5000) throw new Error('A project plan can contain at most 5,000 subtasks.');
   return {
     fileName: file.name,
+    format: 'CSV',
     taskCount: tasks.length,
     subTaskCount,
     payload: {

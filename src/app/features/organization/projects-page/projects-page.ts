@@ -26,8 +26,10 @@ import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
 import {
+  downloadProjectPlanMarkdownTemplate,
   downloadProjectPlanTemplate,
   parseProjectPlanFile,
+  PROJECT_PLAN_ACCEPT,
   ProjectPlanPreview,
 } from '@shared/utils/project-plan-csv';
 import { controlValidators, messageFor } from '@shared/validations';
@@ -164,8 +166,14 @@ export class ProjectsPage {
     this.showDrawer.set(true);
   }
 
+  readonly planAccept = PROJECT_PLAN_ACCEPT;
+
   downloadPlanTemplate(): void {
     downloadProjectPlanTemplate(false);
+  }
+
+  downloadPlanMarkdownTemplate(): void {
+    downloadProjectPlanMarkdownTemplate(false);
   }
 
   openPlanImport(): void {

@@ -37,3 +37,13 @@ export interface ProjectPlanImportPayload {
   organizationId?: number | null;
   tasks: ProjectPlanTaskPayload[];
 }
+
+/** What a parsed plan file (CSV or Markdown) yields before it is sent to the API. */
+export interface ProjectPlanPreview {
+  payload: ProjectPlanImportPayload;
+  fileName: string;
+  taskCount: number;
+  subTaskCount: number;
+  /** Which file format produced this preview — shown in the import drawer. */
+  format: 'CSV' | 'Markdown';
+}

@@ -10,7 +10,11 @@
         <div class="page-actions">
           <button type="button" class="btn-ghost plan-action" (click)="downloadPlanTemplate()">
             <lucide-angular name="Download" size="17"></lucide-angular>
-            Download plan template
+            CSV template
+          </button>
+          <button type="button" class="btn-ghost plan-action" (click)="downloadPlanMarkdownTemplate()">
+            <lucide-angular name="Download" size="17"></lucide-angular>
+            Markdown template
           </button>
           <button data-tour="org.projects.import" type="button" class="btn-ghost plan-action" (click)="openPlanImport()">
             <lucide-angular name="Upload" size="17"></lucide-angular>
@@ -245,16 +249,16 @@
         <div class="import-guide">
           <lucide-angular name="FileSpreadsheet" size="20"></lucide-angular>
           <div>
-            <strong>Use the TaskFlow CSV template</strong>
-            <span>Keep the column names unchanged. Team names must already exist, and assignee emails must be active members.</span>
+            <strong>Use a TaskFlow CSV or Markdown template</strong>
+            <span>In CSV, keep the column names unchanged. In Markdown, the first heading is the project and each "##" heading is a task. Team names must already exist, and assignee emails must be active members.</span>
           </div>
         </div>
 
         <label class="file-drop">
           <lucide-angular name="Upload" size="22"></lucide-angular>
           <strong>Choose completed project plan</strong>
-          <span>CSV only</span>
-          <input type="file" accept=".csv,text/csv" (change)="onPlanFile($event)" />
+          <span>CSV or Markdown (.md)</span>
+          <input type="file" [accept]="planAccept" (change)="onPlanFile($event)" />
         </label>
 
         @if (planError(); as error) {
@@ -264,6 +268,7 @@
         @if (planPreview(); as preview) {
           <div class="import-preview" aria-live="polite">
             <div><span>File</span><strong>{{ preview.fileName }}</strong></div>
+            <div><span>Format</span><strong>{{ preview.format }}</strong></div>
             <div><span>Project</span><strong>{{ preview.payload.title }}</strong></div>
             <div><span>Tasks</span><strong>{{ preview.taskCount }}</strong></div>
             <div><span>Subtasks</span><strong>{{ preview.subTaskCount }}</strong></div>
@@ -271,7 +276,8 @@
         }
 
         <div class="drawer-actions">
-          <button type="button" class="btn-ghost" (click)="downloadPlanTemplate()">Download template</button>
+          <button type="button" class="btn-ghost" (click)="downloadPlanTemplate()">CSV template</button>
+          <button type="button" class="btn-ghost" (click)="downloadPlanMarkdownTemplate()">Markdown template</button>
           <button type="button" class="btn-primary-cta" [disabled]="!planPreview() || saving()" (click)="importPlan()">
             {{ saving() ? 'Importing…' : 'Create full project' }}
           </button>

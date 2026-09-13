@@ -1,5 +1,33 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-13 (Project plans can be imported as Markdown)
+
+- **Why a second format at all:** the CSV template is precise but expensive to produce. Plans are
+  mostly drafted with an assistant now, and an assistant writes Markdown far faster and more
+  reliably than a spreadsheet — including on a free tier, where producing a well-formed CSV is the
+  part that fails. The format is the only thing that changed.
+- **The API never saw the file.** `POST /project/plan-import` has always taken a parsed JSON plan;
+  the CSV reader lives entirely in the client. So Markdown support is a second reader —
+  `@shared/utils/project-plan-markdown` — producing the identical `ProjectPlanImportPayload`. No
+  backend change, no new endpoint, no migration.
+- `parseProjectPlanFile` now dispatches on the extension, so both projects pages call the same
+  function and neither knows which format the user chose. `ProjectPlanPreview` moved into
+  `shared/models/project-plan.model.ts` (the CSV util re-exports it) and gained a `format` field,
+  shown in the import preview.
+- **The reader ignores what it does not recognise, on purpose.** HTML comments, fenced code,
+  blockquotes, horizontal rules and sections titled Instructions / Notes / Examples / Guidance are
+  dropped before parsing. That is what makes the downloaded template self-documenting: the guidance
+  lives in a leading HTML comment, and a user who never deletes it still imports the right project.
+- Defaults keep a minimal plan valid rather than erroring: task start falls back to the project
+  start, priority to Medium, the task key to `T-001`, description to the prose under the heading.
+  The strict rules the backend also enforces (dates inside the project range, unique task titles and
+  keys, 500 tasks, 5 000 subtasks) are still checked before the request is sent, so the failure
+  arrives in the drawer rather than as an API error.
+- Gotcha: the field-vs-subtask distinction is what makes the format forgiving. A bullet is a field
+  only if it reads `Known Field: value`; everything else under a task becomes a subtask. That means
+  a stray note like `- remember to ask design` silently becomes a subtask — accepted, because the
+  alternative is rejecting plans over prose.
+
 ## 2026-09-04 (Meetings: first working production call)
 
 - **A device preference was ending live calls.** `connect()` applied the speaker choice with

@@ -25,8 +25,10 @@ import { DialogDirective } from '@shared/directives/dialog.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { controlValidators, messageFor } from '@shared/validations';
 import {
+  downloadProjectPlanMarkdownTemplate,
   downloadProjectPlanTemplate,
   parseProjectPlanFile,
+  PROJECT_PLAN_ACCEPT,
   ProjectPlanPreview,
 } from '@shared/utils/project-plan-csv';
 import { ProjectFormModel } from '@features/organization/organization.form-models';
@@ -127,8 +129,14 @@ export class MemberProjectsPage {
     this.showDrawer.set(true);
   }
 
+  readonly planAccept = PROJECT_PLAN_ACCEPT;
+
   downloadPlanTemplate(): void {
     downloadProjectPlanTemplate(true);
+  }
+
+  downloadPlanMarkdownTemplate(): void {
+    downloadProjectPlanMarkdownTemplate(true);
   }
 
   openPlanImport(): void {
