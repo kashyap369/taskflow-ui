@@ -7,6 +7,8 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideLottieOptions } from 'ngx-lottie';
 import { of } from 'rxjs';
 
+import { AuthStore } from '@core/auth/auth.store';
+import { AccountType } from '@core/auth/roles.enum';
 import { APP_SETTINGS } from '@core/config/app.tokens';
 import { AppSettings } from '@core/config/app.settings';
 import { OrganizationRepository } from '../organization.repository';
@@ -59,6 +61,15 @@ const TASKS: TaskListItem[] = [
   task(3, 'Ship the hero section', TaskStatus.Completed),
 ];
 
+const SUBTASKS = [
+  { id: 11, title: 'Sketch the layout', status: TaskStatus.Completed, taskId: 1 },
+  { id: 12, title: 'Build the markup', status: TaskStatus.Todo, taskId: 1 },
+];
+
+const getSubTasks = jasmine.createSpy('getSubTasks').and.returnValue(of(SUBTASKS));
+const createSubTask = jasmine.createSpy('createSubTask').and.returnValue(of(13));
+const completeSubTask = jasmine.createSpy('completeSubTask').and.returnValue(of(void 0));
+
 const loadTaskForEdit = jasmine
   .createSpy('getTask')
   .and.returnValue(of({ ...TASKS[0], description: 'The full description' }));
@@ -78,7 +89,24 @@ const repositoryStub = {
   getProject: () => of(PROJECT),
   getProjectTasks: () => of(TASKS),
   getTask: loadTaskForEdit,
+  getSubTasks,
+  createSubTask,
+  completeSubTask,
 };
+
+/**
+ * Signs a user in so `canManageTasks` can resolve. The stubbed organization is owned by user 1,
+ * and an owner holds every permission — so 1 is the permitted case and anyone else is not.
+ */
+function signIn(userId: number): void {
+  TestBed.inject(AuthStore).setUser({
+    id: userId,
+    fullName: 'Nadia Owens',
+    email: 'nadia.owens+org1@taskflow.test',
+    roles: ['User'],
+    accountType: AccountType.Organization,
+  });
+}
 
 describe('ProjectDetailPage', () => {
   let component: ProjectDetailPage;
@@ -86,6 +114,9 @@ describe('ProjectDetailPage', () => {
 
   beforeEach(async () => {
     loadTaskForEdit.calls.reset();
+    getSubTasks.calls.reset();
+    createSubTask.calls.reset();
+    completeSubTask.calls.reset();
 
     await TestBed.configureTestingModule({
       imports: [ProjectDetailPage],
@@ -103,6 +134,7 @@ describe('ProjectDetailPage', () => {
 
     fixture = TestBed.createComponent(ProjectDetailPage);
     component = fixture.componentInstance;
+    signIn(1);
     fixture.detectChanges();
   });
 
@@ -133,6 +165,80 @@ describe('ProjectDetailPage', () => {
 
     expect(loadTaskForEdit).toHaveBeenCalledWith(1);
     expect(component.createForm.controls.description.value).toBe('The full description');
+  });
+
+  it('expands a task in place to show its subtasks, and collapses it again', () => {
+    expect(component.isExpanded(TASKS[0])).toBeFalse();
+
+    component.toggleSubtasks(TASKS[0]);
+    expect(getSubTasks).toHaveBeenCalledWith(1);
+    expect(component.isExpanded(TASKS[0])).toBeTrue();
+    expect(component.subTasks().map((s) => s.title)).toEqual([
+      'Sketch the layout',
+      'Build the markup',
+    ]);
+
+    component.toggleSubtasks(TASKS[0]);
+    expect(component.isExpanded(TASKS[0])).toBeFalse();
+    expect(component.subTasks()).toEqual([]);
+  });
+
+  it('renders the expanded checklist and its add box in the table', () => {
+    component.toggleSubtasks(TASKS[0]);
+    fixture.detectChanges();
+
+    const panel: HTMLElement = fixture.nativeElement.querySelector('.subtask-panel');
+    expect(panel).withContext('the expanded row renders').toBeTruthy();
+    expect(panel.textContent).toContain('Sketch the layout');
+    expect(panel.querySelector('.subtask-add input')).toBeTruthy();
+  });
+
+  it('hides the checklist write controls from a user without ManageTasks', () => {
+    // The facade drops its state when the session changes, and that runs in an effect — so let it
+    // flush against the old fixture first, then build the page fresh for this user. Creating the
+    // component before the flush would have its data wiped a moment after it loaded.
+    signIn(99); // not the owner, and no role grants the permission
+    fixture.detectChanges();
+
+    fixture = TestBed.createComponent(ProjectDetailPage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.toggleSubtasks(TASKS[0]);
+    fixture.detectChanges();
+
+    const panel: HTMLElement = fixture.nativeElement.querySelector('.subtask-panel');
+    expect(panel.textContent)
+      .withContext('the checklist itself stays readable')
+      .toContain('Sketch the layout');
+    expect(panel.querySelector('.subtask-add')).toBeNull();
+    expect(panel.querySelector('.mini-btn.danger')).toBeNull();
+    expect(panel.querySelector('button.check')).toBeNull();
+  });
+
+  it('adds a subtask to the expanded task and clears the box', () => {
+    component.toggleSubtasks(TASKS[0]);
+    component.subTaskForm.controls.title.setValue('Review with design');
+    component.addSubtask(TASKS[0]);
+
+    expect(createSubTask).toHaveBeenCalledWith(1, 'Review with design');
+    expect(component.subTaskForm.controls.title.value).toBe('');
+  });
+
+  it('refuses to add an empty subtask', () => {
+    component.toggleSubtasks(TASKS[0]);
+    component.subTaskForm.controls.title.setValue('');
+    component.addSubtask(TASKS[0]);
+
+    expect(createSubTask).not.toHaveBeenCalled();
+    expect(component.subTaskFieldError()).toBeTruthy();
+  });
+
+  it('completes an open subtask from the row', () => {
+    component.toggleSubtasks(TASKS[0]);
+    component.toggleSubtaskDone(TASKS[0], component.subTasks()[1]);
+
+    expect(completeSubTask).toHaveBeenCalledWith(12);
   });
 
   it('reports validation messages from the decorated task and project models', () => {

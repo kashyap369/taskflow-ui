@@ -5,6 +5,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   ArrowLeft,
   CalendarDays,
+  Check,
+  ChevronDown,
+  ChevronRight,
   CircleCheckBig,
   LUCIDE_ICONS,
   LucideAngularModule,
@@ -25,9 +28,10 @@ import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
 import { controlValidators, messageFor } from '@shared/validations';
-import { ProjectFormModel, TaskFormModel } from '../organization.form-models';
+import { ProjectFormModel, SubTaskFormModel, TaskFormModel } from '../organization.form-models';
 import {
   Project,
+  SubTask,
   TaskListItem,
   TaskPriority,
   TaskStatus,
@@ -67,6 +71,9 @@ import { OrganizationFacade } from '../organization.facade';
         Pencil,
         Trash2,
         Search,
+        ChevronRight,
+        ChevronDown,
+        Check,
       }),
     },
   ],
@@ -101,6 +108,30 @@ export class ProjectDetailPage {
   readonly showProjectDrawer = signal(false);
 
   readonly hasTasks = computed(() => this.tasks().length > 0);
+
+  // ── Inline subtasks ──
+  //
+  // The row used to show only a count, which meant breaking a task down required leaving the
+  // project for the tasks page. The list now expands in place; the facade holds one task's
+  // subtasks at a time, so `expandedTaskId` and `facade.subTasksTaskId` stay in step.
+
+  readonly subTasks = this.facade.subTasks;
+  readonly expandedTaskId = this.facade.subTasksTaskId;
+
+  /**
+   * Whether to offer the write controls (add, tick off, delete) on an expanded checklist.
+   *
+   * Reading a checklist is open to anyone who can open the project; changing one is gated on the
+   * same `ManageTasks` permission the calendar uses for rescheduling. This is an affordance, not a
+   * boundary — the API re-checks every write and stays authoritative.
+   */
+  readonly canManageSubtasks = this.facade.canManageTasks;
+
+  private readonly subTaskRules = controlValidators(SubTaskFormModel);
+
+  readonly subTaskForm = this.fb.nonNullable.group({
+    title: ['', this.subTaskRules['title']],
+  });
 
   /** Placeholder rows rendered while the project loads. */
   readonly loadingRows = [0, 1, 2, 3, 4];
@@ -315,6 +346,54 @@ export class ProjectDetailPage {
         this.router.navigate(['/organization/projects']),
       );
     }
+  }
+
+  // ── Subtasks ──
+
+  /** Expand a task's checklist, or collapse it when it is already open. */
+  toggleSubtasks(task: TaskListItem): void {
+    if (this.expandedTaskId() === task.id) {
+      this.facade.clearSubTasks();
+      return;
+    }
+    this.subTaskForm.reset({ title: '' });
+    this.facade.loadSubTasks(task.id);
+  }
+
+  isExpanded(task: TaskListItem): boolean {
+    return this.expandedTaskId() === task.id;
+  }
+
+  addSubtask(task: TaskListItem): void {
+    if (this.subTaskForm.invalid) {
+      this.subTaskForm.markAllAsTouched();
+      return;
+    }
+    this.facade.addSubTask(task.id, this.subTaskForm.getRawValue().title);
+    this.subTaskForm.reset({ title: '' });
+  }
+
+  subTaskFieldError(): string | null {
+    return messageFor(this.subTaskForm, 'title');
+  }
+
+  toggleSubtaskDone(task: TaskListItem, sub: SubTask): void {
+    if (this.isDone(sub)) {
+      this.facade.reopenSubTask(task.id, sub.id);
+    } else {
+      this.facade.completeSubTask(task.id, sub.id);
+    }
+  }
+
+  async removeSubtask(task: TaskListItem, sub: SubTask): Promise<void> {
+    const ok = await this.dialog.confirmDelete('Delete subtask?', `"${sub.title}" will be deleted.`);
+    if (ok) {
+      this.facade.deleteSubTask(task.id, sub.id);
+    }
+  }
+
+  isDone(sub: SubTask): boolean {
+    return sub.status === TaskStatus.Completed;
   }
 
   start(task: TaskListItem): void {

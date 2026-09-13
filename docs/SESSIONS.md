@@ -1,5 +1,35 @@
 # TaskFlow UI — Session Log
 
+## 2026-09-13 (Subtasks are visible and editable on the project page)
+
+- The project detail row showed `0/7` and nothing else, so breaking a task down meant leaving the
+  project for the tasks page. The count is now the expander: it opens the checklist in place, under
+  the row, with tick-off, delete and an add box.
+- No new state was needed. The facade already holds one task's subtasks at a time
+  (`subTasks` / `subTasksTaskId`), which is exactly "one row expanded at a time" — so
+  `expandedTaskId` **is** `facade.subTasksTaskId` rather than a second signal that could disagree
+  with it.
+- **Write controls are gated on `ManageTasks`**, reusing the existing `facade.canManageTasks`
+  (owner bypass included). Reading the checklist is open to anyone who can open the project.
+- Correction worth recording: this was nearly built on a new `GET .../my-permissions` endpoint,
+  on the belief that the client could not know its own permissions. It already can —
+  `loadOrgData` fetches the current user's role detail and `canManageTasks` has existed since the
+  calendar work. The endpoint was written, built, and then reverted. **Before adding permission
+  plumbing, check `organization.facade.ts` lines ~149-176.**
+- The gate is an affordance, not a boundary. The API gates subtasks on *membership* only
+  (`EnsureTaskAsync`: owner or active member) — there is no `ManageSubtasks` permission — so a
+  member without `ManageTasks` is refused by the UI but would be allowed by the API if they called
+  it directly. That is a deliberate, owner-approved choice; closing it means a permission check in
+  the four subtask handlers.
+- Gotcha for the spec: signing a different user in resets the facade through an **effect**, so it
+  flushes on the next `detectChanges()`. Creating the component first and signing in after wipes
+  the page's data a moment after it loads. Sign in, flush against the old fixture, then build.
+- Fixed in passing: `calendar-page.html` had `<h2>Workload data-tour="org.calendar.workload" you
+  can defend</h2>` — the attribute was inserted into the heading *text*. It rendered the raw
+  attribute to users and failed a calendar spec. This is precisely the corruption the 2026-09-12
+  entry below warned about; it was committed anyway. Also removed an unused `signal` import in
+  `guidance.service.ts` that was failing `ng lint` on main.
+
 ## 2026-09-13 (Project plans can be imported as Markdown)
 
 - **Why a second format at all:** the CSV template is precise but expensive to produce. Plans are

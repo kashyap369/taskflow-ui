@@ -137,7 +137,7 @@
             <span>Task</span><span>Status</span><span>Priority</span><span>Subtasks</span><span>Actions</span>
           </div>
           @for (task of pager.items(); track task.id) {
-            <div class="task-row">
+            <div class="task-row" [class.expanded]="isExpanded(task)">
               <div class="col-title">
                 <div class="task-title">{{ task.title }}</div>
                 <div class="task-meta">
@@ -157,7 +157,19 @@
               <span>
                 <span class="badge" [attr.data-tone]="taskPriorityMeta(task.priority).tone">{{ taskPriorityMeta(task.priority).label }}</span>
               </span>
-              <span class="col-sub">{{ task.completedSubTaskCount }}/{{ task.subTaskCount }}</span>
+              <span class="col-sub">
+                <button
+                  type="button"
+                  class="subtask-toggle"
+                  [class.open]="isExpanded(task)"
+                  (click)="toggleSubtasks(task)"
+                  [attr.aria-expanded]="isExpanded(task)"
+                  [attr.aria-label]="(isExpanded(task) ? 'Hide' : 'Show') + ' subtasks for ' + task.title"
+                >
+                  <lucide-angular [name]="isExpanded(task) ? 'ChevronDown' : 'ChevronRight'" size="14"></lucide-angular>
+                  {{ task.completedSubTaskCount }}/{{ task.subTaskCount }}
+                </button>
+              </span>
               <span class="col-actions">
                 @if (task.status === TaskStatus.Todo) {
                   <button type="button" class="action-btn start" (click)="start(task)"><lucide-angular name="Play" size="14"></lucide-angular> Start</button>
@@ -184,6 +196,75 @@
                 </button>
               </span>
             </div>
+
+            @if (isExpanded(task)) {
+              <div class="subtask-panel">
+                @if (subTasks().length) {
+                  <ul class="subtask-list">
+                    @for (sub of subTasks(); track sub.id) {
+                      <li class="subtask-item" [class.done]="isDone(sub)">
+                        @if (canManageSubtasks()) {
+                          <button
+                            type="button"
+                            class="check"
+                            (click)="toggleSubtaskDone(task, sub)"
+                            [attr.aria-label]="(isDone(sub) ? 'Reopen ' : 'Complete ') + sub.title"
+                          >
+                            @if (isDone(sub)) {
+                              <lucide-angular name="Check" size="12"></lucide-angular>
+                            }
+                          </button>
+                        } @else {
+                          <span class="check check--static" aria-hidden="true">
+                            @if (isDone(sub)) {
+                              <lucide-angular name="Check" size="12"></lucide-angular>
+                            }
+                          </span>
+                        }
+                        <span class="subtask-title">{{ sub.title }}</span>
+                        @if (canManageSubtasks()) {
+                          <button
+                            type="button"
+                            class="mini-btn danger"
+                            (click)="removeSubtask(task, sub)"
+                            [attr.aria-label]="'Delete ' + sub.title"
+                            title="Delete subtask"
+                          >
+                            <lucide-angular name="Trash2" size="13"></lucide-angular>
+                          </button>
+                        }
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="subtask-empty">
+                    @if (canManageSubtasks()) {
+                      No subtasks yet. Break this task into smaller steps below.
+                    } @else {
+                      No subtasks on this task.
+                    }
+                  </p>
+                }
+
+                @if (canManageSubtasks()) {
+                  <form class="subtask-add" [formGroup]="subTaskForm" (ngSubmit)="addSubtask(task)">
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="Add a subtask…"
+                      aria-label="New subtask title"
+                      formControlName="title"
+                    />
+                    <button type="submit" class="btn-primary-cta" [disabled]="saving()">
+                      <lucide-angular name="Plus" size="15"></lucide-angular> Add
+                    </button>
+                  </form>
+                  @if (subTaskFieldError(); as msg) {
+                    <small class="field-msg">{{ msg }}</small>
+                  }
+                }
+              </div>
+            }
           }
         </div>
 
