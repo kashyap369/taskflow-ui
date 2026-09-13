@@ -68,6 +68,7 @@ export interface UserProfileResponse {
   isEmailVerified: boolean;
   lastLoginAt: string | null;
   createdAt: string;
+  hasCompletedOnboarding: boolean;
 }
 
 // ── Mappers (anti-corruption: API DTO → session model) ────
@@ -111,5 +112,8 @@ export function toUser(login: LoginResponse, profile: UserProfileResponse): User
     email: login.email || profile.email,
     roles: mapSystemRoles(login.roles),
     accountType: mapAccountType(profile.accountType),
+    // An API that predates the flag omits it; read that as "seen", so an
+    // established user is never walked through the welcome again.
+    hasCompletedOnboarding: profile.hasCompletedOnboarding !== false,
   };
 }

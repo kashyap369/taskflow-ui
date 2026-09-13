@@ -6,6 +6,7 @@ import { filter, map, startWith } from 'rxjs';
 import { AuthStore } from '@core/auth/auth.store';
 
 import { GuidanceProgressService } from './guidance-progress.service';
+import { OnboardingRepository } from './onboarding.repository';
 import { HELP_TOPICS, WELCOME_TOURS } from './guidance.registry';
 import { HelpTopic } from './guidance.models';
 import { TourService } from './tour.service';
@@ -28,6 +29,7 @@ export class GuidanceService {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthStore);
   private readonly tours = inject(TourService);
+  private readonly onboarding = inject(OnboardingRepository);
 
   readonly progress = inject(GuidanceProgressService);
 
@@ -84,9 +86,33 @@ export class GuidanceService {
       .filter((related): related is HelpTopic => related !== null);
   });
 
-  /** The welcome tour for this account type, or null once it has run. */
+  /**
+   * The welcome tour for a brand-new account, or null — which is the
+   * answer for almost every sign-in.
+   *
+   * Two gates, and both matter:
+   *
+   * 1. **The account has never completed onboarding**, per `/user/me`.
+   *    This is the one that decides *who* sees the welcome: only an
+   *    account registered after the flag existed reads as new, because
+   *    the migration that added the column stamped every row that
+   *    already existed. It is server-side so that clearing site data,
+   *    a private window or a second machine cannot replay it.
+   *
+   * 2. **This browser has not just played it**, per the local progress
+   *    record. Purely a fast path — it stops a replay on the next route
+   *    change in the seconds before the server write lands.
+   *
+   * An older persisted session has no flag at all; `toUser` reads that
+   * as "seen", because showing the welcome to an established user is
+   * the failure worth avoiding.
+   */
   readonly pendingWelcome = computed<HelpTopic | null>(() => {
-    if (this.progress.hasSeenWelcome() || !this.auth.isAuthenticated()) {
+    if (!this.auth.isAuthenticated() || this.progress.hasSeenWelcome()) {
+      return null;
+    }
+
+    if (this.auth.user()?.hasCompletedOnboarding !== false) {
       return null;
     }
 
@@ -132,12 +158,18 @@ export class GuidanceService {
       return;
     }
 
-    this.progress.completeWelcome();
+    this.recordWelcomeShown();
     this.tours.start(welcome);
   }
 
   dismissWelcome(): void {
+    this.recordWelcomeShown();
+  }
+
+  /** Local record first (immediate), then the server one (durable). */
+  private recordWelcomeShown(): void {
     this.progress.completeWelcome();
+    this.onboarding.complete();
   }
 
   private matchTopic(url: string): HelpTopic | null {

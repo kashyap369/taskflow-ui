@@ -39,6 +39,22 @@ export class AuthService {
     this.tokens.setUser(user);
   }
 
+  /**
+   * Flips the current principal's onboarding flag, in memory and in the
+   * persisted session, so the welcome does not replay on the next route
+   * change while the server call is still in flight — or after a reload
+   * that rehydrates from storage rather than from `/user/me`.
+   */
+  markOnboardingComplete(): void {
+    const user = this.store.user();
+
+    if (!user || user.hasCompletedOnboarding) {
+      return;
+    }
+
+    this.setUser({ ...user, hasCompletedOnboarding: true });
+  }
+
   endSession(): void {
     this.tokens.clearSession();
     this.store.clear();

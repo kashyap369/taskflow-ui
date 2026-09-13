@@ -1,6 +1,11 @@
 import { ElementRef } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+
+import { AppSettings } from '@core/config/app.settings';
+import { APP_SETTINGS } from '@core/config/app.tokens';
 
 import { HelpLauncher } from './help-launcher';
 
@@ -19,6 +24,11 @@ describe('HelpLauncher position', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
+        // The guidance chain reaches the API client: the launcher owns the
+        // first-run welcome, and recording that is a server call now.
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: APP_SETTINGS, useValue: AppSettings },
         // The launcher injects its own host to close the menu on an
         // outside click; nothing under test here reads it.
         { provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },

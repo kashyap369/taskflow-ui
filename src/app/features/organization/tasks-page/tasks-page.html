@@ -129,6 +129,8 @@
                   <select
                     class="assignee-select"
                     [class.unassigned]="!task.assignedToUserId"
+                    [appLocked]="!canAssignTask()"
+                    [lockedReason]="assignLockReason"
                     (change)="onAssignChange(task, $event)"
                     aria-label="Assignee"
                   >
@@ -157,6 +159,8 @@
                   <select
                     class="assignee-select"
                     [class.unassigned]="!task.teamId"
+                    [appLocked]="!canAssignTask()"
+                    [lockedReason]="assignLockReason"
                     (change)="onTeamChange(task, $event)"
                     aria-label="Owning team"
                   >

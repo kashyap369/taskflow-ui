@@ -1164,3 +1164,32 @@
   `effect()` instead (the settings page already did this).
 - Still a usability gate only. Every one of these checks is repeated by the API, which stays
   authoritative; the owner-only settings gate remains the one the API does *not* enforce.
+
+## 2026-09-13 (Welcome gating, the tour lock-out, locked dropdowns, list controls)
+
+- **The freeze users reported was the tour's own overlay.** driver.js marks `<body>` with
+  `driver-active`, and `driver.css` turns that into `.driver-active * { pointer-events: none }`.
+  Nothing stopped a tour on route change, and the welcome's third step highlights the sidebar —
+  the one thing a highlight makes clickable — so the click it invites navigated away, the popover
+  was unmounted with the old page, and the class stayed behind. `TourService` now tears down on
+  `NavigationStart` and sweeps driver's body classes and portalled nodes unconditionally.
+  See `tour.service.spec.ts`; those tests are about the lock-out, not the tour.
+- **The welcome now comes from the account, not the browser.** `pendingWelcome` requires
+  `user.hasCompletedOnboarding === false` from `/user/me`; the local record is only the fast path
+  that stops a replay before the server write lands. A session persisted by an older build has no
+  such field, and `toUser` reads that absence as *seen* — showing the welcome to an established
+  user is the failure worth avoiding. **This needs the API deployed first.**
+- `GuidanceProgressService` re-reads its per-user bucket from an effect on the principal now. It
+  used to read once at construction, which was wrong for anything that changes the user inside the
+  life of the singleton — sign-in, sign-out, switching accounts.
+- **`PermissionLockDirective` now covers form controls.** A select opens on `mousedown`, not
+  `click`, and only `<option>` may live inside it, so the badge goes beside it with the parent as
+  the positioning context. Applied to the inline assignee/team dropdowns on the tasks and project
+  pages, which were live for members without `AssignTask` — the pick looked like it worked and the
+  refusal arrived as a toast.
+- **Restyling a select: use `background-color`, never the `background` shorthand.** `_input.scss`
+  draws the caret as a `background-image` after `appearance: none`; `_toolbar.scss` is imported
+  later and its shorthand was wiping that image, so every `.list-filter` in the app had no arrow.
+- The meetings toolbar had rolled its own `.toolbar`/`.search` with unstyled native controls; it
+  uses `.list-toolbar` / `.list-search` / `.list-filter` like every other list page now.
+- 319/319 specs, build, lint, design lint clean.

@@ -131,6 +131,11 @@ export class ProjectDetailPage {
   readonly subtasksLockReason =
     'Requires the Manage tasks permission — ask an organization owner to grant it.';
 
+  /** Assigning is a separate permission from managing, so the inline dropdown locks separately. */
+  readonly canAssignTask = this.facade.canAssignTask;
+  readonly assignLockReason =
+    'Requires the Assign task permission — ask an organization owner to grant it.';
+
   private readonly subTaskRules = controlValidators(SubTaskFormModel);
 
   readonly subTaskForm = this.fb.nonNullable.group({

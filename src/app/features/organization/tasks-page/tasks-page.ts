@@ -119,6 +119,15 @@ export class TasksPage {
   readonly tasksLockReason =
     'Requires the Manage tasks permission — ask an organization owner to grant it.';
 
+  /**
+   * Assigning is its own permission, so the inline assignee and team dropdowns lock separately
+   * from the row's other actions. Without this they stayed live for a member who could not
+   * assign: the pick appeared to work and the refusal arrived afterwards as a toast.
+   */
+  readonly canAssignTask = this.facade.canAssignTask;
+  readonly assignLockReason =
+    'Requires the Assign task permission — ask an organization owner to grant it.';
+
   // Subtasks
   readonly subTasks = this.facade.subTasks;
   readonly activeTask = signal<TaskListItem | null>(null);

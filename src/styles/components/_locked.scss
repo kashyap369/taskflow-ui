@@ -55,6 +55,23 @@
   }
 }
 
+// A locked form control keeps its own shape — no lift to neutralise, and no room inside it for a
+// badge, so the wrapper holds one instead (see PermissionLockDirective).
+select.is-permission-locked,
+input.is-permission-locked,
+textarea.is-permission-locked {
+  // Not `[disabled]`: the control stays focusable so its tooltip explains the lock.
+  pointer-events: auto;
+  // Drops the caret on the selects we draw one for (.form-select, .list-filter) — it would
+  // promise a list that will not open. A control left with native chrome keeps the OS arrow,
+  // which is the platform's own business.
+  background-image: none;
+}
+
+.has-permission-lock {
+  position: relative;
+}
+
 // Inside a tight row (icon buttons in a table cell, menu items) the badge would overflow the
 // clipping parent, so tuck it into the corner instead of outside it.
 td .is-permission-locked,
@@ -65,4 +82,13 @@ td .is-permission-locked,
     width: 15px;
     height: 15px;
   }
+}
+
+// The badge belonging to a form control is a sibling, not a child, so it is positioned from the
+// wrapper. Small, and tucked over the caret the lock has just made meaningless.
+.has-permission-lock > .permission-lock-badge {
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
 }

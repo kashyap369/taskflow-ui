@@ -137,7 +137,15 @@
   }
 }
 
-/** Native select needs its own affordance since we removed the default chrome look. */
+/**
+ * Native select needs its own affordance since we removed the default chrome look.
+ *
+ * The caret is drawn as two background gradients rather than an SVG so it
+ * follows `currentcolor` into either theme without a second asset. Anything
+ * that restyles a select afterwards must set `background-color`, not the
+ * `background` shorthand — the shorthand wipes this image out and leaves a
+ * control with no arrow at all.
+ */
 .form-select,
 .list-filter {
   appearance: none;
@@ -145,13 +153,19 @@
   background-image: linear-gradient(45deg, transparent 50%, currentcolor 50%),
     linear-gradient(135deg, currentcolor 50%, transparent 50%);
   background-position:
-    calc(100% - 18px) calc(50% + 2px),
-    calc(100% - 13px) calc(50% + 2px);
+    calc(100% - 19px) calc(50% + 1px),
+    calc(100% - 14px) calc(50% + 1px);
   background-size:
     5px 5px,
     5px 5px;
   background-repeat: no-repeat;
   cursor: pointer;
+}
+
+/** Keep the OS popup list readable on a dark theme. */
+.form-select option {
+  background-color: var(--surface);
+  color: var(--text);
 }
 
 textarea.form-control {

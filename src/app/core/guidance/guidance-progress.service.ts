@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { AuthStore } from '@core/auth/auth.store';
 
@@ -34,16 +34,26 @@ export class GuidanceProgressService {
   readonly hasSeenWelcome = computed(() => this.state().welcomeCompletedAt !== null);
 
   constructor() {
-    this.reload();
+    // Storage is namespaced per user id, so the bucket this service
+    // reads changes whenever the principal does. Re-read on every such
+    // change rather than only at construction: the service is created
+    // once, while sign-in, sign-out and switching accounts all happen
+    // inside the life of that one instance, and reading the wrong
+    // bucket is what makes a tour replay for someone who has seen it.
+    effect(() => {
+      const userId = this.auth.user()?.id ?? null;
+
+      untracked(() => this.readFor(userId));
+    });
   }
 
-  /**
-   * Re-reads storage for the current principal. Call after login and
-   * after logout — the service cannot watch the store itself without
-   * creating a circular dependency with the auth bootstrap.
-   */
+  /** Re-reads storage for the current principal. */
   reload(): void {
     this.state.set(this.read());
+  }
+
+  private readFor(userId: number | null): void {
+    this.state.set(this.read(userId));
   }
 
   isCompleted(tourKey: string): boolean {
@@ -126,14 +136,14 @@ export class GuidanceProgressService {
     this.write({ ...this.state(), promptsEnabled: enabled });
   }
 
-  private storageKey(): string {
-    const userId = this.auth.user()?.id;
-    return `${GuidanceProgressService.STORAGE_PREFIX}.${userId ?? 'anon'}`;
+  private storageKey(userId?: number | null): string {
+    const id = userId === undefined ? this.auth.user()?.id : userId;
+    return `${GuidanceProgressService.STORAGE_PREFIX}.${id ?? 'anon'}`;
   }
 
-  private read(): GuidanceProgress {
+  private read(userId?: number | null): GuidanceProgress {
     try {
-      const raw = localStorage.getItem(this.storageKey());
+      const raw = localStorage.getItem(this.storageKey(userId));
 
       if (!raw) {
         return EMPTY_PROGRESS;

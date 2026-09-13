@@ -143,6 +143,7 @@
                 <div class="task-meta">
                   <lucide-angular name="User" size="12" class="assignee-ico"></lucide-angular>
                   <select class="assignee-select" [class.unassigned]="!task.assignedToUserId"
+                    [appLocked]="!canAssignTask()" [lockedReason]="assignLockReason"
                     (change)="onAssignChange(task, $event)" aria-label="Assignee">
                     <option value="" [selected]="!task.assignedToUserId">Unassigned</option>
                     @for (m of members(); track m.id) {

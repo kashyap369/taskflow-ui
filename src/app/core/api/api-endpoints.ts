@@ -58,9 +58,12 @@ export const API = {
     ResetPassword: '/auth/password/reset',
   },
 
-  // `UserController` is read-only — there is no PUT/DELETE on /user.
+  // `UserController` is read-only apart from the onboarding marker below —
+  // there is no PUT/DELETE on /user.
   User: {
     Me: '/user/me',
+    /** Records that this account has been through the first-run welcome. */
+    CompleteOnboarding: '/user/me/onboarding/complete',
     GetAll: '/user',
     GetById: (id: number) => `/user/${id}`,
   },

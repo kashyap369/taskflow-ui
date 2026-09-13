@@ -67,19 +67,37 @@
   width: auto;
   min-width: 150px;
   flex: 0 1 190px;
-  padding: var(--space-2) var(--space-3);
+  // `background-color`, never the `background` shorthand: components/_input.scss
+  // strips the native chrome off this control with `appearance: none` and draws
+  // the caret back as a `background-image`. The shorthand resets that image to
+  // `none`, and since this file is imported after _input.scss the result was a
+  // select with no arrow at all, on every list page in the app.
+  background-color: var(--surface);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3) var(--space-8);
   border: 1px solid var(--border-input);
   border-radius: var(--radius-lg);
-  background: var(--surface);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-body-sm);
   cursor: pointer;
 
-  &:focus {
+  &:hover:not(:disabled) {
+    border-color: var(--border-strong);
+  }
+
+  &:focus,
+  &:focus-visible {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  // The popup list itself is drawn by the OS, and on a dark theme it
+  // inherits the page's white text unless the options are told otherwise.
+  option {
+    background-color: var(--surface);
+    color: var(--text);
   }
 }
 
