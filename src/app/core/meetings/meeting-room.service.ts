@@ -212,14 +212,42 @@ export class MeetingRoomService {
         if (publication.track) this.attachTrack(publication.track, participant);
   }
 
+  /**
+   * Renders one track into its participant tile.
+   *
+   * The local microphone is deliberately never attached. Playing your own capture back out of the
+   * speakers is an echo by construction — you hear yourself with nobody else in the room — and
+   * muting the element after the fact does not hold: livekit-client re-runs `attachToElement` over
+   * every element of a local track each time that track restarts, and that helper resets
+   * `element.muted` to `stream.getAudioTracks().length === 0`, i.e. back to false for audio.
+   * Selecting a microphone (`switchActiveDevice('audioinput', ...)`, which every join performs) is
+   * exactly such a restart, so the mute was undone moments after it was set. livekit guards its own
+   * processor element against this same reset; the only durable fix here is to never create the
+   * element. Local video still attaches — its stream carries no audio track, so it stays silent.
+   *
+   * Attaching is idempotent because `track.attach()` mints a *new* element on every call and leaves
+   * the previous one playing the same stream — so a track attached twice is simply heard twice, at
+   * two slightly different latencies, which is what an echo is. Several paths deliver the same track
+   * more than once: `attachExistingTracks()` re-walks publications that `TrackSubscribed` has
+   * already delivered, a reconnect re-emits every subscription, and a republished camera fires
+   * `LocalTrackPublished` again. Because the first of those runs once per participant already in the
+   * room, the number of overlapping copies tracked the number of people in the call. Reuse the
+   * element we already own instead of minting another.
+   */
   private attachTrack(track: RemoteTrack | Track, participant: Participant): void {
     if (!this.mediaContainer) return;
-    const tile = this.ensureParticipantTile(participant); const element = track.attach();
+    if (participant.isLocal && track.kind === Track.Kind.Audio) return;
+    const tile = this.ensureParticipantTile(participant);
+    const surface = tile.querySelector('.meeting-media-surface');
+    if (!surface) return;
+    const existing = track.attachedElements.find((candidate) => this.mediaContainer!.contains(candidate));
+    if (existing) { if (existing.parentElement !== surface) surface.append(existing); return; }
+    const element = track.attach();
     element.autoplay = true; element.setAttribute('playsinline', '');
     element.dataset['meetingTrack'] = track.sid ?? track.kind;
-    if (participant === this.room?.localParticipant) element.muted = true;
+    if (participant.isLocal) element.muted = true;
     if (track.kind === Track.Kind.Audio) element.classList.add('meeting-audio-track');
-    tile.querySelector('.meeting-media-surface')?.append(element);
+    surface.append(element);
   }
   private detachTrack(track: RemoteTrack | Track): void { for (const element of track.detach()) element.remove(); }
 
