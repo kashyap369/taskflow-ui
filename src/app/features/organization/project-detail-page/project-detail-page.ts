@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -23,6 +23,7 @@ import {
 
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
@@ -51,6 +52,7 @@ import { OrganizationFacade } from '../organization.facade';
     LucideAngularModule,
     LottiePlayer,
     DialogDirective,
+    PermissionLockDirective,
     Skeleton,
     Pagination,
   ],
@@ -126,6 +128,8 @@ export class ProjectDetailPage {
    * boundary — the API re-checks every write and stays authoritative.
    */
   readonly canManageSubtasks = this.facade.canManageTasks;
+  readonly subtasksLockReason =
+    'Requires the Manage tasks permission — ask an organization owner to grant it.';
 
   private readonly subTaskRules = controlValidators(SubTaskFormModel);
 
@@ -204,6 +208,17 @@ export class ProjectDetailPage {
     this.facade.init();
     this.facade.loadProjectDetail(this.projectId);
     this.destroyRef.onDestroy(() => this.facade.clearProjectDetail());
+
+    // The add-a-subtask box stays visible without ManageTasks (its submit is locked), so make the
+    // field itself inert rather than letting someone type into a box that can't be submitted.
+    effect(() => {
+      const allowed = this.canManageSubtasks();
+      if (allowed && this.subTaskForm.disabled) {
+        this.subTaskForm.enable();
+      } else if (!allowed && this.subTaskForm.enabled) {
+        this.subTaskForm.disable();
+      }
+    });
   }
 
   // ── Filters ──

@@ -6,7 +6,7 @@
         <p>Define what people can do in {{ currentOrg()?.name ?? 'your organization' }}.</p>
       </div>
       @if (!needsOrganization()) {
-        <button data-tour="org.roles.create" type="button" class="btn-primary-cta" (click)="openCreate()">
+        <button data-tour="org.roles.create" type="button" class="btn-primary-cta" [appLocked]="!canManageRoles()" [lockedReason]="rolesLockReason" (click)="openCreate()">
           <lucide-angular name="Plus" size="18"></lucide-angular>
           New role
         </button>
@@ -41,7 +41,7 @@
         <app-lottie-player src="/lottie/empty.json" [width]="150" [height]="150" ariaLabel="No roles yet" />
         <h3>No roles yet</h3>
         <p>Create a role (e.g. Manager, Developer) to invite teammates into.</p>
-        <button type="button" class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" [appLocked]="!canManageRoles()" [lockedReason]="rolesLockReason" (click)="openCreate()">
           <lucide-angular name="Plus" size="16"></lucide-angular> New role
         </button>
       </div>
@@ -76,6 +76,7 @@
                 <button
                   type="button"
                   class="icon-action"
+                  [appLocked]="!canManageRoles()" [lockedReason]="rolesLockReason"
                   (click)="openEdit(role)"
                   [attr.aria-label]="'Edit ' + role.name"
                   title="Edit role"
@@ -85,6 +86,7 @@
                 <button
                   type="button"
                   class="icon-action danger"
+                  [appLocked]="!canManageRoles()" [lockedReason]="rolesLockReason"
                   (click)="remove(role)"
                   [attr.aria-label]="'Delete ' + role.name"
                   title="Delete role"
@@ -97,7 +99,7 @@
             @if (role.description) {
               <p>{{ role.description }}</p>
             }
-            <button type="button" class="manage-btn" (click)="manage(role.id)">
+            <button type="button" class="manage-btn" [appLocked]="!canManageRoles()" [lockedReason]="rolesLockReason" (click)="manage(role.id)">
               <lucide-angular name="KeyRound" size="14"></lucide-angular>
               Manage permissions
             </button>

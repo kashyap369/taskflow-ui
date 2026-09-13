@@ -34,6 +34,7 @@ import {
   Plus,
 } from 'lucide-angular';
 
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { OrganizationFacade } from '../organization.facade';
 import { MeetingsFacade } from '../meetings.facade';
 import { CalendarEntry, CalendarEntryPayload, CapacityRow, TaskListItem, TaskStatus } from '../organization.models';
@@ -56,7 +57,7 @@ interface CalendarDateRange { start: Date; end: Date; }
 @Component({
   selector: 'app-calendar-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, FullCalendarModule, LucideAngularModule, CalendarDetailDrawer, CalendarEntryDrawer],
+  imports: [CommonModule, RouterLink, FullCalendarModule, LucideAngularModule, CalendarDetailDrawer, CalendarEntryDrawer, PermissionLockDirective],
   templateUrl: './calendar-page.html',
   styleUrls: ['./calendar-page.scss', './calendar-capacity.scss'],
   providers: [
@@ -121,6 +122,8 @@ export class CalendarPage implements OnDestroy {
   readonly saving = this.facade.saving;
   readonly canManageMembers = this.facade.canManageMembers;
   readonly canManageCalendar = this.facade.canManageCalendar;
+  readonly calendarLockReason =
+    'Requires the Manage calendar permission — ask an organization owner to grant it.';
   readonly capacity = this.facade.capacity;
   readonly capacityLoading = this.facade.capacityLoading;
   readonly capacityWeekStart = signal(this.currentMonday());

@@ -22,6 +22,7 @@ import {
 
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
@@ -47,6 +48,7 @@ import { OrganizationFacade } from '../organization.facade';
     LucideAngularModule,
     Skeleton,
     DialogDirective,
+    PermissionLockDirective,
     Pagination,
   ],
   templateUrl: './projects-page.html',
@@ -82,6 +84,13 @@ export class ProjectsPage {
   readonly projects = this.facade.projects;
   readonly currentOrg = this.facade.currentOrg;
   readonly needsOrganization = this.facade.needsOrganization;
+
+  readonly canCreateProject = this.facade.canCreateProject;
+  readonly canManageProjects = this.facade.canManageProjects;
+  readonly createProjectLockReason =
+    'Requires the Create project permission — ask an organization owner to grant it.';
+  readonly projectsLockReason =
+    'Requires the Manage projects permission — ask an organization owner to grant it.';
 
   readonly projectStatusMeta = projectStatusMeta;
 

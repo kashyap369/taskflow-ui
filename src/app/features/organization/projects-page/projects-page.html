@@ -16,11 +16,11 @@
             <lucide-angular name="Download" size="17"></lucide-angular>
             Markdown template
           </button>
-          <button data-tour="org.projects.import" type="button" class="btn-ghost plan-action" (click)="openPlanImport()">
+          <button data-tour="org.projects.import" type="button" class="btn-ghost plan-action" [appLocked]="!canCreateProject()" [lockedReason]="createProjectLockReason" (click)="openPlanImport()">
             <lucide-angular name="Upload" size="17"></lucide-angular>
             Import project plan
           </button>
-          <button data-tour="org.projects.create" type="button" class="btn-primary-cta" (click)="openCreate()">
+          <button data-tour="org.projects.create" type="button" class="btn-primary-cta" [appLocked]="!canCreateProject()" [lockedReason]="createProjectLockReason" (click)="openCreate()">
             <lucide-angular name="Plus" size="18"></lucide-angular>
             New project
           </button>
@@ -59,7 +59,7 @@
         <span class="empty-icon"><lucide-angular name="FolderKanban" size="24"></lucide-angular></span>
         <h3>No projects yet</h3>
         <p>Create your first project to organize tasks and track progress.</p>
-        <button type="button" class="btn-primary-cta" (click)="openCreate()">
+        <button type="button" class="btn-primary-cta" [appLocked]="!canCreateProject()" [lockedReason]="createProjectLockReason" (click)="openCreate()">
           <lucide-angular name="Plus" size="16"></lucide-angular> New project
         </button>
       </div>
@@ -108,6 +108,7 @@
                 <button
                   type="button"
                   class="icon-action"
+                  [appLocked]="!canManageProjects()" [lockedReason]="projectsLockReason"
                   (click)="openEdit(project)"
                   [attr.aria-label]="'Edit ' + project.title"
                   title="Edit project"
@@ -117,6 +118,7 @@
                 <button
                   type="button"
                   class="icon-action danger"
+                  [appLocked]="!canManageProjects()" [lockedReason]="projectsLockReason"
                   (click)="remove(project)"
                   [attr.aria-label]="'Delete ' + project.title"
                   title="Delete project"

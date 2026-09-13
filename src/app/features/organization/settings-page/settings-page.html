@@ -80,25 +80,25 @@
               name and description.
             </p>
 
-            @if (isOwner()) {
-              <div class="panel-actions">
-                <button
-                  type="button"
-                  class="btn-ghost"
-                  (click)="reset()"
-                  [disabled]="form.pristine || saving()"
-                >
-                  Discard changes
-                </button>
-                <button
-                  type="submit"
-                  class="btn-primary-cta"
-                  [disabled]="saving() || form.pristine || form.invalid"
-                >
-                  {{ saving() ? 'Saving…' : 'Save changes' }}
-                </button>
-              </div>
-            }
+            <div class="panel-actions">
+              <button
+                type="button"
+                class="btn-ghost"
+                [appLocked]="!isOwner()" [lockedReason]="ownerLockReason"
+                (click)="reset()"
+                [disabled]="form.pristine || saving()"
+              >
+                Discard changes
+              </button>
+              <button
+                type="submit"
+                class="btn-primary-cta"
+                [appLocked]="!isOwner()" [lockedReason]="ownerLockReason"
+                [disabled]="saving() || form.pristine || form.invalid"
+              >
+                {{ saving() ? 'Saving…' : 'Save changes' }}
+              </button>
+            </div>
           </form>
         </section>
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-angular';
 
 import { DialogService } from '@core/services/dialog.service';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { controlValidators, messageFor } from '@shared/validations';
 import { OrganizationSettingsFormModel } from '../organization.form-models';
@@ -34,6 +35,7 @@ import { organizationStatusMeta } from '../organization.models';
     ReactiveFormsModule,
     RouterLink,
     LucideAngularModule,
+    PermissionLockDirective,
     Skeleton,
   ],
   templateUrl: './settings-page.html',
@@ -66,6 +68,7 @@ export class SettingsPage {
   readonly summary = this.facade.summary;
   readonly needsOrganization = this.facade.needsOrganization;
   readonly isOwner = this.facade.isCurrentOrgOwner;
+  readonly ownerLockReason = 'Only the organization owner can change these settings.';
 
   readonly organizationStatusMeta = organizationStatusMeta;
 

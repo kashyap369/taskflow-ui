@@ -55,8 +55,8 @@
       }
     } @else if (item().kind === 'meeting') {
       <a class="btn btn--primary" [routerLink]="['/organization/meetings', item().sourceId]">Open meeting</a>
-    } @else if (item().calendarEntry && canManageCalendar()) {
-      <button type="button" class="btn btn--primary" (click)="editCalendarEntry.emit(item().calendarEntry!)">Edit calendar entry</button>
+    } @else if (item().calendarEntry) {
+      <button type="button" class="btn btn--primary" [appLocked]="!canManageCalendar()" [lockedReason]="calendarLockReason()" (click)="editCalendarEntry.emit(item().calendarEntry!)">Edit calendar entry</button>
     }
   </div>
 </aside>

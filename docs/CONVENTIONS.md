@@ -308,6 +308,12 @@ Row/card affordances use the global `.icon-action` (and `.icon-action.danger` fo
   isn't focusable, so a handler there would fail `interactive-supports-focus`.
 - **Drawers get `appDialog`** (`shared/directives/dialog.directive.ts`) — focus-trap, Escape, `role=dialog`,
   focus restore. Never hand-roll it.
+- **Actions a member lacks permission for get `[appLocked]`** (`shared/directives/permission-lock.directive.ts`)
+  — the control stays on screen, reads as disabled and gets a lock badge plus a tooltip naming the
+  missing permission. Do **not** hide it behind `@if (canX())`: a member who can't see the action
+  can't tell whether it exists. Pass the reason via `[lockedReason]`. Read the flag from an
+  `OrganizationFacade` `canX()` computed — it is a usability gate, the API stays authoritative.
+  A `<select>` can't hold the badge; give it plain `[disabled]` + `[title]` instead.
 - **Colour**: pull from tokens and run `npm run a11y:contrast` after touching any of them; use
   `--border-input` (not `--border`) on anything the user types into. See DESIGN.md §3.
 

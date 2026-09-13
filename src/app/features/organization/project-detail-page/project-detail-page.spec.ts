@@ -193,7 +193,7 @@ describe('ProjectDetailPage', () => {
     expect(panel.querySelector('.subtask-add input')).toBeTruthy();
   });
 
-  it('hides the checklist write controls from a user without ManageTasks', () => {
+  it('locks the checklist write controls for a user without ManageTasks', () => {
     // The facade drops its state when the session changes, and that runs in an effect — so let it
     // flush against the old fixture first, then build the page fresh for this user. Creating the
     // component before the flush would have its data wiped a moment after it loaded.
@@ -211,8 +211,18 @@ describe('ProjectDetailPage', () => {
     expect(panel.textContent)
       .withContext('the checklist itself stays readable')
       .toContain('Sketch the layout');
-    expect(panel.querySelector('.subtask-add')).toBeNull();
-    expect(panel.querySelector('.mini-btn.danger')).toBeNull();
+    // The write controls stay on screen but read as locked, so the member can see the action
+    // exists and why it is unavailable — see PermissionLockDirective.
+    const addButton = panel.querySelector('.subtask-add button[type="submit"]')!;
+    expect(addButton.classList).toContain('is-permission-locked');
+    expect(addButton.querySelector('.permission-lock-badge')).toBeTruthy();
+    expect(panel.querySelector<HTMLInputElement>('.subtask-add input')!.disabled).toBeTrue();
+
+    const deleteButton = panel.querySelector('.mini-btn.danger')!;
+    expect(deleteButton.classList).toContain('is-permission-locked');
+    expect(deleteButton.getAttribute('aria-disabled')).toBe('true');
+
+    // The done/undone toggle has its own read-only rendering, so it is still absent.
     expect(panel.querySelector('button.check')).toBeNull();
   });
 

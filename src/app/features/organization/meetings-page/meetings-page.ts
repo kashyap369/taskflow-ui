@@ -9,17 +9,19 @@ import { MeetingListItem, MeetingPayload, MeetingStatus, meetingStatusMeta } fro
 import { MeetingsFacade } from '../meetings.facade';
 import { OrganizationFacade } from '../organization.facade';
 import { MeetingFormDrawer } from './meeting-form-drawer';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 
 type MeetingView = 'upcoming' | 'live' | 'past';
 @Component({ selector: 'app-meetings-page', standalone: true,
-  imports: [CommonModule, RouterLink, LucideAngularModule, Skeleton, Pagination, MeetingFormDrawer],
+  imports: [CommonModule, RouterLink, LucideAngularModule, Skeleton, Pagination, MeetingFormDrawer, PermissionLockDirective],
   templateUrl: './meetings-page.html', styleUrl: './meetings-page.scss',
   providers: [{ provide: LUCIDE_ICONS, multi: true, useValue: new LucideIconProvider({ CalendarClock, Plus, Search, Users, Video }) }],
 })
 export class MeetingsPage {
   private readonly organization = inject(OrganizationFacade); readonly meetingsFacade = inject(MeetingsFacade); private readonly router = inject(Router);
   readonly currentOrg = this.organization.currentOrg; readonly needsOrganization = this.organization.needsOrganization;
-  readonly canCreate = this.organization.canCreateMeetings; readonly meetings = this.meetingsFacade.meetings;
+  readonly canCreate = this.organization.canCreateMeetings;
+  readonly createLockReason = 'Requires the Create meetings permission — ask an organization owner to grant it.'; readonly meetings = this.meetingsFacade.meetings;
   readonly loading = this.meetingsFacade.loading; readonly saving = this.meetingsFacade.saving; readonly error = this.meetingsFacade.error;
   readonly activeView = signal<MeetingView>('upcoming'); readonly search = signal(''); readonly showCreate = signal(false);
   readonly statusFilter = signal<'' | MeetingStatus>(''); readonly statusMeta = meetingStatusMeta; readonly loadingRows = [0, 1, 2, 3];

@@ -222,17 +222,16 @@
                           </span>
                         }
                         <span class="subtask-title">{{ sub.title }}</span>
-                        @if (canManageSubtasks()) {
-                          <button
-                            type="button"
-                            class="mini-btn danger"
-                            (click)="removeSubtask(task, sub)"
-                            [attr.aria-label]="'Delete ' + sub.title"
-                            title="Delete subtask"
-                          >
-                            <lucide-angular name="Trash2" size="13"></lucide-angular>
-                          </button>
-                        }
+                        <button
+                          type="button"
+                          class="mini-btn danger"
+                          [appLocked]="!canManageSubtasks()" [lockedReason]="subtasksLockReason"
+                          (click)="removeSubtask(task, sub)"
+                          [attr.aria-label]="'Delete ' + sub.title"
+                          title="Delete subtask"
+                        >
+                          <lucide-angular name="Trash2" size="13"></lucide-angular>
+                        </button>
                       </li>
                     }
                   </ul>
@@ -246,22 +245,21 @@
                   </p>
                 }
 
-                @if (canManageSubtasks()) {
-                  <form class="subtask-add" [formGroup]="subTaskForm" (ngSubmit)="addSubtask(task)">
-                    <input
-                      type="text"
-                      class="form-control"
-                      placeholder="Add a subtask…"
-                      aria-label="New subtask title"
-                      formControlName="title"
-                    />
-                    <button type="submit" class="btn-primary-cta" [disabled]="saving()">
-                      <lucide-angular name="Plus" size="15"></lucide-angular> Add
-                    </button>
-                  </form>
-                  @if (subTaskFieldError(); as msg) {
-                    <small class="field-msg">{{ msg }}</small>
-                  }
+                <form class="subtask-add" [formGroup]="subTaskForm" (ngSubmit)="addSubtask(task)">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Add a subtask…"
+                    aria-label="New subtask title"
+                    formControlName="title"
+                    [title]="canManageSubtasks() ? '' : subtasksLockReason"
+                  />
+                  <button type="submit" class="btn-primary-cta" [appLocked]="!canManageSubtasks()" [lockedReason]="subtasksLockReason" [disabled]="saving()">
+                    <lucide-angular name="Plus" size="15"></lucide-angular> Add
+                  </button>
+                </form>
+                @if (canManageSubtasks() && subTaskFieldError(); as msg) {
+                  <small class="field-msg">{{ msg }}</small>
                 }
               </div>
             }

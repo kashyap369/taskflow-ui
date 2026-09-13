@@ -36,6 +36,7 @@ import {
 } from '../organization.models';
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
 import { createPagination } from '@shared/utils/pagination';
@@ -63,6 +64,7 @@ interface Option {
     LucideAngularModule,
     Skeleton,
     DialogDirective,
+    PermissionLockDirective,
     Pagination,
   ],
   templateUrl: './tasks-page.html',
@@ -111,6 +113,11 @@ export class TasksPage {
   readonly assigneeRoleId = this.facade.assigneeRoleId;
   readonly currentOrg = this.facade.currentOrg;
   readonly needsOrganization = this.facade.needsOrganization;
+
+  /** Creating, editing, deleting and advancing a task all sit behind one permission. */
+  readonly canManageTasks = this.facade.canManageTasks;
+  readonly tasksLockReason =
+    'Requires the Manage tasks permission — ask an organization owner to grant it.';
 
   // Subtasks
   readonly subTasks = this.facade.subTasks;

@@ -19,6 +19,7 @@ import {
 
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
@@ -44,6 +45,7 @@ import { OrganizationFacade } from '../organization.facade';
     LottiePlayer,
     Skeleton,
     DialogDirective,
+    PermissionLockDirective,
     Pagination,
   ],
   templateUrl: './members-page.html',
@@ -78,6 +80,13 @@ export class MembersPage {
   readonly roles = this.facade.roles;
   readonly currentOrg = this.facade.currentOrg;
   readonly needsOrganization = this.facade.needsOrganization;
+
+  readonly canManageMembers = this.facade.canManageMembers;
+  readonly canInviteMember = this.facade.canInviteMember;
+  readonly membersLockReason =
+    'Requires the Manage members permission — ask an organization owner to grant it.';
+  readonly inviteLockReason =
+    'Requires the Invite member permission — ask an organization owner to grant it.';
 
   readonly invitationStatusMeta = invitationStatusMeta;
   readonly InvitationStatus = InvitationStatus;

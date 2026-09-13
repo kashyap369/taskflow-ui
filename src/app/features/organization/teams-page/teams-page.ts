@@ -18,6 +18,7 @@ import {
 
 import { DialogService } from '@core/services/dialog.service';
 import { DialogDirective } from '@shared/directives/dialog.directive';
+import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
 import { LottiePlayer } from '@shared/ui/atoms/animations/lottie-player/lottie-player';
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import { Pagination } from '@shared/ui/molecules/pagination/pagination';
@@ -37,6 +38,7 @@ import { OrganizationFacade } from '../organization.facade';
     LucideAngularModule,
     LottiePlayer,
     DialogDirective,
+    PermissionLockDirective,
     Skeleton,
     Pagination,
   ],
@@ -69,6 +71,10 @@ export class TeamsPage {
   readonly teams = this.facade.teams;
   readonly currentOrg = this.facade.currentOrg;
   readonly needsOrganization = this.facade.needsOrganization;
+
+  readonly canManageTeams = this.facade.canManageTeams;
+  readonly teamsLockReason =
+    'Requires the Manage teams permission — ask an organization owner to grant it.';
 
   /** One drawer serves create and edit; `editing` holds the team being edited (null = create). */
   readonly showDrawer = signal(false);

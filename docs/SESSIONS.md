@@ -1140,3 +1140,27 @@
 - The launcher renders nothing when the current route has no topic. That is how the meeting room
   (`/room`), the guest portal and the auth pages stay clear of a floating button — no separate
   suppression list in the layouts.
+
+## 2026-09-13 (Permission-locked actions — show, don't hide)
+
+- Members without a permission now see the action **locked** rather than gone: the control keeps its
+  place, renders greyed out, and carries a small lock badge with a tooltip naming the missing
+  permission. New `PermissionLockDirective` (`shared/directives/permission-lock.directive.ts`,
+  `[appLocked]` + `[lockedReason]`) plus `styles/components/_locked.scss`.
+- The directive uses `aria-disabled`, **not** the native `disabled` attribute. A natively disabled
+  button is unfocusable and shows no tooltip, so the member would see a dead control and never learn
+  why. The click is instead swallowed by a **capture-phase** listener the directive registers in its
+  constructor — that runs before the template's own bubble-phase `(click)`, which a `@HostListener`
+  would not reliably do.
+- `OrganizationFacade` now derives every permission through one private `hasPermission(name)` helper
+  (owner still bypasses, matching `IOrganizationPermissionChecker`), and gained the computeds the UI
+  was missing: `canAssignTask`, `canInviteMember`, `canCreateProject`, `canManageProjects`,
+  `canManageTeams`, `canManageRoles`.
+- Applied to tasks, members, teams, projects, roles, meetings, calendar, project detail and settings.
+  Several `@if (canX()) { … }` gates were replaced by a lock, which is the visible behaviour change.
+- Gotcha: a `<select>` can't hold the badge (no element children allowed), so the member-role picker
+  takes plain `[disabled]` + a `[title]`. Same for the add-a-subtask field: with reactive forms,
+  `[attr.disabled]` is swallowed by the `FormControlName` directive — the control is disabled from an
+  `effect()` instead (the settings page already did this).
+- Still a usability gate only. Every one of these checks is repeated by the API, which stays
+  authoritative; the owner-only settings gate remains the one the API does *not* enforce.

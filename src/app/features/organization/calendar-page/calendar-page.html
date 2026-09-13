@@ -207,11 +207,9 @@
               <span><i class="legend-event"></i>Event</span>
               <span><i class="legend-leave"></i>Leave</span>
               <span><i class="legend-holiday"></i>Holiday</span>
-              @if (canManageCalendar()) {
-                <button type="button" class="btn btn--primary add-entry" (click)="openNewEntry()">
-                  <lucide-angular name="Plus" size="15" /> Add entry
-                </button>
-              }
+              <button type="button" class="btn btn--primary add-entry" [appLocked]="!canManageCalendar()" [lockedReason]="calendarLockReason" (click)="openNewEntry()">
+                <lucide-angular name="Plus" size="15" /> Add entry
+              </button>
             </div>
           } @else if (activeTab() === 'timeline') {
             <label class="project-picker">
@@ -250,9 +248,7 @@
                 <lucide-angular name="CalendarDays" size="24" aria-hidden="true"></lucide-angular>
                 <h2>Your schedule is clear</h2>
                 <p>Create a project or task and it will appear here automatically.</p>
-                @if (canManageCalendar()) {
-                  <button type="button" class="btn btn--primary" (click)="openNewEntry()">Add calendar entry</button>
-                }
+                <button type="button" class="btn btn--primary" [appLocked]="!canManageCalendar()" [lockedReason]="calendarLockReason" (click)="openNewEntry()">Add calendar entry</button>
                 <a routerLink="/organization/projects" class="btn btn--secondary">View projects</a>
               </div>
             } @else if (filteredItems().length === 0) {
@@ -428,6 +424,7 @@
     [item]="item"
     [canManageTasks]="canManageTasks()"
     [canManageCalendar]="canManageCalendar()"
+    [calendarLockReason]="calendarLockReason"
     (editCalendarEntry)="editEntry($event)"
     (dismiss)="closeDetails()"
   />

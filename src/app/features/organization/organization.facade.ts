@@ -152,29 +152,29 @@ export class OrganizationFacade {
     return org != null && user != null && org.ownerUserId === user.id;
   });
 
-  /** UI affordance only; the API repeats this check and remains authoritative. */
-  readonly canManageTasks = computed(
-    () =>
-      this.isCurrentOrgOwner() ||
-      (this._currentUserRole()?.permissions.includes('ManageTasks') ?? false),
-  );
-  readonly canManageMembers = computed(
-    () =>
-      this.isCurrentOrgOwner() ||
-      (this._currentUserRole()?.permissions.includes('ManageMembers') ?? false),
-  );
-  readonly canManageCalendar = computed(
-    () => this.isCurrentOrgOwner() ||
-      (this._currentUserRole()?.permissions.includes('ManageCalendar') ?? false),
-  );
-  readonly canCreateMeetings = computed(
-    () => this.isCurrentOrgOwner() ||
-      (this._currentUserRole()?.permissions.includes('CreateMeetings') ?? false),
-  );
-  readonly canManageMeetings = computed(
-    () => this.isCurrentOrgOwner() ||
-      (this._currentUserRole()?.permissions.includes('ManageMeetings') ?? false),
-  );
+  /**
+   * UI affordance only; the API repeats every one of these checks and remains authoritative.
+   * The owner bypasses all of them, matching `IOrganizationPermissionChecker` on the backend.
+   *
+   * Pages read these to *lock* an action rather than hide it — see `PermissionLockDirective`.
+   */
+  private hasPermission(name: string): boolean {
+    return (
+      this.isCurrentOrgOwner() || (this._currentUserRole()?.permissions.includes(name) ?? false)
+    );
+  }
+
+  readonly canManageTasks = computed(() => this.hasPermission('ManageTasks'));
+  readonly canAssignTask = computed(() => this.hasPermission('AssignTask'));
+  readonly canManageMembers = computed(() => this.hasPermission('ManageMembers'));
+  readonly canInviteMember = computed(() => this.hasPermission('InviteMember'));
+  readonly canCreateProject = computed(() => this.hasPermission('CreateProject'));
+  readonly canManageProjects = computed(() => this.hasPermission('ManageProjects'));
+  readonly canManageTeams = computed(() => this.hasPermission('ManageTeams'));
+  readonly canManageRoles = computed(() => this.hasPermission('ManageRoles'));
+  readonly canManageCalendar = computed(() => this.hasPermission('ManageCalendar'));
+  readonly canCreateMeetings = computed(() => this.hasPermission('CreateMeetings'));
+  readonly canManageMeetings = computed(() => this.hasPermission('ManageMeetings'));
 
   constructor() {
     // Everything below is scoped to the signed-in user, and `init()` won't refetch once `_loaded`
