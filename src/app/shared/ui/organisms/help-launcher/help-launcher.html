@@ -1,5 +1,11 @@
 @if (guidance.currentTopic(); as topic) {
-  <div class="help-launcher" data-tour="help.launcher">
+  <div
+    class="help-launcher"
+    [ngClass]="launcherClass()"
+    [style.left.px]="dragPoint()?.x"
+    [style.top.px]="dragPoint()?.y"
+    data-tour="help.launcher"
+  >
     <!-- Menu -->
 
     @if (open()) {
@@ -86,6 +92,12 @@
       [ngClass]="{ 'is-teasing': teasing(), 'is-open': open(), 'is-unseen': guidance.shouldPrompt() }"
       [attr.aria-expanded]="open()"
       [attr.aria-label]="'Help with ' + topic.label"
+      title="Drag to move this button to another corner, or hold Alt and press an arrow key"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp()"
+      (pointercancel)="onPointerUp()"
+      (keydown)="onFabKeydown($event)"
       (click)="toggle()"
     >
       <span class="help-fab-mark">

@@ -4,6 +4,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  computed,
   effect,
   inject,
   signal,
@@ -37,10 +38,16 @@ import { GuidanceService } from '@core/guidance/guidance.service';
 import { HelpTopic } from '@core/guidance/guidance.models';
 import { TourService } from '@core/guidance/tour.service';
 
+/** The corners the launcher can be parked in. */
+export const HELP_LAUNCHER_CORNERS = ['bottom-right', 'bottom-left', 'top-right', 'top-left'] as const;
+
+export type HelpLauncherCorner = (typeof HELP_LAUNCHER_CORNERS)[number];
+
 /**
- * The floating help button, bottom-right of every portal page.
+ * The floating help button, bottom-right of every portal page until the
+ * user drags it somewhere else.
  *
- * Three behaviours are deliberate and easy to undo by accident:
+ * Four behaviours are deliberate and easy to undo by accident:
  *
  * 1. **The label never changes.** It always reads "Help". Text that
  *    cycles in the periphery is a permanent distraction in a tool
@@ -57,6 +64,12 @@ import { TourService } from '@core/guidance/tour.service';
  *    read rather than be walked through; the popover offers both, plus
  *    the pages related to this one, which is where the mental model of
  *    how TaskFlow fits together actually gets taught.
+ *
+ * 4. **It can be moved, but only between the four corners.** Whichever
+ *    corner it defaults to will sooner or later sit on top of a control
+ *    someone needs, so the user drags it out of the way and it snaps to
+ *    the nearest corner. See {@link corner} for why it snaps rather than
+ *    landing wherever it was dropped.
  *
  * The component renders nothing at all when the current route has no
  * topic — that is how the meeting room, the guest portal and the auth
@@ -103,6 +116,16 @@ export class HelpLauncher {
   private static readonly TEASER_DELAY_MS = 2000;
   private static readonly TEASER_VISIBLE_MS = 6000;
 
+  /** Where a moved launcher is remembered, per browser. */
+  private static readonly CORNER_KEY = 'taskflow.help.corner';
+
+  /**
+   * How far the pointer must travel before a press counts as a drag
+   * rather than a click. Small enough that dragging feels immediate,
+   * large enough that the shake in an ordinary click is not a move.
+   */
+  private static readonly DRAG_THRESHOLD_PX = 4;
+
   /**
    * Longer than the teaser delay: the welcome opens a modal over the
    * page, so it waits for the dashboard's data to land rather than
@@ -125,6 +148,36 @@ export class HelpLauncher {
   private readonly teased = new Set<string>();
 
   private teaserTimers: ReturnType<typeof setTimeout>[] = [];
+
+  /**
+   * Which corner the launcher sits in.
+   *
+   * Any fixed corner eventually covers something — a table row's last
+   * action, a footer control, a third-party widget on the same page.
+   * Rather than guess which corner is safe, the button is draggable and
+   * snaps to whichever of the four the pointer released nearest, and the
+   * choice is remembered so it is a decision made once.
+   *
+   * Snapping rather than free placement is deliberate: a control that can
+   * be dropped anywhere can be dropped half off-screen, or straight over
+   * the thing it was moved to uncover.
+   */
+  readonly corner = signal<HelpLauncherCorner>(this.readCorner());
+
+  /** True only once the pointer has travelled past the drag threshold. */
+  readonly dragging = signal(false);
+
+  /** Viewport position of the launcher's top-left corner, while dragging. */
+  readonly dragPoint = signal<{ x: number; y: number } | null>(null);
+
+  readonly launcherClass = computed(() => ({
+    ['is-' + this.corner()]: true,
+    'is-dragging': this.dragging(),
+  }));
+
+  private pointerStart: { x: number; y: number } | null = null;
+  private grab: { x: number; y: number; width: number; height: number } | null = null;
+  private suppressClick = false;
 
   constructor() {
     // Close the menu and re-arm the teaser whenever the page changes.
@@ -200,9 +253,154 @@ export class HelpLauncher {
   }
 
   toggle(): void {
+    // A drag finishes with a click on the button it started from. That
+    // click belongs to the move, not to the menu.
+    if (this.suppressClick) {
+      this.suppressClick = false;
+      return;
+    }
+
     this.clearTeaserTimers();
     this.teasing.set(false);
     this.open.update((value) => !value);
+  }
+
+  onPointerDown(event: PointerEvent): void {
+    // Ignore secondary mouse buttons; touch and pen report button 0 too.
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+
+    const fab = event.currentTarget as HTMLElement;
+    const rect = fab.getBoundingClientRect();
+
+    this.suppressClick = false;
+    this.pointerStart = { x: event.clientX, y: event.clientY };
+    this.grab = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    // Keeps the moves coming to this element even when the pointer
+    // outruns it, which it will on a fast drag.
+    fab.setPointerCapture(event.pointerId);
+  }
+
+  onPointerMove(event: PointerEvent): void {
+    if (!this.pointerStart || !this.grab) {
+      return;
+    }
+
+    if (!this.dragging()) {
+      const travelled = Math.hypot(
+        event.clientX - this.pointerStart.x,
+        event.clientY - this.pointerStart.y,
+      );
+
+      if (travelled < HelpLauncher.DRAG_THRESHOLD_PX) {
+        return;
+      }
+
+      // It is a drag now. Get the menu and the teaser out of the way so
+      // the user is moving the button alone.
+      this.dragging.set(true);
+      this.open.set(false);
+      this.teasing.set(false);
+      this.clearTeaserTimers();
+    }
+
+    // Clamped, so the launcher cannot be dropped over the edge of the
+    // viewport and stranded there.
+    const maxX = Math.max(window.innerWidth - this.grab.width, 0);
+    const maxY = Math.max(window.innerHeight - this.grab.height, 0);
+
+    this.dragPoint.set({
+      x: Math.min(Math.max(event.clientX - this.grab.x, 0), maxX),
+      y: Math.min(Math.max(event.clientY - this.grab.y, 0), maxY),
+    });
+  }
+
+  onPointerUp(): void {
+    const point = this.dragPoint();
+    const grab = this.grab;
+    const dragged = this.dragging();
+
+    this.pointerStart = null;
+    this.grab = null;
+    this.dragging.set(false);
+    this.dragPoint.set(null);
+
+    if (!dragged || !point || !grab) {
+      return;
+    }
+
+    this.suppressClick = true;
+    this.setCorner(this.nearestCorner(point.x + grab.width / 2, point.y + grab.height / 2));
+  }
+
+  /**
+   * Moves the launcher with the keyboard, which a drag cannot serve.
+   * Alt is required so that the bare arrow keys a screen-reader user
+   * navigates with keep doing what they have always done.
+   */
+  onFabKeydown(event: KeyboardEvent): void {
+    if (!event.altKey) {
+      return;
+    }
+
+    const [vertical, horizontal] = this.corner().split('-');
+    let next: HelpLauncherCorner;
+
+    switch (event.key) {
+      case 'ArrowUp':
+        next = ('top-' + horizontal) as HelpLauncherCorner;
+        break;
+      case 'ArrowDown':
+        next = ('bottom-' + horizontal) as HelpLauncherCorner;
+        break;
+      case 'ArrowLeft':
+        next = (vertical + '-left') as HelpLauncherCorner;
+        break;
+      case 'ArrowRight':
+        next = (vertical + '-right') as HelpLauncherCorner;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    this.setCorner(next);
+  }
+
+  private nearestCorner(centreX: number, centreY: number): HelpLauncherCorner {
+    const vertical = centreY < window.innerHeight / 2 ? 'top' : 'bottom';
+    const horizontal = centreX < window.innerWidth / 2 ? 'left' : 'right';
+
+    return (vertical + '-' + horizontal) as HelpLauncherCorner;
+  }
+
+  private readCorner(): HelpLauncherCorner {
+    try {
+      const stored = localStorage.getItem(HelpLauncher.CORNER_KEY) as HelpLauncherCorner | null;
+
+      return stored && HELP_LAUNCHER_CORNERS.includes(stored) ? stored : 'bottom-right';
+    } catch {
+      // Private mode, or storage disabled entirely. The default corner is
+      // a perfectly good answer.
+      return 'bottom-right';
+    }
+  }
+
+  private setCorner(corner: HelpLauncherCorner): void {
+    this.corner.set(corner);
+
+    try {
+      localStorage.setItem(HelpLauncher.CORNER_KEY, corner);
+    } catch {
+      // The move still applies for this session, it just will not outlive it.
+    }
   }
 
   /** Opens the docs at a specific topic and closes the menu behind it. */

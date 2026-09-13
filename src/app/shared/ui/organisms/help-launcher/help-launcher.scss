@@ -1,9 +1,11 @@
 /**
  * The floating help launcher.
  *
- * Sits bottom-right. That corner is free: toasts are configured
- * top-right (`provideToastr({ positionClass: 'toast-top-right' })`), so
- * a notification and the launcher never fight for the same space.
+ * Starts bottom-right. That corner is free by default: toasts are
+ * configured top-right (`provideToastr({ positionClass: 'toast-top-right' })`),
+ * so a notification and the launcher never fight for the same space —
+ * which is also why top-right is the corner to think twice about when
+ * moving it.
  *
  * Every value here is a token. The collapsed pill is a fixed height so
  * that expanding to show the contextual line grows it rightwards and
@@ -12,15 +14,65 @@
  */
 
 .help-launcher {
+  // One inset for all four corners, so the small-screen override below
+  // is a single value rather than four separate edge declarations.
+  --help-inset: var(--space-6);
+
   position: fixed;
-  right: var(--space-6);
-  bottom: var(--space-6);
   z-index: 1040; // Under modals and the toast container, over page content.
 
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
   gap: var(--space-3);
+}
+
+/**
+ * The four corners.
+ *
+ * `column-reverse` on the top corners is what flips the popover. The menu
+ * precedes the button in the DOM, so reversing the column opens it
+ * downwards from a top corner and upwards from a bottom one, with no
+ * duplicated markup and no measuring in JavaScript.
+ */
+.help-launcher.is-bottom-right,
+.help-launcher.is-bottom-left {
+  flex-direction: column;
+  bottom: calc(var(--help-inset) + env(safe-area-inset-bottom, 0px));
+}
+
+.help-launcher.is-top-right,
+.help-launcher.is-top-left {
+  flex-direction: column-reverse;
+  top: calc(var(--help-inset) + env(safe-area-inset-top, 0px));
+}
+
+.help-launcher.is-bottom-right,
+.help-launcher.is-top-right {
+  right: var(--help-inset);
+  align-items: flex-end;
+}
+
+.help-launcher.is-bottom-left,
+.help-launcher.is-top-left {
+  left: var(--help-inset);
+  align-items: flex-start;
+}
+
+/**
+ * While dragging, the launcher is placed from the pointer rather than
+ * from an edge. Resetting `inset` matters: leaving the corner's `right`
+ * in place alongside an inline `left` would stretch the box between the
+ * two instead of moving it. This rule must stay after the corner rules —
+ * they share a specificity, so source order is what settles it.
+ */
+.help-launcher.is-dragging {
+  inset: auto;
+  user-select: none;
+
+  .help-fab {
+    cursor: grabbing;
+    // No lift on hover mid-drag: the button should sit under the pointer.
+    transform: none;
+  }
 }
 
 /* ---------------------------------------------------------------- */
@@ -41,6 +93,9 @@
   box-shadow: var(--shadow-lg);
 
   cursor: pointer;
+  // The launcher is dragged by this button, so the browser must not claim
+  // the gesture for scrolling first.
+  touch-action: none;
   transition:
     transform var(--dur-2) var(--ease-out),
     box-shadow var(--dur-2) var(--ease-out);
@@ -364,9 +419,9 @@
 
 @media (max-width: 575.98px) {
   .help-launcher {
-    right: var(--space-4);
-    // Clears a bottom bar or an on-screen keyboard's safe area.
-    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    // Tighter to the edge; the corner rules already fold in the safe-area
+    // inset, which is what clears a bottom bar or an on-screen keyboard.
+    --help-inset: var(--space-4);
   }
 
   // Icon only: the label is a luxury the narrow viewport cannot afford,
