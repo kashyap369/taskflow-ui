@@ -175,6 +175,9 @@ export class OrganizationFacade {
   readonly canManageCalendar = computed(() => this.hasPermission('ManageCalendar'));
   readonly canCreateMeetings = computed(() => this.hasPermission('CreateMeetings'));
   readonly canManageMeetings = computed(() => this.hasPermission('ManageMeetings'));
+  readonly canViewAttendance = computed(() => this.hasPermission('ViewAttendance'));
+  readonly canManageAttendance = computed(() => this.hasPermission('ManageAttendance'));
+  readonly canViewFieldTracking = computed(() => this.hasPermission('ViewFieldTracking'));
 
   constructor() {
     // Everything below is scoped to the signed-in user, and `init()` won't refetch once `_loaded`

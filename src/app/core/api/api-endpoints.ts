@@ -237,6 +237,23 @@ export const API = {
     ByOrganization: (organizationId: number) => `/report/capacity/${organizationId}`,
   },
 
+  /**
+   * Attendance (punch in/out with a selfie) and field tracking. The API's canonical reference is
+   * its docs/ATTENDANCE.md; responses are bare payloads with enums as numbers.
+   */
+  Attendance: {
+    Roster: (organizationId: number) => `/attendance/organization/${organizationId}/roster`,
+    Member: (organizationId: number, userId: number) =>
+      `/attendance/organization/${organizationId}/member/${userId}`,
+    Settings: (organizationId: number) => `/attendance/organization/${organizationId}/settings`,
+    Adjust: (sessionId: number) => `/attendance/${sessionId}/adjust`,
+    Photo: (sessionId: number, kind: 'in' | 'out') => `/attendance/${sessionId}/photo/${kind}`,
+    TrackingLive: (organizationId: number) => `/attendance/organization/${organizationId}/tracking/live`,
+    TrackingMember: (organizationId: number, userId: number) =>
+      `/attendance/organization/${organizationId}/tracking/member/${userId}`,
+    TrackingSettings: (organizationId: number) =>
+      `/attendance/organization/${organizationId}/tracking/settings`,
+  },
   Calendar: {
     Create: '/calendar',
     Update: '/calendar',

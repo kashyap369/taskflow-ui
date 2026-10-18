@@ -12,6 +12,11 @@ export const AppSettings = {
     baseUrl: environment.api.baseUrl,
   },
 
+  maps: {
+    tileUrl: environment.maps.tileUrl,
+    attribution: environment.maps.attribution,
+  },
+
   features: {
     planner: Boolean(environment.features.planner),
     meetingsProbe: Boolean(environment.features.meetingsProbe),

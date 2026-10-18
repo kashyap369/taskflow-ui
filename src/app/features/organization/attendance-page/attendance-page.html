@@ -1,0 +1,435 @@
+<section class="page">
+  <div class="container-fluid">
+    <div class="page-head">
+      <h1>Attendance</h1>
+      <p>Who is in, where field staff are, and every punch at {{ currentOrg()?.name ?? 'your organization' }}.</p>
+    </div>
+
+    @if (needsOrganization()) {
+      <div class="empty-state">
+        <span class="empty-icon"><lucide-angular name="Building2" size="24"></lucide-angular></span>
+        <h3>No organization yet</h3>
+        <p>Create your organization from the dashboard to track attendance.</p>
+        <a routerLink="/organization/dashboard" class="btn-primary-cta">
+          Go to dashboard <lucide-angular name="ArrowRight" size="16"></lucide-angular>
+        </a>
+      </div>
+    } @else {
+      <div class="tabs" role="tablist" aria-label="Attendance sections">
+        @for (t of tabs; track t.id) {
+          <button
+            type="button"
+            role="tab"
+            [id]="'att-tab-' + t.id"
+            [attr.aria-selected]="tab() === t.id"
+            [attr.aria-controls]="'att-panel-' + t.id"
+            [class.active]="tab() === t.id"
+            (click)="selectTab(t.id)"
+          >
+            <lucide-angular [name]="t.icon" size="16"></lucide-angular>
+            {{ t.label }}
+            @if (tabLocked(t.id)) {
+              <lucide-angular name="Lock" size="12" class="tab-lock" aria-label="Locked"></lucide-angular>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="tab-panel" role="tabpanel" [id]="'att-panel-' + tab()" [attr.aria-labelledby]="'att-tab-' + tab()">
+        @switch (tab()) {
+          <!-- ───────────── Today ───────────── -->
+          @case ('today') {
+            @if (!canViewAttendance()) {
+              <ng-container *ngTemplateOutlet="locked; context: { $implicit: viewAttendanceReason }"></ng-container>
+            } @else {
+              <div class="toolbar-row">
+                <label class="inline-field">
+                  <span>Day</span>
+                  <input type="date" class="form-control sm" [ngModel]="rosterDate()" (ngModelChange)="onRosterDate($event)" />
+                </label>
+                <button type="button" class="btn-ghost sm" (click)="loadRoster()">
+                  <lucide-angular name="RefreshCw" size="14"></lucide-angular> Refresh
+                </button>
+              </div>
+
+              <div class="stat-row">
+                <div class="stat"><span class="stat-value" data-tone="success">{{ rosterCounts().in }}</span><span class="stat-label">In now</span></div>
+                <div class="stat"><span class="stat-value" data-tone="info">{{ rosterCounts().out }}</span><span class="stat-label">Punched out</span></div>
+                <div class="stat"><span class="stat-value">{{ rosterCounts().notIn }}</span><span class="stat-label">Not in</span></div>
+                <div class="stat"><span class="stat-value" data-tone="warning">{{ rosterCounts().away }}</span><span class="stat-label">Leave / holiday</span></div>
+              </div>
+
+              <div class="panel">
+                @switch (roster().state) {
+                  @case ('loading') {
+                    <div class="skeleton-list" aria-busy="true" aria-label="Loading attendance">
+                      @for (row of loadingRows; track row) { <app-skeleton width="100%" height="2.4rem" /> }
+                    </div>
+                  }
+                  @case ('error') {
+                    <ng-container *ngTemplateOutlet="failed; context: { $implicit: roster().error, retry: 'roster' }"></ng-container>
+                  }
+                  @default {
+                    @if (!roster().data?.members?.length) {
+                      <p class="muted-state">No members to show for this day.</p>
+                    } @else {
+                      <div class="table-wrap">
+                        <table class="att-table">
+                          <caption class="visually-hidden">Attendance on {{ roster().data!.workDate }}</caption>
+                          <thead>
+                            <tr><th scope="col">Member</th><th scope="col">Status</th><th scope="col">First in</th><th scope="col">Last out</th><th scope="col">Worked</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr>
+                          </thead>
+                          <tbody>
+                            @for (m of roster().data!.members; track m.userId) {
+                              <tr>
+                                <td><strong>{{ m.fullName }}</strong><span class="sub">{{ m.roleName }}</span></td>
+                                <td><span class="badge" [attr.data-tone]="rosterStatusMeta[m.status].tone">{{ rosterStatusMeta[m.status].label }}</span></td>
+                                <td>{{ m.firstPunchInUtc ? (m.firstPunchInUtc | date: 'shortTime') : '—' }}</td>
+                                <td>{{ m.lastPunchOutUtc ? (m.lastPunchOutUtc | date: 'shortTime') : '—' }}</td>
+                                <td>{{ m.workedMinutes > 0 ? formatMinutes(m.workedMinutes) : '—' }}</td>
+                                <td class="actions">
+                                  <button type="button" class="btn-ghost sm" (click)="openHistory(m.userId)">
+                                    <lucide-angular name="History" size="14"></lucide-angular> History
+                                  </button>
+                                  <button type="button" class="btn-ghost sm" [appLocked]="!canViewFieldTracking()" [lockedReason]="viewTrackingReason" (click)="openRoute(m.userId, rosterDate())">
+                                    <lucide-angular name="Route" size="14"></lucide-angular> Route
+                                  </button>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    }
+                  }
+                }
+              </div>
+            }
+          }
+
+          <!-- ───────────── Live map ───────────── -->
+          @case ('live') {
+            @if (!canViewFieldTracking()) {
+              <ng-container *ngTemplateOutlet="locked; context: { $implicit: viewTrackingReason }"></ng-container>
+            } @else {
+              <div class="toolbar-row">
+                <p class="hint">Tracked members who are punched in. Refreshes every 30 seconds.</p>
+                <button type="button" class="btn-ghost sm" (click)="loadLive()">
+                  <lucide-angular name="RefreshCw" size="14"></lucide-angular> Refresh
+                </button>
+              </div>
+              @if (live().error && live().data) {
+                <p class="inline-error" role="status"><lucide-angular name="TriangleAlert" size="14"></lucide-angular> Could not refresh: {{ live().error }}</p>
+              }
+              @switch (live().state) {
+                @case ('loading') { <app-skeleton width="100%" height="460px" radius="16px" /> }
+                @case ('error') {
+                  <div class="panel"><ng-container *ngTemplateOutlet="failed; context: { $implicit: live().error, retry: 'live' }"></ng-container></div>
+                }
+                @default {
+                  <div class="map-layout">
+                    <div class="map-box">
+                      <app-route-map [data]="liveMap()" [tileUrl]="mapSettings.tileUrl" [attribution]="mapSettings.attribution"
+                        fitKey="live" ariaLabel="Live positions of tracked members" (markerSelected)="onLiveMarker($event)" />
+                    </div>
+                    <div class="side-list panel">
+                      <h2 class="side-title"><lucide-angular name="Navigation" size="16"></lucide-angular> On the move ({{ live().data?.members?.length ?? 0 }})</h2>
+                      @if (!live().data?.members?.length) {
+                        <p class="muted-state">Nobody tracked is punched in right now. Tracking is set per role in Settings.</p>
+                      }
+                      @for (m of live().data?.members ?? []; track m.userId) {
+                        <div class="person" [class.selected]="liveSelected() === m.userId">
+                          <div>
+                            <strong>{{ m.fullName }}</strong>
+                            <span class="sub">{{ m.roleName }} · in since {{ m.punchInAtUtc | date: 'shortTime' }}</span>
+                            <span class="sub">
+                              @if (m.lastSeenAtUtc) { Last seen {{ m.lastSeenAtUtc | date: 'shortTime' }} } @else { No location yet }
+                              @if (isStale(m)) { <span class="badge" data-tone="neutral">stale</span> }
+                            </span>
+                            <span class="sub">
+                              @if (m.batteryPercent !== null) {
+                                <span [class.low]="m.batteryPercent <= 15">Battery {{ m.batteryPercent }}%{{ m.isCharging ? ' · charging' : '' }}</span>
+                              }
+                              @if (m.isMock) { <span class="badge" data-tone="danger">fake GPS</span> }
+                            </span>
+                          </div>
+                          <button type="button" class="btn-ghost sm" (click)="openRoute(m.userId)">Route</button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              }
+            }
+          }
+
+          <!-- ───────────── Routes ───────────── -->
+          @case ('routes') {
+            <div class="toolbar-row">
+              <label class="inline-field">
+                <span>Member</span>
+                <select class="form-select sm" [ngModel]="routeUserId()" (ngModelChange)="onRouteUser($event)">
+                  <option [ngValue]="null" disabled>Choose a member</option>
+                  @for (p of people(); track p.userId) { <option [ngValue]="p.userId">{{ p.name }}{{ p.role ? ' · ' + p.role : '' }}</option> }
+                </select>
+              </label>
+              <label class="inline-field">
+                <span>Day</span>
+                <input type="date" class="form-control sm" [ngModel]="routeDate()" (ngModelChange)="onRouteDate($event)" />
+              </label>
+            </div>
+            @if (!canViewFieldTracking()) {
+              <p class="hint"><lucide-angular name="Lock" size="12"></lucide-angular> You can see your own route. Other members' routes need the ViewFieldTracking permission.</p>
+            }
+
+            @if (routeUserId() === null) {
+              <p class="muted-state">Choose a member to see their route.</p>
+            } @else {
+              @switch (routeDay().state) {
+                @case ('loading') { <app-skeleton width="100%" height="460px" radius="16px" /> }
+                @case ('error') {
+                  <div class="panel"><ng-container *ngTemplateOutlet="failed; context: { $implicit: routeDay().error, retry: 'route' }"></ng-container></div>
+                }
+                @case ('loaded') {
+                  @if (routeDay().data; as day) {
+                    <div class="stat-row">
+                      <div class="stat"><span class="stat-value">{{ km(day.distanceMeters) }} km</span><span class="stat-label">Travelled</span></div>
+                      <div class="stat"><span class="stat-value">{{ day.stopCount }}</span><span class="stat-label">Stops (10+ min)</span></div>
+                      <div class="stat"><span class="stat-value">{{ km(day.inferredDistanceMeters) }} km</span><span class="stat-label">Guessed across gaps</span></div>
+                      <div class="stat"><span class="stat-value" [attr.data-tone]="day.mockPointCount ? 'danger' : null">{{ day.mockPointCount }}</span><span class="stat-label">Fake-GPS points</span></div>
+                    </div>
+
+                    @if (!day.sessions.length) {
+                      <p class="muted-state">No punches on this day.</p>
+                    } @else if (!routeHasTrack()) {
+                      <p class="muted-state">Punched in, but no route was recorded — this member's role may not be tracked, or the phone sent no locations.</p>
+                    }
+
+                    <div class="map-layout">
+                      <div class="map-box">
+                        <app-route-map [data]="routeMap()" [tileUrl]="mapSettings.tileUrl" [attribution]="mapSettings.attribution"
+                          [fitKey]="routeFitKey()" [ariaLabel]="'Route of ' + day.fullName + ' on ' + day.workDate" />
+                      </div>
+                      <div class="side-list panel">
+                        <h2 class="side-title"><lucide-angular name="MapPin" size="16"></lucide-angular> {{ day.fullName }}</h2>
+                        <ul class="legend">
+                          <li><span class="swatch recorded"></span> Route on roads</li>
+                          <li><span class="swatch inferred"></span> No signal — likely route</li>
+                          <li><span class="swatch pending"></span> Latest, not yet matched</li>
+                          <li><span class="dot" data-tone="warning"></span> Stop · <span class="dot" data-tone="success"></span> In · <span class="dot" data-tone="danger"></span> Out</li>
+                        </ul>
+                        @for (s of day.sessions; track s.attendanceSessionId) {
+                          <div class="session-block">
+                            <strong>{{ s.punchInAtUtc | date: 'shortTime' }} – {{ s.punchOutAtUtc ? (s.punchOutAtUtc | date: 'shortTime') : 'now' }}</strong>
+                            <span class="sub">{{ sessionStatusLabel[s.status] }}{{ s.isTracked ? '' : ' · not tracked' }}</span>
+                            @for (stop of s.stops; track stop.arrivedAtUtc) {
+                              <span class="sub">Stop {{ stop.arrivedAtUtc | date: 'shortTime' }}–{{ stop.leftAtUtc | date: 'shortTime' }} ({{ formatMinutes(stop.minutes) }})</span>
+                            }
+                          </div>
+                        }
+                        @if (batteryChart(); as chart) {
+                          <h3 class="side-sub"><lucide-angular name="BatteryLow" size="14"></lucide-angular> Battery</h3>
+                          <div echarts [options]="chart" class="battery-chart" role="img" aria-label="Battery level through the day"></div>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              }
+            }
+          }
+
+          <!-- ───────────── History ───────────── -->
+          @case ('history') {
+            <div class="toolbar-row">
+              <label class="inline-field">
+                <span>Member</span>
+                <select class="form-select sm" [ngModel]="historyUserId()" (ngModelChange)="onHistoryUser($event)">
+                  <option [ngValue]="null" disabled>Choose a member</option>
+                  @for (p of people(); track p.userId) { <option [ngValue]="p.userId">{{ p.name }}{{ p.role ? ' · ' + p.role : '' }}</option> }
+                </select>
+              </label>
+              <label class="inline-field"><span>From</span><input type="date" class="form-control sm" [ngModel]="historyFrom()" (ngModelChange)="onHistoryRange('from', $event)" /></label>
+              <label class="inline-field"><span>To</span><input type="date" class="form-control sm" [ngModel]="historyTo()" (ngModelChange)="onHistoryRange('to', $event)" /></label>
+            </div>
+            @if (!canViewAttendance()) {
+              <p class="hint"><lucide-angular name="Lock" size="12"></lucide-angular> You can see your own history. Other members' history needs the ViewAttendance permission.</p>
+            }
+
+            @if (historyUserId() === null) {
+              <p class="muted-state">Choose a member to see their attendance.</p>
+            } @else {
+              <div class="panel">
+                @switch (history().state) {
+                  @case ('loading') {
+                    <div class="skeleton-list" aria-busy="true" aria-label="Loading history">
+                      @for (row of loadingRows; track row) { <app-skeleton width="100%" height="2.4rem" /> }
+                    </div>
+                  }
+                  @case ('error') {
+                    <ng-container *ngTemplateOutlet="failed; context: { $implicit: history().error, retry: 'history' }"></ng-container>
+                  }
+                  @default {
+                    @if (!history().data?.length) {
+                      <p class="muted-state">Nothing in this range.</p>
+                    }
+                    @for (d of history().data ?? []; track d.workDate) {
+                      <div class="day-row">
+                        <div class="day-head">
+                          <strong>{{ d.workDate | date: 'EEE d MMM' }}</strong>
+                          <span class="badge" [attr.data-tone]="dayStatusMeta[d.status].tone">{{ dayStatusMeta[d.status].label }}</span>
+                          @if (d.calendarNote) { <span class="sub">{{ d.calendarNote }}</span> }
+                          <span class="spacer"></span>
+                          @if (d.workedMinutes > 0) { <span class="sub"><lucide-angular name="Clock" size="12"></lucide-angular> {{ formatMinutes(d.workedMinutes) }}</span> }
+                        </div>
+                        @for (s of d.sessions; track s.id) {
+                          <div class="session-row">
+                            <span>{{ s.punchInAtUtc | date: 'shortTime' }} – {{ s.punchOutAtUtc ? (s.punchOutAtUtc | date: 'shortTime') : 'still in' }}</span>
+                            <span class="badge" [attr.data-tone]="s.status === SessionStatus.AutoClosed ? 'danger' : s.status === SessionStatus.Adjusted ? 'purple' : 'neutral'">{{ sessionStatusLabel[s.status] }}</span>
+                            @if (s.adjustmentReason) { <span class="sub" title="Adjustment reason">“{{ s.adjustmentReason }}”</span> }
+                            <span class="spacer"></span>
+                            @for (kind of ['in', 'out']; track kind) {
+                              @if (kind === 'in' ? s.hasPunchInPhoto : s.hasPunchOutPhoto) {
+                                @switch (photos()[photoKey(s.id, $any(kind))]) {
+                                  @case (undefined) {
+                                    <button type="button" class="btn-ghost sm" (click)="showPhoto(s.id, $any(kind))">
+                                      <lucide-angular name="Camera" size="14"></lucide-angular> Selfie {{ kind }}
+                                    </button>
+                                  }
+                                  @case ('loading') { <span class="sub">Loading…</span> }
+                                  @case ('error') { <span class="sub">Selfie unavailable</span> }
+                                  @default {
+                                    <img class="selfie" [src]="photos()[photoKey(s.id, $any(kind))]" [alt]="'Punch-' + kind + ' selfie'" />
+                                  }
+                                }
+                              }
+                            }
+                            <button type="button" class="btn-ghost sm" [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason"
+                              [disabled]="s.status === SessionStatus.Open" (click)="startAdjust(s)">Adjust</button>
+                          </div>
+                          @if (adjusting()?.session?.id === s.id) {
+                            <form class="adjust-form" (ngSubmit)="saveAdjust()">
+                              <label class="inline-field"><span>In</span><input type="datetime-local" class="form-control sm" name="in" [ngModel]="adjusting()!.punchIn" (ngModelChange)="updateAdjust('punchIn', $event)" /></label>
+                              <label class="inline-field"><span>Out</span><input type="datetime-local" class="form-control sm" name="out" [ngModel]="adjusting()!.punchOut" (ngModelChange)="updateAdjust('punchOut', $event)" /></label>
+                              <label class="inline-field grow"><span>Reason</span><input type="text" class="form-control sm" name="reason" maxlength="500" required [ngModel]="adjusting()!.reason" (ngModelChange)="updateAdjust('reason', $event)" /></label>
+                              <button type="submit" class="btn-primary-cta sm" [disabled]="adjustSaving()">Save</button>
+                              <button type="button" class="btn-ghost sm" (click)="cancelAdjust()">Cancel</button>
+                              @if (adjustError()) { <p class="form-error" role="alert">{{ adjustError() }}</p> }
+                            </form>
+                          }
+                        }
+                      </div>
+                    }
+                  }
+                }
+              </div>
+            }
+          }
+
+          <!-- ───────────── Settings ───────────── -->
+          @case ('settings') {
+            @if (settingsMessage()) { <p class="hint" role="status">{{ settingsMessage() }}</p> }
+
+            <div class="panel">
+              <div class="panel-head"><h2><lucide-angular name="Clock" size="18"></lucide-angular> Attendance</h2></div>
+              @switch (attendanceSettings().state) {
+                @case ('loading') { <app-skeleton width="100%" height="6rem" /> }
+                @case ('error') { <ng-container *ngTemplateOutlet="failed; context: { $implicit: attendanceSettings().error, retry: 'settings' }"></ng-container> }
+                @default {
+                  @if (attendanceSettings().data; as s) {
+                    <div class="settings-grid">
+                      <label class="field">
+                        <span class="form-label">Time zone</span>
+                        <select class="form-select" [ngModel]="s.timeZone" (ngModelChange)="updateAttendanceSetting('timeZone', $event)"
+                          [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason">
+                          @for (z of timeZones; track z) { <option [value]="z">{{ z }}</option> }
+                        </select>
+                        <span class="form-hint">Decides which calendar day a punch belongs to.</span>
+                      </label>
+                      <label class="field">
+                        <span class="form-label">Close a forgotten punch-out after (hours)</span>
+                        <input type="number" class="form-control" min="1" max="24" [ngModel]="s.autoCloseAfterHours" (ngModelChange)="updateAttendanceSetting('autoCloseAfterHours', $event)"
+                          [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason" />
+                      </label>
+                      <label class="field">
+                        <span class="form-label">Keep selfies for (days)</span>
+                        <input type="number" class="form-control" min="7" max="3650" [ngModel]="s.photoRetentionDays" (ngModelChange)="updateAttendanceSetting('photoRetentionDays', $event)"
+                          [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason" />
+                      </label>
+                    </div>
+                    <button type="button" class="btn-primary-cta sm" [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason"
+                      [disabled]="settingsSaving() === 'attendance'" (click)="saveAttendanceSettings()">Save attendance settings</button>
+                  }
+                }
+              }
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h2><lucide-angular name="Navigation" size="18"></lucide-angular> Field tracking</h2></div>
+              @if (!canSeeTrackingSettings()) {
+                <ng-container *ngTemplateOutlet="locked; context: { $implicit: manageAttendanceReason }"></ng-container>
+              } @else {
+                @switch (trackingSettings().state) {
+                  @case ('loading') { <app-skeleton width="100%" height="8rem" /> }
+                  @case ('error') { <ng-container *ngTemplateOutlet="failed; context: { $implicit: trackingSettings().error, retry: 'settings' }"></ng-container> }
+                  @default {
+                    @if (trackingSettings().data; as t) {
+                      <p class="hint">
+                        Members of the roles ticked below share their location <strong>only while punched in</strong>, after agreeing to it in the app.
+                        Who may see the map is the <strong>ViewFieldTracking</strong> permission, granted per role on the Roles page.
+                      </p>
+                      @if (!t.roadMatchingAvailable) {
+                        <p class="inline-error"><lucide-angular name="TriangleAlert" size="14"></lucide-angular> Road matching is not configured on the server yet — routes are drawn from the cleaned GPS track until it is.</p>
+                      }
+                      <div class="settings-grid">
+                        <label class="check-field">
+                          <input type="checkbox" class="form-check-input" [ngModel]="trackingEnabled()" (ngModelChange)="trackingEnabled.set($event)"
+                            [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason" />
+                          <span>Field tracking on</span>
+                        </label>
+                        <label class="field">
+                          <span class="form-label">Keep raw GPS points for (days)</span>
+                          <input type="number" class="form-control" min="7" max="365" [ngModel]="retentionDays()" (ngModelChange)="retentionDays.set($event)"
+                            [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason" />
+                          <span class="form-hint">Routes, stops and distance are kept; the raw points are deleted.</span>
+                        </label>
+                      </div>
+                      <fieldset class="roles">
+                        <legend class="form-label">Tracked roles</legend>
+                        @if (!t.roles.length) { <p class="muted-state">This organization has no roles yet.</p> }
+                        @for (r of t.roles; track r.organizationRoleId) {
+                          <label class="check-field">
+                            <input type="checkbox" class="form-check-input" [ngModel]="trackedRoleIds().has(r.organizationRoleId)"
+                              (ngModelChange)="toggleRole(r.organizationRoleId, $event)" [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason" />
+                            <span>{{ r.name }} <span class="sub">{{ r.memberCount }} {{ r.memberCount === 1 ? 'member' : 'members' }}</span></span>
+                          </label>
+                        }
+                      </fieldset>
+                      <button type="button" class="btn-primary-cta sm" [appLocked]="!canManageAttendance()" [lockedReason]="manageAttendanceReason"
+                        [disabled]="settingsSaving() === 'tracking'" (click)="saveTrackingSettings()">Save field tracking</button>
+                    }
+                  }
+                }
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+</section>
+
+<ng-template #locked let-reason>
+  <div class="empty-state compact">
+    <span class="empty-icon"><lucide-angular name="Lock" size="22"></lucide-angular></span>
+    <h3>Locked</h3>
+    <p>{{ reason }} Ask your organization's owner to give it to your role.</p>
+  </div>
+</ng-template>
+
+<ng-template #failed let-message let-retry="retry">
+  <div class="muted-state" role="alert">
+    <lucide-angular name="TriangleAlert" size="16"></lucide-angular> {{ message }}
+    <button type="button" class="btn-ghost sm" (click)="retry === 'roster' ? loadRoster() : retry === 'live' ? loadLive() : retry === 'route' ? loadRoute() : retry === 'history' ? loadHistory() : loadSettings()">Try again</button>
+  </div>
+</ng-template>

@@ -63,6 +63,12 @@ export const ORGANIZATION_ROUTES: Routes = [
     loadComponent: () => import('./roles-page/roles-page').then((m) => m.RolesPage),
   },
   {
+    // Who is in, live positions of tracked field staff, routes, history and settings.
+    path: 'attendance',
+    loadComponent: () =>
+      import('./attendance-page/attendance-page').then((m) => m.AttendancePage),
+  },
+  {
     path: 'reports',
     loadComponent: () => import('./reports-page/reports-page').then((m) => m.ReportsPage),
   },
