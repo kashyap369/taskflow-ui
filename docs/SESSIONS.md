@@ -1,5 +1,27 @@
 # TaskFlow UI — Session Log
 
+## 2026-10-18 (Attendance section with a live map and road-following routes)
+
+- **Why:** field tracking end to end (API + web + app). The web is where owners and managers look,
+  so it got the settings page, live map and day route first (FIELD-TRACKING.md §9).
+- **One routed page with tabs** (`?tab=today|live|routes|history|settings`, plus `user` and
+  `date`), not five routes: every tab shares the member list, date and permission flags, and the
+  Today table jumps straight into a member's History or Route.
+- **Leaflet, not a map SDK:** free, no key, and the same library the app's WebView uses, so both
+  clients draw a route identically. Added `leaflet` + `@types/leaflet`; `leaflet.css` is in
+  `angular.json` styles (build and test). Leaflet is CommonJS — the build warns, like several
+  existing deps.
+- **Colours** are read from the CSS tokens at draw time (`getComputedStyle`), so the map follows the
+  theme and `design:lint` stays clean. Markers are `circleMarker`s — Leaflet's default pin images
+  have asset-path trouble under bundlers, and none are needed.
+- **Bug the spec caught:** `RouteMap` deferred `invalidateSize()` with `setTimeout`; when the
+  component was destroyed first, Leaflet threw on the removed map. The timer is now cleared on
+  destroy and checks the map is still the live one. Navigating away quickly would have hit it.
+- **Tiles:** OpenStreetMap's free tiles, fine for a few admins. Before heavy use, set a keyed
+  provider (MapTiler / Stadia) in the three environment files — nothing else changes.
+- **Unverified:** nothing has run against the API (its side is on the same branch, unbuilt).
+
+
 ## 2026-09-13 (Subtasks are visible and editable on the project page)
 
 - The project detail row showed `0/7` and nothing else, so breaking a task down meant leaving the

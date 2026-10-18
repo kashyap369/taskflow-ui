@@ -2,6 +2,20 @@
 
 > Keep the Current Status section up to date at the end of every session.
 
+## 🟡 Attendance section + field-tracking map (2026-10-18, branch `claude/wonderful-darwin-8lt5ko`)
+
+- **Built:** organization portal → **Attendance** (`/organization/attendance`): Today (who is in,
+  with Route/History shortcuts), **Live map** of tracked field staff (30 s refresh), **Routes** (a
+  member's day drawn from the API's road-matched segments; gaps dashed, unmatched points dotted;
+  battery chart), **History** (days, sessions, private selfies, adjust with a reason), **Settings**
+  (time zone, auto-close, selfie retention; field tracking on/off, raw-point retention, tracked roles).
+- **`RouteMap` organism** (`shared/ui/organisms/route-map`, 5 files) wraps **Leaflet 1.9.4**; colours
+  from theme tokens; tiles from `environment*.ts → maps.tileUrl` (OpenStreetMap to start).
+- Locks, not hides: ViewAttendance / ManageAttendance / ViewFieldTracking via `OrganizationFacade`.
+- **Verified here:** `ng build`, `ng lint`, `design:lint`, all **323** specs. **Not verified:** any of
+  it against a running API — the API side is on the same branch and has not been built.
+- API reference: backend `docs/ATTENDANCE.md` §8; plan: Taskaro `docs/FIELD-TRACKING.md`.
+
 ## 🟡 Organization Meetings Phase 7 — P7.1 done: readiness and ready-anytime creation (2026-09-04)
 
 Ready-anytime meeting creation works again. The drawer's start/end inputs carried the template
