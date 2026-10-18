@@ -12,8 +12,9 @@
 - **`RouteMap` organism** (`shared/ui/organisms/route-map`, 5 files) wraps **Leaflet 1.9.4**; colours
   from theme tokens; tiles from `environment*.ts → maps.tileUrl` (OpenStreetMap to start).
 - Locks, not hides: ViewAttendance / ManageAttendance / ViewFieldTracking via `OrganizationFacade`.
-- **Verified here:** `ng build`, `ng lint`, `design:lint`, all **323** specs. **Not verified:** any of
-  it against a running API — the API side is on the same branch and has not been built.
+- **Verified here:** `ng build`, `ng lint`, `design:lint`, all **323** specs. **Deployed** to `main`
+  (`c2a597a`) on 2026-10-18 together with the API (`50544c8`); the developer confirmed it live.
+  Not yet exercised with real tracking data.
 - API reference: backend `docs/ATTENDANCE.md` §8; plan: Taskaro `docs/FIELD-TRACKING.md`.
 
 ## 🟡 Organization Meetings Phase 7 — P7.1 done: readiness and ready-anytime creation (2026-09-04)
