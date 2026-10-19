@@ -1,5 +1,33 @@
 # TaskFlow UI — Session Log
 
+## 2026-10-19 (Attendance map: filtered picker, selfies on the pins, hoverable fixes)
+
+- **Why:** the three things the developer asked for after the first real field shifts. All three are
+  reads plus UI; nothing here touches how a route is built. Branch
+  `claude/attendance-map-features`, cut from `origin/main` (worktree `TaskFlowUI-mapfeatures`) —
+  deliberately not stacked on the unmerged `claude/offroad-segments`.
+- **The photo pin is the only interesting bit of the map work.** Markers were `circleMarker`s, which
+  can be a filled circle and nothing else. A marker with a `badge` is now an `L.divIcon` whose HTML
+  the stylesheet themes: `.route-pin` sets `--pin` from `data-tone`, and the ring and badge both read
+  it, so the pin follows light/dark and `design:lint` stays clean. Everything interpolated into that
+  HTML is escaped — `avatarUrl` is an object URL this app made, but it still goes through an
+  attribute, and a spec asserts a hostile badge cannot inject.
+- **The authenticated-image problem was already half solved.** `AttendanceFacade.photoUrl` (built for
+  the History tab's selfies) fetches the blob with the session's token and wraps it in an object URL;
+  the pins reuse it and the same `photos` cache, which is already revoked on destroy. The API only
+  had to say `hasPhoto` per punch. That is all Phase 8.10 was waiting for.
+- **Selfies are fetched with the day, not on click**, because a pin has to *show* the face before
+  anyone clicks it. `routeMap()` reads the `photos` signal, so each pin picks up its image as it
+  arrives with no extra wiring.
+- **"Me" is a fallback, not a permanent entry.** The attended-members read needs `ViewAttendance` or
+  `ViewFieldTracking`; a plain member has neither and gets a 403, so "Me" is added back **only when
+  the list is refused** — otherwise the picker stays exactly "who punched in", and a day with nobody
+  in leaves it empty and disabled, which is what the developer asked for.
+- **Recorded fixes are opt-in.** Hundreds of markers is fine for Leaflet but noise on top of a route,
+  so a checkbox turns them on and the points are only fetched when it is ticked.
+- **Unverified:** nothing has been looked at in a browser against a running API with real tracked
+  data. `ng build`, `ng lint`, `design:lint` and **331/331** specs pass.
+
 ## 2026-10-18 (Attendance section with a live map and road-following routes)
 
 - **Why:** field tracking end to end (API + web + app). The web is where owners and managers look,

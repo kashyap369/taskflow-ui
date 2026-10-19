@@ -16,6 +16,71 @@
 
 // Leaflet's own chrome, brought onto the theme.
 :host ::ng-deep {
+  // A punch pin: the member's selfie in a ring tinted by the punch (in = success, out = danger),
+  // with a small IN/OUT badge. `--pin` is set per tone so the ring and the badge agree.
+  .route-pin-icon {
+    background: none;
+    border: 0;
+  }
+
+  .route-pin {
+    --pin: var(--primary);
+    position: relative;
+    display: block;
+    width: 38px;
+    height: 38px;
+
+    &[data-tone='success'] {
+      --pin: var(--success);
+    }
+
+    &[data-tone='danger'] {
+      --pin: var(--danger);
+    }
+
+    &[data-tone='warning'] {
+      --pin: var(--warning);
+    }
+
+    &[data-tone='info'] {
+      --pin: var(--info);
+    }
+
+    &[data-tone='muted'] {
+      --pin: var(--text-subtle);
+    }
+  }
+
+  .route-pin-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--pin);
+    background: var(--surface-inset);
+    box-shadow: var(--shadow-md);
+
+    &.is-empty {
+      background: var(--pin);
+    }
+  }
+
+  .route-pin-badge {
+    position: absolute;
+    inset-block-end: -4px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    padding: 0 4px;
+    border-radius: var(--radius-full);
+    background: var(--pin);
+    color: var(--on-primary);
+    font-size: var(--fs-body-2xs);
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+  }
+
   .leaflet-container {
     font-family: inherit;
     font-size: var(--fs-body-sm);

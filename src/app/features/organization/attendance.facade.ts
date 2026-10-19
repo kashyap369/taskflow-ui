@@ -10,7 +10,9 @@ import {
   AttendanceDay,
   AttendanceRoster,
   AttendanceSettings,
+  AttendedMembers,
   FieldTrackingDay,
+  FieldTrackingPoints,
   FieldTrackingSettings,
   LiveFieldTracking,
   UpdateAttendanceSettingsPayload,
@@ -50,6 +52,10 @@ export class AttendanceFacade {
     return this.repository.getRoster(this.orgId(), date);
   }
 
+  attendedMembers(date: string): Observable<AttendedMembers> {
+    return this.repository.getAttendedMembers(this.orgId(), date);
+  }
+
   history(userId: number, from: string, to: string): Observable<AttendanceDay[]> {
     return this.repository.getMemberHistory(this.orgId(), userId, from, to);
   }
@@ -76,6 +82,10 @@ export class AttendanceFacade {
 
   route(userId: number, date: string): Observable<FieldTrackingDay> {
     return this.repository.getMemberRoute(this.orgId(), userId, date);
+  }
+
+  routePoints(userId: number, date: string): Observable<FieldTrackingPoints> {
+    return this.repository.getMemberRoutePoints(this.orgId(), userId, date);
   }
 
   trackingSettings(): Observable<FieldTrackingSettings> {

@@ -243,6 +243,8 @@ export const API = {
    */
   Attendance: {
     Roster: (organizationId: number) => `/attendance/organization/${organizationId}/roster`,
+    AttendedMembers: (organizationId: number) =>
+      `/attendance/organization/${organizationId}/attended-members`,
     Member: (organizationId: number, userId: number) =>
       `/attendance/organization/${organizationId}/member/${userId}`,
     Settings: (organizationId: number) => `/attendance/organization/${organizationId}/settings`,
@@ -251,6 +253,8 @@ export const API = {
     TrackingLive: (organizationId: number) => `/attendance/organization/${organizationId}/tracking/live`,
     TrackingMember: (organizationId: number, userId: number) =>
       `/attendance/organization/${organizationId}/tracking/member/${userId}`,
+    TrackingMemberPoints: (organizationId: number, userId: number) =>
+      `/attendance/organization/${organizationId}/tracking/member/${userId}/points`,
     TrackingSettings: (organizationId: number) =>
       `/attendance/organization/${organizationId}/tracking/settings`,
   },

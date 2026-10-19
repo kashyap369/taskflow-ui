@@ -168,22 +168,51 @@
             <div class="toolbar-row">
               <label class="inline-field">
                 <span>Member</span>
-                <select class="form-select sm" [ngModel]="routeUserId()" (ngModelChange)="onRouteUser($event)">
-                  <option [ngValue]="null" disabled>Choose a member</option>
-                  @for (p of people(); track p.userId) { <option [ngValue]="p.userId">{{ p.name }}{{ p.role ? ' · ' + p.role : '' }}</option> }
+                <select
+                  class="form-select sm"
+                  [ngModel]="routeUserId()"
+                  (ngModelChange)="onRouteUser($event)"
+                  [disabled]="attended().state === 'loading' || !routePeople().length"
+                >
+                  <option [ngValue]="null" disabled>
+                    @if (attended().state === 'loading') { Loading who was in… } @else if (!routePeople().length) {
+                      Nobody punched in on this day
+                    } @else { Choose a member }
+                  </option>
+                  @for (p of routePeople(); track p.userId) {
+                    <option [ngValue]="p.userId">
+                      {{ p.name }}{{ p.role ? ' · ' + p.role : '' }}{{ p.absent ? ' · no punches this day' : '' }}
+                    </option>
+                  }
                 </select>
               </label>
               <label class="inline-field">
                 <span>Day</span>
                 <input type="date" class="form-control sm" [ngModel]="routeDate()" (ngModelChange)="onRouteDate($event)" />
               </label>
+              <label class="inline-field check">
+                <input type="checkbox" [ngModel]="showPoints()" (ngModelChange)="togglePoints($event)" />
+                <span><lucide-angular name="Locate" size="14"></lucide-angular> Recorded fixes</span>
+              </label>
             </div>
+            @if (attended().error) {
+              <p class="inline-error" role="status">
+                <lucide-angular name="TriangleAlert" size="14"></lucide-angular>
+                Could not list who punched in: {{ attended().error }}
+              </p>
+            }
             @if (!canViewFieldTracking()) {
               <p class="hint"><lucide-angular name="Lock" size="12"></lucide-angular> You can see your own route. Other members' routes need the ViewFieldTracking permission.</p>
             }
 
             @if (routeUserId() === null) {
-              <p class="muted-state">Choose a member to see their route.</p>
+              @if (attended().state === 'loaded' && !routePeople().length) {
+                <p class="muted-state">
+                  Nobody punched in on {{ routeDate() | date: 'EEE d MMM' }}. Pick another day to see a route.
+                </p>
+              } @else {
+                <p class="muted-state">Choose a member to see their route.</p>
+              }
             } @else {
               @switch (routeDay().state) {
                 @case ('loading') { <app-skeleton width="100%" height="460px" radius="16px" /> }
@@ -208,16 +237,102 @@
                     <div class="map-layout">
                       <div class="map-box">
                         <app-route-map [data]="routeMap()" [tileUrl]="mapSettings.tileUrl" [attribution]="mapSettings.attribution"
-                          [fitKey]="routeFitKey()" [ariaLabel]="'Route of ' + day.fullName + ' on ' + day.workDate" />
+                          [fitKey]="routeFitKey()" [ariaLabel]="'Route of ' + day.fullName + ' on ' + day.workDate"
+                          (markerSelected)="onRouteMarker($event)" />
                       </div>
                       <div class="side-list panel">
-                        <h2 class="side-title"><lucide-angular name="MapPin" size="16"></lucide-angular> {{ day.fullName }}</h2>
+                        @if (selectedPunch(); as chosen) {
+                          <!-- The pin's detail. No address: nothing stores one and no geocoder is called. -->
+                          <div class="punch-detail">
+                            <div class="punch-head">
+                              <h2 class="side-title">
+                                <lucide-angular name="MapPin" size="16"></lucide-angular>
+                                {{ punchLabel(chosen.punch) }}
+                              </h2>
+                              <button type="button" class="btn-ghost sm" (click)="closePunch()" aria-label="Close punch details">
+                                <lucide-angular name="X" size="14"></lucide-angular>
+                              </button>
+                            </div>
+                            @switch (photos()[photoKey(chosen.session.attendanceSessionId, chosen.punch.kind)]) {
+                              @case (undefined) {
+                                @if (chosen.punch.hasPhoto) { <app-skeleton width="88px" height="88px" radius="999px" /> }
+                              }
+                              @case ('loading') { <app-skeleton width="88px" height="88px" radius="999px" /> }
+                              @case ('error') { <p class="sub">Selfie unavailable.</p> }
+                              @default {
+                                <img
+                                  class="punch-photo"
+                                  [src]="photos()[photoKey(chosen.session.attendanceSessionId, chosen.punch.kind)]"
+                                  [alt]="'Punch ' + chosen.punch.kind + ' selfie of ' + day.fullName"
+                                />
+                              }
+                            }
+                            <dl class="punch-facts">
+                              <dt>Member</dt>
+                              <dd>{{ day.fullName }}</dd>
+                              <dt>Member code</dt>
+                              <dd>{{ day.email }} · #{{ day.userId }}</dd>
+                              <dt>Punch</dt>
+                              <dd>
+                                {{ chosen.punch.kind === 'in' ? 'In' : 'Out' }} · session
+                                #{{ chosen.session.attendanceSessionId }} · {{ sessionStatusLabel[chosen.session.status] }}
+                              </dd>
+                              <dt>Time</dt>
+                              <dd>{{ chosen.punch.atUtc | date: 'EEE d MMM, HH:mm:ss' }}</dd>
+                              <dt>Address</dt>
+                              <dd class="sub">Not recorded — only coordinates are stored.</dd>
+                              <dt>Battery</dt>
+                              <dd>
+                                @if (chosen.punch.batteryPercent !== null) {
+                                  {{ chosen.punch.batteryPercent }}%{{ chosen.punch.isCharging ? ' · charging' : '' }}
+                                } @else {
+                                  <span class="sub">No fix near this punch</span>
+                                }
+                              </dd>
+                              <dt>Coordinates</dt>
+                              <dd>
+                                {{ coordinates(chosen.punch.latitude, chosen.punch.longitude) }}
+                                @if (chosen.punch.accuracyMeters !== null) {
+                                  <span class="sub"> ±{{ chosen.punch.accuracyMeters | number: '1.0-0' }} m</span>
+                                }
+                              </dd>
+                              @if (chosen.punch.note) {
+                                <dt>Note</dt>
+                                <dd>“{{ chosen.punch.note }}”</dd>
+                              }
+                            </dl>
+                          </div>
+                        } @else {
+                          <h2 class="side-title"><lucide-angular name="MapPin" size="16"></lucide-angular> {{ day.fullName }}</h2>
+                        }
                         <ul class="legend">
                           <li><span class="swatch recorded"></span> Route on roads</li>
                           <li><span class="swatch inferred"></span> No signal — likely route</li>
                           <li><span class="swatch pending"></span> Latest, not yet matched</li>
                           <li><span class="dot" data-tone="warning"></span> Stop · <span class="dot" data-tone="success"></span> In · <span class="dot" data-tone="danger"></span> Out</li>
+                          @if (showPoints()) {
+                            <li><span class="dot" data-tone="info"></span> One recorded fix — hover it for what was stored</li>
+                          }
                         </ul>
+                        @if (showPoints()) {
+                          @switch (routePoints().state) {
+                            @case ('loading') { <p class="sub">Loading recorded fixes…</p> }
+                            @case ('error') { <p class="sub">Could not load the fixes: {{ routePoints().error }}</p> }
+                            @default {
+                              @if (routePoints().data; as fixes) {
+                                <p class="sub">
+                                  @if (fixes.totalPointCount === 0) {
+                                    No fixes were recorded on this day.
+                                  } @else {
+                                    Showing {{ fixes.sampledPointCount | number }} of
+                                    {{ fixes.totalPointCount | number }} recorded fixes — an even sample through the
+                                    day, at most {{ fixes.maxPointsPerSession | number }} per session.
+                                  }
+                                </p>
+                              }
+                            }
+                          }
+                        }
                         @for (s of day.sessions; track s.attendanceSessionId) {
                           <div class="session-block">
                             <strong>{{ s.punchInAtUtc | date: 'shortTime' }} – {{ s.punchOutAtUtc ? (s.punchOutAtUtc | date: 'shortTime') : 'now' }}</strong>

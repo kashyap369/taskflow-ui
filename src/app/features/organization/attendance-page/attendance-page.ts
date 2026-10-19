@@ -16,6 +16,7 @@ import {
   LUCIDE_ICONS,
   LucideAngularModule,
   LucideIconProvider,
+  Locate,
   MapPin,
   Navigation,
   RefreshCw,
@@ -23,6 +24,7 @@ import {
   Settings2,
   TriangleAlert,
   Users,
+  X,
 } from 'lucide-angular';
 
 import { PermissionLockDirective } from '@shared/directives/permission-lock.directive';
@@ -40,11 +42,16 @@ import {
   AttendanceRosterStatus,
   AttendanceSession,
   AttendanceSessionStatus,
+  AttendedMember,
   FieldTrackingDay,
+  FieldTrackingPoints,
   FieldTrackingSettings,
   LiveFieldMember,
   LiveFieldTracking,
+  PunchDetail,
+  RecordedPoint,
   TrackedSegmentKind,
+  TrackedSession,
   dayStatusMeta,
   decodePolyline,
   formatMinutes,
@@ -107,6 +114,7 @@ function errorText(error: unknown): string {
         Camera,
         Clock,
         History: HistoryIcon,
+        Locate,
         Lock,
         MapPin,
         Navigation,
@@ -115,6 +123,7 @@ function errorText(error: unknown): string {
         Settings2,
         TriangleAlert,
         Users,
+        X,
       }),
     },
   ],
@@ -205,6 +214,34 @@ export class AttendancePage {
   readonly routeUserId = signal<number | null>(null);
   readonly routeDate = signal<string>(localIsoDate());
   readonly routeDay = signal<Load<FieldTrackingDay>>(idle());
+  /**
+   * The picker offers only the people who punched in on the chosen day — anyone else can only
+   * produce an empty map. The API decides who that is; this list is reloaded when the day changes.
+   */
+  readonly attended = signal<Load<AttendedMember[]>>(idle());
+  /** The chosen member stays in the list even with no punches that day, so a link still resolves. */
+  readonly routePeople = computed(() => {
+    const list = (this.attended().data ?? []).map((m) => ({
+      userId: m.userId,
+      name: m.fullName,
+      role: m.roleName,
+      absent: false,
+    }));
+    const chosen = this.routeUserId();
+    if (chosen != null && !list.some((p) => p.userId === chosen)) {
+      const known = this.people().find((p) => p.userId === chosen);
+      list.unshift({ userId: chosen, name: known?.name ?? 'Chosen member', role: known?.role ?? '', absent: true });
+    }
+    // A member may always see their own route, but without ViewAttendance or ViewFieldTracking the
+    // list above is refused outright — so "Me" is offered only then. On a successful load the list
+    // stays exactly "who punched in", which is the point of the feature: a day with nobody in shows
+    // an empty, disabled picker rather than names that all resolve to no route.
+    const me = this.facade.user();
+    if (me && this.attended().state === 'error' && !list.some((p) => p.userId === me.id)) {
+      list.push({ userId: me.id, name: 'Me', role: '', absent: true });
+    }
+    return list;
+  });
   readonly routeFitKey = computed(() => `${this.routeUserId()}-${this.routeDate()}`);
   readonly routeMap = computed<RouteMapData>(() => this.buildRouteMap(this.routeDay().data));
   readonly routeHasTrack = computed(() => {
@@ -212,6 +249,11 @@ export class AttendancePage {
     return !!day && day.sessions.some((s) => s.segments.length > 0 || s.pendingPoints.length > 0);
   });
   readonly batteryChart = computed<EChartsOption | null>(() => this.buildBatteryChart(this.routeDay().data));
+  /** The punch whose pin was clicked, shown as a detail panel beside the map. */
+  readonly selectedPunch = signal<{ session: TrackedSession; punch: PunchDetail } | null>(null);
+  /** Recorded fixes are off by default: they are hover detail, not the route. */
+  readonly showPoints = signal(false);
+  readonly routePoints = signal<Load<FieldTrackingPoints>>(idle());
 
   // ── History ──
   readonly historyUserId = signal<number | null>(null);
@@ -263,6 +305,7 @@ export class AttendancePage {
             if (this.canViewFieldTracking()) this.startLiveRefresh();
             break;
           case 'routes':
+            this.loadAttended();
             if (this.routeUserId() != null) this.loadRoute();
             break;
           case 'history':
@@ -369,12 +412,30 @@ export class AttendancePage {
   }
 
   // ── Routes ──
+  loadAttended(): void {
+    this.attended.update((a) => ({ ...a, state: 'loading', error: null }));
+    this.facade.attendedMembers(this.routeDate()).subscribe({
+      next: (data) => this.attended.set({ state: 'loaded', data: data.members, error: null }),
+      error: (e) => this.attended.set({ state: 'error', data: null, error: errorText(e) }),
+    });
+  }
+
   loadRoute(): void {
     const userId = this.routeUserId();
     if (userId == null) return;
+    this.selectedPunch.set(null);
+    this.routePoints.set(idle());
     this.routeDay.update((r) => ({ ...r, state: 'loading', error: null }));
     this.facade.route(userId, this.routeDate()).subscribe({
-      next: (data) => this.routeDay.set({ state: 'loaded', data, error: null }),
+      next: (data) => {
+        this.routeDay.set({ state: 'loaded', data, error: null });
+        // The pins carry the selfies, so they are fetched with the day rather than on a click.
+        for (const session of data.sessions) {
+          if (session.punchIn.hasPhoto) this.showPhoto(session.attendanceSessionId, 'in');
+          if (session.punchOut?.hasPhoto) this.showPhoto(session.attendanceSessionId, 'out');
+        }
+        if (this.showPoints()) this.loadRoutePoints();
+      },
       error: (e) => this.routeDay.set({ state: 'error', data: null, error: errorText(e) }),
     });
   }
@@ -386,7 +447,52 @@ export class AttendancePage {
 
   onRouteDate(value: string): void {
     this.routeDate.set(value || localIsoDate());
+    this.loadAttended();
     this.loadRoute();
+  }
+
+  /** True when the chosen member has no attendance session on the chosen day. */
+  routeMemberWasAway(): boolean {
+    return this.routePeople().some((p) => p.userId === this.routeUserId() && p.absent);
+  }
+
+  onRouteMarker(id: string): void {
+    const day = this.routeDay().data;
+    const [kind, sessionId] = id.split('-');
+    if (!day || (kind !== 'in' && kind !== 'out')) {
+      this.selectedPunch.set(null);
+      return;
+    }
+    const session = day.sessions.find((s) => s.attendanceSessionId === Number(sessionId));
+    const punch = kind === 'in' ? session?.punchIn : session?.punchOut;
+    this.selectedPunch.set(session && punch ? { session, punch } : null);
+  }
+
+  closePunch(): void {
+    this.selectedPunch.set(null);
+  }
+
+  punchLabel(punch: PunchDetail): string {
+    return punch.kind === 'in' ? 'Punched in' : 'Punched out';
+  }
+
+  coordinates(latitude: number | null, longitude: number | null): string {
+    return latitude == null || longitude == null ? '—' : `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+  }
+
+  togglePoints(show: boolean): void {
+    this.showPoints.set(show);
+    if (show && this.routePoints().state === 'idle') this.loadRoutePoints();
+  }
+
+  loadRoutePoints(): void {
+    const userId = this.routeUserId();
+    if (userId == null) return;
+    this.routePoints.update((p) => ({ ...p, state: 'loading', error: null }));
+    this.facade.routePoints(userId, this.routeDate()).subscribe({
+      next: (data) => this.routePoints.set({ state: 'loaded', data, error: null }),
+      error: (e) => this.routePoints.set({ state: 'error', data: null, error: errorText(e) }),
+    });
   }
 
   km(meters: number): string {
@@ -426,28 +532,73 @@ export class AttendancePage {
           tooltip: `Stop · ${formatMinutes(stop.minutes)} · ${time(stop.arrivedAtUtc)}–${time(stop.leftAtUtc)}`,
         }),
       );
-      if (session.punchInLatitude != null && session.punchInLongitude != null) {
+      for (const punch of [session.punchIn, session.punchOut]) {
+        if (!punch || punch.latitude == null || punch.longitude == null) continue;
         markers.push({
-          id: `in-${session.attendanceSessionId}`,
-          latitude: session.punchInLatitude,
-          longitude: session.punchInLongitude,
-          tone: 'success',
-          size: 'sm',
-          tooltip: `Punched in ${time(session.punchInAtUtc)}`,
-        });
-      }
-      if (session.punchOutLatitude != null && session.punchOutLongitude != null && session.punchOutAtUtc) {
-        markers.push({
-          id: `out-${session.attendanceSessionId}`,
-          latitude: session.punchOutLatitude,
-          longitude: session.punchOutLongitude,
-          tone: 'danger',
-          size: 'sm',
-          tooltip: `Punched out ${time(session.punchOutAtUtc)}`,
+          id: `${punch.kind}-${session.attendanceSessionId}`,
+          latitude: punch.latitude,
+          longitude: punch.longitude,
+          tone: punch.kind === 'in' ? 'success' : 'danger',
+          badge: punch.kind === 'in' ? 'IN' : 'OUT',
+          avatarUrl: this.photoObjectUrl(session.attendanceSessionId, punch.kind),
+          tooltip: `${escapeHtml(this.punchLabel(punch))} ${time(punch.atUtc)}<br>Click for details`,
         });
       }
     }
+    markers.push(...this.pointMarkers());
     return { lines, markers };
+  }
+
+  /** The object URL of an already-fetched selfie, or undefined while it is loading or failed. */
+  private photoObjectUrl(sessionId: number, kind: 'in' | 'out'): string | undefined {
+    const url = this.photos()[this.photoKey(sessionId, kind)];
+    return url && url !== 'loading' && url !== 'error' ? url : undefined;
+  }
+
+  /**
+   * One small dot per recorded fix, each hovering its stored values. The API has already sampled
+   * them (a shift is thousands), and the page says how many of how many are drawn.
+   */
+  private pointMarkers(): RouteMarker[] {
+    if (!this.showPoints()) return [];
+    const data = this.routePoints().data;
+    if (!data) return [];
+    const markers: RouteMarker[] = [];
+    for (const session of data.sessions) {
+      session.points.forEach((point, i) =>
+        markers.push({
+          id: `point-${session.attendanceSessionId}-${i}`,
+          latitude: point.latitude,
+          longitude: point.longitude,
+          tone: point.isMock ? 'danger' : 'info',
+          size: 'xs',
+          tooltip: this.pointTooltip(point),
+        }),
+      );
+    }
+    return markers;
+  }
+
+  private pointTooltip(point: RecordedPoint): string {
+    const at = new Date(point.recordedAtUtc).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    const lines = [`<strong>${escapeHtml(at)}</strong>`];
+    lines.push(escapeHtml(this.coordinates(point.latitude, point.longitude)));
+    lines.push(
+      escapeHtml(
+        point.batteryPercent != null
+          ? `Battery ${point.batteryPercent}%${point.isCharging ? ' · charging' : ''}${point.isBatterySaverOn ? ' · saver on' : ''}`
+          : 'Battery not reported',
+      ),
+    );
+    if (point.accuracyMeters != null) lines.push(`Accurate to ±${Math.round(point.accuracyMeters)} m`);
+    if (point.speedMetersPerSecond != null) lines.push(`${(point.speedMetersPerSecond * 3.6).toFixed(1)} km/h`);
+    if (point.headingDegrees != null) lines.push(`Heading ${Math.round(point.headingDegrees)}°`);
+    if (point.isMock) lines.push('⚠ Reported by a mock (fake GPS) app');
+    return lines.join('<br>');
   }
 
   private buildBatteryChart(day: FieldTrackingDay | null): EChartsOption | null {
