@@ -178,6 +178,75 @@ export interface TrackPoint {
   isMock: boolean;
 }
 
+/** One member who punched in on a chosen day — the map tabs' member picker. */
+export interface AttendedMember {
+  userId: number;
+  fullName: string;
+  roleName: string;
+  sessionCount: number;
+  firstPunchInUtc: string;
+  lastPunchOutUtc: string | null;
+  isStillIn: boolean;
+  wasTracked: boolean;
+}
+
+export interface AttendedMembers {
+  workDate: string;
+  timeZone: string;
+  members: AttendedMember[];
+}
+
+/**
+ * What a punch pin shows when it is clicked. The selfie is not here: the photo endpoint is
+ * authenticated, so `hasPhoto` says whether to fetch one. `batteryPercent` is the nearest
+ * recorded fix within ten minutes of the punch, and is null when there was none.
+ */
+export interface PunchDetail {
+  attendanceSessionId: number;
+  kind: 'in' | 'out';
+  atUtc: string;
+  latitude: number | null;
+  longitude: number | null;
+  accuracyMeters: number | null;
+  hasPhoto: boolean;
+  batteryPercent: number | null;
+  isCharging: boolean | null;
+  note: string | null;
+}
+
+/** One stored fix, with every field the phone sent — the map's hover detail. */
+export interface RecordedPoint {
+  recordedAtUtc: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters: number | null;
+  speedMetersPerSecond: number | null;
+  headingDegrees: number | null;
+  batteryPercent: number | null;
+  isCharging: boolean | null;
+  isBatterySaverOn: boolean | null;
+  isMock: boolean;
+}
+
+export interface RecordedPointsSession {
+  attendanceSessionId: number;
+  punchInAtUtc: string;
+  punchOutAtUtc: string | null;
+  totalPointCount: number;
+  points: RecordedPoint[];
+}
+
+/** A day's fixes, sampled by the API: `sampledPointCount` of `totalPointCount` are drawn. */
+export interface FieldTrackingPoints {
+  userId: number;
+  workDate: string;
+  timeZone: string;
+  totalPointCount: number;
+  sampledPointCount: number;
+  maxPointsPerSession: number;
+  sessions: RecordedPointsSession[];
+}
+
 export interface BatterySample {
   recordedAtUtc: string;
   batteryPercent: number;
@@ -198,11 +267,15 @@ export interface TrackedSession {
   stops: TrackStop[];
   /** Received but not yet matched to roads (processing runs every few minutes). */
   pendingPoints: TrackPoint[];
+  punchIn: PunchDetail;
+  /** Null while the session is still open. */
+  punchOut: PunchDetail | null;
 }
 
 export interface FieldTrackingDay {
   userId: number;
   fullName: string;
+  email: string;
   workDate: string;
   timeZone: string;
   distanceMeters: number;

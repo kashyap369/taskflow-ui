@@ -10,7 +10,9 @@ import {
   AttendanceDay,
   AttendanceRoster,
   AttendanceSettings,
+  AttendedMembers,
   FieldTrackingDay,
+  FieldTrackingPoints,
   FieldTrackingSettings,
   LiveFieldTracking,
   UpdateAttendanceSettingsPayload,
@@ -26,6 +28,14 @@ export class AttendanceRepository {
     return this.api.get<AttendanceRoster>(
       API.Attendance.Roster(organizationId),
       date ? ApiParams.create({ date }) : undefined,
+    );
+  }
+
+  /** Only the members with an attendance session on `date` — what the map pickers offer. */
+  getAttendedMembers(organizationId: number, date: string): Observable<AttendedMembers> {
+    return this.api.get<AttendedMembers>(
+      API.Attendance.AttendedMembers(organizationId),
+      ApiParams.create({ date }),
     );
   }
 
@@ -60,6 +70,13 @@ export class AttendanceRepository {
   getMemberRoute(organizationId: number, userId: number, date: string): Observable<FieldTrackingDay> {
     return this.api.get<FieldTrackingDay>(
       API.Attendance.TrackingMember(organizationId, userId),
+      ApiParams.create({ date }),
+    );
+  }
+
+  getMemberRoutePoints(organizationId: number, userId: number, date: string): Observable<FieldTrackingPoints> {
+    return this.api.get<FieldTrackingPoints>(
+      API.Attendance.TrackingMemberPoints(organizationId, userId),
       ApiParams.create({ date }),
     );
   }

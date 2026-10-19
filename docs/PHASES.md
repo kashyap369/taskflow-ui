@@ -2,6 +2,32 @@
 
 > Keep the Current Status section up to date at the end of every session.
 
+## 🟡 Attendance map: who was in, punch selfies on the pins, hoverable fixes (2026-10-19, branch `claude/attendance-map-features`)
+
+- **Member picker on Routes lists only who punched in** on the chosen day, from the new
+  `GET …/attendance/organization/{orgId}/attended-members?date`, and reloads when the day changes.
+  A member reached from Today or a link stays in the list marked *no punches this day*. On a day with
+  nobody in, the picker is **empty and disabled** with "Nobody punched in on this day" rather than
+  names that all resolve to no route. **Me** is added back only when the list is *refused* — a member
+  holding neither `ViewAttendance` nor `ViewFieldTracking` gets a 403 and must still be able to pick
+  their own route.
+- **Punch pins carry the selfie.** `RouteMap` markers accept `badge` + `avatarUrl` and are then drawn
+  as a `divIcon` photo pin (round image, tinted ring, IN/OUT badge) instead of a `circleMarker` — a
+  circle cannot hold an image. The selfie is fetched with the session's token and shown from an
+  object URL, because the photo endpoint is authenticated; nothing about it was loosened. Clicking a
+  pin opens a detail panel: member, member code, which punch and session, time, battery, coordinates
+  with accuracy, note.
+- **Hover a recorded fix** for its stored time, coordinates, battery (with charging / saver),
+  accuracy, speed and heading — behind a **Recorded fixes** checkbox, off by default. The API samples
+  them (a shift is thousands) and the panel says *showing N of M*, so a thinned set never reads as
+  the whole record.
+- **Address is shown as "not recorded"** rather than left blank: nothing stores one and no geocoder
+  is called. **Member code** is the member's email and user id — the schema has no employee code.
+- **Verified here:** `ng build`, `ng lint`, `design:lint`, all **331** specs (8 new, covering the
+  filtered picker, pin selection, photo pins and the fix tooltip). **Not verified:** any of it in a
+  browser against a running API with real tracked data.
+- API reference: backend `docs/ATTENDANCE.md` §9.
+
 ## 🟡 Attendance section + field-tracking map (2026-10-18, branch `claude/wonderful-darwin-8lt5ko`)
 
 - **Built:** organization portal → **Attendance** (`/organization/attendance`): Today (who is in,

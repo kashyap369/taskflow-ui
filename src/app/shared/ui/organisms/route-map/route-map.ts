@@ -33,11 +33,22 @@ export interface RouteMarker {
   latitude: number;
   longitude: number;
   tone: RouteMarkerTone;
-  /** Bigger markers for people, smaller for stops and punch points. */
-  size?: 'sm' | 'md' | 'lg';
+  /** `xs` for one recorded fix, up through people at `lg`. */
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   tooltip: string;
   /** Keep the tooltip open (e.g. a person's name on the live map). */
   permanentLabel?: string;
+  /**
+   * Short text on a badge over the pin, e.g. `IN` / `OUT`. Setting it turns the marker into a
+   * round photo pin instead of a plain dot.
+   */
+  badge?: string;
+  /**
+   * A punch selfie, as an object URL fetched with the session's token — the photo endpoint is
+   * authenticated, so a plain remote `src` cannot load it. Only used when `badge` is set; while
+   * it is absent the pin shows the badge alone.
+   */
+  avatarUrl?: string;
 }
 
 export interface RouteMapData {
@@ -45,7 +56,9 @@ export interface RouteMapData {
   markers: RouteMarker[];
 }
 
-const MARKER_RADIUS: Record<NonNullable<RouteMarker['size']>, number> = { sm: 5, md: 7, lg: 10 };
+const MARKER_RADIUS: Record<NonNullable<RouteMarker['size']>, number> = { xs: 3, sm: 5, md: 7, lg: 10 };
+/** Must match `.route-pin` in route-map.scss, which is what actually sizes the photo pin. */
+const PIN_SIZE = 38;
 
 /**
  * A Leaflet map that draws tracked routes, stops and people. Tiles come from the configured
@@ -118,22 +131,15 @@ export class RouteMap {
     }
 
     for (const marker of data.markers) {
-      const colour = this.token(`--${marker.tone === 'muted' ? 'text-subtle' : marker.tone}`);
-      const circle = L.circleMarker([marker.latitude, marker.longitude], {
-        radius: MARKER_RADIUS[marker.size ?? 'md'],
-        color: this.token('--surface'),
-        weight: 2,
-        fillColor: colour,
-        fillOpacity: 1,
-      });
+      const drawn = marker.badge ? this.photoPin(marker) : this.dot(marker);
       if (marker.permanentLabel) {
-        circle.bindTooltip(marker.permanentLabel, { permanent: true, direction: 'top', offset: [0, -8] });
-        circle.bindPopup(marker.tooltip);
+        drawn.bindTooltip(marker.permanentLabel, { permanent: true, direction: 'top', offset: [0, -8] });
+        drawn.bindPopup(marker.tooltip);
       } else {
-        circle.bindTooltip(marker.tooltip);
+        drawn.bindTooltip(marker.tooltip, { direction: 'top' });
       }
-      circle.on('click', () => this.markerSelected.emit(marker.id));
-      circle.addTo(layer);
+      drawn.on('click', () => this.markerSelected.emit(marker.id));
+      drawn.addTo(layer);
       bounds.extend([marker.latitude, marker.longitude]);
     }
 
@@ -148,6 +154,39 @@ export class RouteMap {
       this.resizeTimer = null;
       if (this.map === map) map.invalidateSize();
     }, 0);
+  }
+
+  private dot(marker: RouteMarker): L.CircleMarker {
+    return L.circleMarker([marker.latitude, marker.longitude], {
+      radius: MARKER_RADIUS[marker.size ?? 'md'],
+      color: this.token('--surface'),
+      weight: 2,
+      fillColor: this.token(`--${marker.tone === 'muted' ? 'text-subtle' : marker.tone}`),
+      fillOpacity: 1,
+    });
+  }
+
+  /**
+   * A round pin carrying the member's punch selfie and an IN/OUT badge. Built as a `divIcon` so the
+   * photo and the badge are real elements the stylesheet themes with tokens — a `circleMarker` can
+   * only be a filled circle. Everything interpolated is escaped: `avatarUrl` is an object URL this
+   * app created, but it still passes through an HTML attribute.
+   */
+  private photoPin(marker: RouteMarker): L.Marker {
+    const photo = marker.avatarUrl
+      ? `<img class="route-pin-photo" src="${escapeHtml(marker.avatarUrl)}" alt="" />`
+      : '<span class="route-pin-photo is-empty" aria-hidden="true"></span>';
+    return L.marker([marker.latitude, marker.longitude], {
+      keyboard: false,
+      icon: L.divIcon({
+        className: 'route-pin-icon',
+        iconSize: [PIN_SIZE, PIN_SIZE],
+        iconAnchor: [PIN_SIZE / 2, PIN_SIZE / 2],
+        html:
+          `<span class="route-pin" data-tone="${escapeHtml(marker.tone)}">${photo}` +
+          `<span class="route-pin-badge">${escapeHtml(marker.badge ?? '')}</span></span>`,
+      }),
+    });
   }
 
   private lineStyle(kind: RouteLineKind): L.PolylineOptions {
@@ -168,4 +207,11 @@ export class RouteMap {
   private token(name: string): string {
     return getComputedStyle(this.host.nativeElement).getPropertyValue(name).trim() || 'currentColor';
   }
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+  );
 }
