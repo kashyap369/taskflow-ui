@@ -29,8 +29,16 @@ export enum AttendanceDayStatus {
 
 export enum TrackedSegmentKind {
   Recorded = 1,
-  /** A gap bridged by the server's guess — always drawn dashed, never as if recorded. */
+  /**
+   * A gap with no points: a straight line between where they stop and where they resume. The
+   * server does not know the way taken and must never draw a road as if it did.
+   */
   Inferred = 2,
+  /**
+   * Recorded travel that no road explains — a train, a metro, a ferry. Drawn from the member's
+   * own fixes rather than snapped. Real travel, so it counts as travelled.
+   */
+  OffRoad = 3,
 }
 
 export interface AttendanceRosterRow {

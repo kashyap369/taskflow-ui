@@ -127,6 +127,7 @@
 .swatch {
   display: inline-block; width: 28px; height: 0; border-top: 4px solid var(--primary);
   &.inferred { border-top: 4px dashed var(--text-subtle); }
+  &.offroad { border-top: 4px dashed var(--info); }
   &.pending { border-top: 3px dotted var(--info); }
 }
 .dot {

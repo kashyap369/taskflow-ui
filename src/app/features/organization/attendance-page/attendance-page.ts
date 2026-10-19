@@ -29,6 +29,7 @@ import { PermissionLockDirective } from '@shared/directives/permission-lock.dire
 import { Skeleton } from '@shared/ui/atoms/skeletons/skeleton/skeleton';
 import {
   RouteLine,
+  RouteLineKind,
   RouteMap,
   RouteMapData,
   RouteMarker,
@@ -400,14 +401,21 @@ export class AttendancePage {
     const time = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     for (const session of day.sessions) {
       for (const segment of session.segments) {
-        const inferred = segment.kind === TrackedSegmentKind.Inferred;
-        lines.push({
-          kind: inferred ? 'inferred' : segment.isSnapped ? 'recorded' : 'unsnapped',
-          points: decodePolyline(segment.encodedPolyline),
-          tooltip: inferred
-            ? `No signal ${time(segment.startedAtUtc)}–${time(segment.endedAtUtc)} · likely route, ${this.km(segment.distanceMeters)} km`
-            : `${time(segment.startedAtUtc)}–${time(segment.endedAtUtc)} · ${this.km(segment.distanceMeters)} km${segment.isSnapped ? '' : ' · not matched to roads'}`,
-        });
+        const span = `${time(segment.startedAtUtc)}–${time(segment.endedAtUtc)}`;
+        const km = this.km(segment.distanceMeters);
+        let kind: RouteLineKind;
+        let tooltip: string;
+        if (segment.kind === TrackedSegmentKind.Inferred) {
+          kind = 'inferred';
+          tooltip = `No signal ${span} · straight line, not the way taken, ${km} km`;
+        } else if (segment.kind === TrackedSegmentKind.OffRoad) {
+          kind = 'offroad';
+          tooltip = `${span} · off-road travel (train or similar), ${km} km`;
+        } else {
+          kind = segment.isSnapped ? 'recorded' : 'unsnapped';
+          tooltip = `${span} · ${km} km${segment.isSnapped ? '' : ' · not matched to roads'}`;
+        }
+        lines.push({ kind, tooltip, points: decodePolyline(segment.encodedPolyline) });
       }
       if (session.pendingPoints.length > 1) {
         lines.push({

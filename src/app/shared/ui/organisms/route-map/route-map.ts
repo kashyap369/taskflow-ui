@@ -12,8 +12,12 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 
-/** How a line is drawn. `inferred` is a server guess across a gap and is always dashed. */
-export type RouteLineKind = 'recorded' | 'unsnapped' | 'inferred' | 'pending';
+/**
+ * How a line is drawn. `inferred` is a straight line across a gap nobody has a record of, and
+ * `offroad` is travel the member's own fixes prove but no road explains. Both are dashed, so a
+ * road the member really travelled is never confused with one the server supplied.
+ */
+export type RouteLineKind = 'recorded' | 'unsnapped' | 'inferred' | 'offroad' | 'pending';
 
 /** Semantic colour of a marker; resolved from the theme tokens, never a literal. */
 export type RouteMarkerTone = 'primary' | 'success' | 'danger' | 'warning' | 'info' | 'muted';
@@ -154,6 +158,8 @@ export class RouteMap {
         return { color: this.token('--primary'), weight: 3, opacity: 0.6 };
       case 'inferred':
         return { color: this.token('--text-subtle'), weight: 4, opacity: 0.9, dashArray: '8 8' };
+      case 'offroad':
+        return { color: this.token('--info'), weight: 4, opacity: 0.9, dashArray: '12 6' };
       case 'pending':
         return { color: this.token('--info'), weight: 3, opacity: 0.7, dashArray: '2 6' };
     }
